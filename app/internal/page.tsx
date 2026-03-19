@@ -1,5 +1,6 @@
 import { TriggerButton } from "@/app/internal/_components/trigger-button";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function InternalPage() {
   const [newsletters, recentRuns, totalSubscriptions] = await Promise.all([
@@ -25,9 +26,17 @@ export default async function InternalPage() {
       </div>
 
       <section className="mb-10">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Newsletters
-        </h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Newsletters
+          </h2>
+          <Link
+            href="/internal/newsletters/new"
+            className="rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted/40"
+          >
+            + Add newsletter
+          </Link>
+        </div>
         <div className="overflow-hidden rounded-md border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
@@ -49,7 +58,15 @@ export default async function InternalPage() {
                   <td className="px-4 py-2 text-right">{n._count.subscriptions}</td>
                   <td className="px-4 py-2 text-right">{n._count.digestRuns}</td>
                   <td className="px-4 py-2 text-right">
-                    <TriggerButton newsletterId={n.id} />
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/internal/newsletters/${n.id}/edit`}
+                        className="text-xs text-muted-foreground hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      <TriggerButton newsletterId={n.id} />
+                    </div>
                   </td>
                 </tr>
               ))}

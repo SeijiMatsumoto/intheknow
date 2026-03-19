@@ -16,17 +16,19 @@ model UserPlan {
 }
 
 model Newsletter {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  description String?
-  frequency   String   // 'daily' | 'weekly' | 'biweekly'
-  sources     Json     @default("{}")
-  keywords    String[]
-  isPublic    Boolean  @default(false) @map("is_public")
-  isSystem    Boolean  @default(false) @map("is_system")
-  createdBy   String?  @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  description  String?
+  frequency    String   // 'daily' | 'weekly' — display label only
+  scheduleDays String[] @default([]) @map("schedule_days") // ['monday','tuesday',...]
+  scheduleHour Int      @default(8) @map("schedule_hour")  // UTC hour (0–23)
+  sources      Json     @default("{}")
+  keywords     String[]
+  isPublic     Boolean  @default(false) @map("is_public")
+  isSystem     Boolean  @default(false) @map("is_system")
+  createdBy    String?  @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   subscriptions Subscription[]
   digestRuns    DigestRun[]
@@ -35,14 +37,14 @@ model Newsletter {
 }
 
 model Subscription {
-  id                String    @id @default(uuid())
-  userId            String    @map("user_id")
-  newsletterId      String    @map("newsletter_id")
-  frequencyOverride String?   @map("frequency_override")
-  timezone          String?
-  digestLength      String    @default("standard") @map("digest_length") // 'brief' | 'standard' | 'deep_dive'
-  pausedAt          DateTime? @map("paused_at")
-  createdAt         DateTime  @default(now()) @map("created_at")
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  newsletterId String    @map("newsletter_id")
+  digestLength String    @default("standard") @map("digest_length") // 'brief' | 'standard' | 'deep_dive'
+  scheduleDays String[]  @default([]) @map("schedule_days") // [] = use newsletter default
+  scheduleHour Int?      @map("schedule_hour")               // null = use newsletter default (UTC hour 0–23)
+  pausedAt     DateTime? @map("paused_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   newsletter Newsletter @relation(fields: [newsletterId], references: [id])
 

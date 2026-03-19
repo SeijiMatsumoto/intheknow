@@ -14,6 +14,8 @@ const systemNewsletters = [
     description:
       "The most important developments in large language models — new releases, benchmarks, research, and real-world deployments.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["LLM", "language model", "GPT", "Claude", "Gemini", "Llama", "fine-tuning", "RLHF"],
     sources: {
       rss: ["https://arxiv.org/rss/cs.CL", "https://feeds.feedburner.com/oreilly/radar"],
@@ -27,6 +29,8 @@ const systemNewsletters = [
     description:
       "Alignment research, interpretability breakthroughs, governance updates, and the people working to make AI go well.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["AI safety", "alignment", "interpretability", "AI governance", "existential risk", "RLHF", "red teaming"],
     sources: {
       rss: ["https://www.alignmentforum.org/feed.xml"],
@@ -40,6 +44,8 @@ const systemNewsletters = [
     description:
       "The best open-source model releases, tooling, and community projects — everything happening outside the closed labs.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["open source AI", "Llama", "Mistral", "Hugging Face", "open weights", "community model"],
     sources: {
       rss: ["https://huggingface.co/blog/feed.xml"],
@@ -53,6 +59,8 @@ const systemNewsletters = [
     description:
       "GPUs, training clusters, inference optimization, serving frameworks, and the compute layer powering the AI boom.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["AI infrastructure", "GPU", "CUDA", "inference", "vLLM", "TensorRT", "training cluster", "H100"],
     sources: {
       rss: ["https://arxiv.org/rss/cs.DC"],
@@ -66,6 +74,8 @@ const systemNewsletters = [
     description:
       "The most-cited and most-discussed papers from arXiv and top ML venues — summarized so you can stay current without reading every PDF.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["arXiv", "NeurIPS", "ICML", "ICLR", "ML paper", "research", "transformer", "diffusion"],
     sources: {
       rss: [
@@ -83,6 +93,8 @@ const systemNewsletters = [
     description:
       "How companies are shipping AI features — product launches, UX patterns, and what's actually working in production.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["AI product", "AI feature launch", "LLM product", "AI startup", "product AI integration"],
     sources: {
       rss: ["https://www.producthunt.com/feed"],
@@ -96,6 +108,8 @@ const systemNewsletters = [
     description:
       "Fundraising news, founder essays, YC batch updates, and the ideas shaping the next generation of tech companies.",
     frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
     keywords: ["startup", "YC", "seed round", "Series A", "founder", "venture capital", "product-market fit"],
     sources: {
       rss: ["https://news.ycombinator.com/rss", "https://techcrunch.com/feed/"],
@@ -105,13 +119,20 @@ const systemNewsletters = [
   },
 ];
 
+
 async function main() {
   console.log("Seeding system newsletters...");
 
   for (const newsletter of systemNewsletters) {
     await prisma.newsletter.upsert({
       where: { slug: newsletter.slug },
-      update: {},
+      update: {
+        scheduleDays: newsletter.scheduleDays,
+        scheduleHour: newsletter.scheduleHour,
+        keywords: newsletter.keywords,
+        sources: newsletter.sources,
+        description: newsletter.description,
+      },
       create: {
         ...newsletter,
         isPublic: true,

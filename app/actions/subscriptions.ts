@@ -29,3 +29,19 @@ export async function unsubscribe(subscriptionId: string) {
 
   revalidatePath("/newsletters");
 }
+
+export async function updateSubscriptionSchedule(
+  subscriptionId: string,
+  scheduleDays: string[],
+  scheduleHour: number | null,
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+
+  await prisma.subscription.updateMany({
+    where: { id: subscriptionId, userId },
+    data: { scheduleDays, scheduleHour },
+  });
+
+  revalidatePath("/newsletters");
+}

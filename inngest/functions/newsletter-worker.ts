@@ -15,24 +15,32 @@ export const newsletterWorker = inngest.createFunction(
     triggers: [{ event: "newsletter/run" }],
   },
   async ({ event, step, logger }) => {
-    const { newsletterId, userEmails } = event.data;
-    logger.info(`newsletter-worker started`, { newsletterId, userEmails });
+    const { newsletterId, userEmails, userIds } = event.data;
+    logger.info(`newsletter-worker started`, { newsletterId, userEmails, userIds });
 
-    // 1. Load newsletter + active subscribers
+    // 1. Load newsletter + relevant subscriptions
     const { newsletter, subscriptions } = await step.run("load-newsletter", async () => {
       const newsletter = await prisma.newsletter.findUniqueOrThrow({
         where: { id: newsletterId },
       });
       logger.info(`Loaded newsletter: "${newsletter.title}" (${newsletter.frequency})`);
 
-      const subscriptions = userEmails
-        ? []
-        : await prisma.subscription.findMany({ where: { newsletterId, pausedAt: null } });
+      // userEmails = manual email override (internal trigger), skip subscriber lookup
+      // userIds = orchestrator-resolved subset of subscribers
+      // neither = all active subscribers
+      const subscriptions =
+        userEmails
+          ? []
+          : userIds
+            ? await prisma.subscription.findMany({
+                where: { newsletterId, pausedAt: null, userId: { in: userIds } },
+              })
+            : await prisma.subscription.findMany({ where: { newsletterId, pausedAt: null } });
 
       if (userEmails) {
         logger.info(`Email override active — sending to: ${userEmails.join(", ")}`);
       } else {
-        logger.info(`Found ${subscriptions.length} active subscriber(s)`);
+        logger.info(`Found ${subscriptions.length} subscriber(s) for this run`);
       }
 
       return { newsletter, subscriptions };
@@ -41,8 +49,8 @@ export const newsletterWorker = inngest.createFunction(
     const recipientEmails = userEmails ?? [];
 
     if (!userEmails && subscriptions.length === 0) {
-      logger.info("No active subscribers, skipping run");
-      return { newsletterId, skipped: true, reason: "no active subscribers" };
+      logger.info("No subscribers for this run, skipping");
+      return { newsletterId, skipped: true, reason: "no subscribers for this run" };
     }
 
     // 2. Create digest run
@@ -137,14 +145,15 @@ export const newsletterWorker = inngest.createFunction(
         passingItems,
         newsletter.title,
         newsletter.description ?? newsletter.title,
+        newsletter.frequency,
       );
-      logger.info(`Synthesis complete — "${result.title}", ${result.sections.length} section(s), ${result.keyTakeaways.length} takeaway(s)`);
+      logger.info(`Synthesis complete — "${result.editionTitle}", ${result.sections.length} section(s), ${result.keyTakeaways.length} takeaway(s)`);
       return result;
     });
 
     // 7. Render email
     const emailHtml = await step.run("render-email", async () => {
-      const html = renderEmail(digest, newsletter.title);
+      const html = renderEmail(digest, newsletter.title, newsletter.frequency);
       logger.info(`Email rendered (${html.length} chars)`);
       return html;
     });
@@ -190,7 +199,7 @@ export const newsletterWorker = inngest.createFunction(
           name: "newsletter/email.generated" as const,
           data: {
             digestRunId: digestRun.id,
-            newsletterTitle: digest.title,
+            newsletterTitle: digest.editionTitle,
             userId: e.userId,
             userEmail: e.userEmail,
             emailHtml,

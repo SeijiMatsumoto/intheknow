@@ -1,50 +1,106 @@
 import type { DigestContent } from "./synthesize";
 
-export function renderEmail(digest: DigestContent, newsletterTitle: string): string {
-  const sectionsHtml = digest.sections
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function periodLabel(frequency: string): string {
+  const date = formatDate(new Date().toISOString().split("T")[0]);
+  const freq = frequency === "daily" ? "Daily" : "Weekly";
+  return `${freq} · ${date}`;
+}
+
+export function renderEmail(
+  digest: DigestContent,
+  newsletterTitle: string,
+  frequency: string,
+): string {
+  // Table of contents
+  const tocItems = digest.sections
+    .flatMap((s) => s.items.map((item) => `<li style="margin-bottom:4px;font-size:13px;color:#555;">${item.title}</li>`))
+    .join("");
+
+  // Key takeaways
+  const takeawaysHtml = digest.keyTakeaways
     .map(
-      (section) => `
-    <h2 style="font-size:15px;font-weight:600;color:#111;margin:32px 0 12px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;">${section.heading}</h2>
-    ${section.items
-      .map(
-        (item) => `
-      <div style="margin-bottom:20px;">
-        <a href="${item.url}" style="font-size:14px;font-weight:600;color:#111;text-decoration:none;line-height:1.4;">${item.title}</a>
-        <p style="font-size:12px;color:#999;margin:3px 0 6px;">${item.source}</p>
-        <p style="font-size:13px;color:#444;line-height:1.6;margin:0;">${item.summary}</p>
-        ${item.quote ? `<blockquote style="margin:8px 0 0;padding:6px 12px;border-left:3px solid #e0e0e0;color:#666;font-style:italic;font-size:13px;">"${item.quote}"</blockquote>` : ""}
-      </div>`
-      )
-      .join("")}`
+      (t) =>
+        `<li style="margin-bottom:6px;font-size:13px;color:#333;line-height:1.55;">${t}</li>`,
     )
     .join("");
 
-  const takeawaysHtml = digest.keyTakeaways
-    .map((t) => `<li style="margin-bottom:5px;font-size:13px;color:#444;line-height:1.5;">${t}</li>`)
+  // News sections
+  const sectionsHtml = digest.sections
+    .map(
+      (section) => `
+    <tr><td style="padding:28px 0 4px;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 12px;">${section.heading}</p>
+      ${section.items
+        .map(
+          (item) => `
+        <div style="margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #f0f0f0;">
+          <p style="font-size:12px;color:#aaa;margin:0 0 5px;">${formatDate(item.publishedAt)} · ${item.source}</p>
+          <p style="font-size:15px;font-weight:600;color:#111;margin:0 0 10px;line-height:1.35;">${item.title}</p>
+          <p style="font-size:14px;color:#333;line-height:1.65;margin:0 0 8px;"><strong>${item.plainLead}</strong></p>
+          <p style="font-size:13px;color:#555;line-height:1.65;margin:0 0 10px;">${item.detail}</p>
+          ${item.quote ? `<blockquote style="margin:0 0 10px;padding:8px 14px;border-left:3px solid #ddd;color:#666;font-style:italic;font-size:13px;line-height:1.55;">"${item.quote}"</blockquote>` : ""}
+          <a href="${item.url}" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;border-bottom:1px solid #ddd;">Read more →</a>
+        </div>`,
+        )
+        .join("")}
+    </td></tr>`,
+    )
     .join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;">
-  <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:8px;border:1px solid #e5e5e5;overflow:hidden;">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${digest.editionTitle}</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <div style="max-width:600px;margin:32px auto;padding:0 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:10px;border:1px solid #e5e5e5;overflow:hidden;">
 
-    <div style="padding:28px 36px 24px;border-bottom:1px solid #f0f0f0;">
-      <p style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#aaa;margin:0 0 6px;">${newsletterTitle}</p>
-      <h1 style="font-size:20px;font-weight:700;color:#111;margin:0 0 12px;line-height:1.3;">${digest.title}</h1>
-      <p style="font-size:13px;color:#555;line-height:1.65;margin:0;">${digest.summary}</p>
-    </div>
+    <!-- Header -->
+    <tr><td style="padding:32px 40px 24px;border-bottom:1px solid #f0f0f0;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#bbb;margin:0 0 8px;">${newsletterTitle}</p>
+      <h1 style="font-size:24px;font-weight:700;color:#111;margin:0 0 10px;line-height:1.25;">${digest.editionTitle}</h1>
+      <p style="font-size:12px;color:#bbb;margin:0 0 16px;">${periodLabel(frequency)}</p>
+      <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">${digest.summary}</p>
+    </td></tr>
 
-    <div style="padding:20px 36px;background:#fafafa;border-bottom:1px solid #f0f0f0;">
-      <p style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#aaa;margin:0 0 8px;">Key Takeaways</p>
+    <!-- Table of contents -->
+    <tr><td style="padding:20px 40px;background:#fafafa;border-bottom:1px solid #f0f0f0;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">In this edition</p>
+      <ul style="margin:0;padding-left:18px;">${tocItems}</ul>
+    </td></tr>
+
+    <!-- Key takeaways -->
+    <tr><td style="padding:20px 40px;background:#fffbf0;border-bottom:1px solid #f0f0f0;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">⚡ Key takeaways</p>
       <ul style="margin:0;padding-left:18px;">${takeawaysHtml}</ul>
-    </div>
+    </td></tr>
 
-    <div style="padding:4px 36px 28px;">${sectionsHtml}</div>
+    <!-- News items -->
+    <tr><td style="padding:0 40px;">
+      <table width="100%" cellpadding="0" cellspacing="0">${sectionsHtml}</table>
+    </td></tr>
 
-    <div style="padding:20px 36px;border-top:1px solid #f0f0f0;text-align:center;">
-      <p style="font-size:11px;color:#ccc;margin:0;">You're receiving this because you subscribed to ${newsletterTitle} on The Latest.</p>
-    </div>
+    <!-- Bottom line -->
+    <tr><td style="padding:24px 40px;background:#f7f7f7;border-top:1px solid #f0f0f0;">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">The bottom line</p>
+      <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${digest.bottomLine}</p>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="padding:20px 40px;border-top:1px solid #f0f0f0;text-align:center;">
+      <p style="font-size:11px;color:#ccc;margin:0;">You're receiving this because you subscribed to <strong>${newsletterTitle}</strong> on The Latest.</p>
+    </td></tr>
+
+  </table>
   </div>
 </body>
 </html>`;

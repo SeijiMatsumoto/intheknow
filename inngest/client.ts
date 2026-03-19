@@ -5,7 +5,8 @@ type Events = {
   "newsletter/run": {
     data: {
       newsletterId: string;
-      userEmails?: string[]; // if set, skips subscriber lookup and sends only to these emails
+      userEmails?: string[]; // manual override — send only to these emails (internal trigger)
+      userIds?: string[]; // orchestrator-resolved subset of subscribers due this run
     };
   };
 

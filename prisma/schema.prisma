@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model UserPlan {
+  userId    String   @id @map("user_id")
+  plan      String   @default("free") // 'free' | 'pro'
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_plans")
+}
+
+model Newsletter {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String?
+  frequency   String   // 'daily' | 'weekly' | 'biweekly'
+  sources     Json     @default("{}")
+  keywords    String[]
+  isPublic    Boolean  @default(false) @map("is_public")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  subscriptions Subscription[]
+  digestRuns    DigestRun[]
+
+  @@map("newsletters")
+}
+
+model Subscription {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  newsletterId      String    @map("newsletter_id")
+  frequencyOverride String?   @map("frequency_override")
+  timezone          String?
+  digestLength      String    @default("standard") @map("digest_length") // 'brief' | 'standard' | 'deep_dive'
+  pausedAt          DateTime? @map("paused_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model DigestRun {
+  id             String    @id @default(uuid())
+  newsletterId   String    @map("newsletter_id")
+  runAt          DateTime  @map("run_at")
+  status         String    @default("pending") // 'pending' | 'running' | 'sent' | 'failed'
+  candidateItems Json?     @map("candidate_items")
+  passingItems   Json?     @map("passing_items")
+  content        Json?
+  emailHtml      String?   @map("email_html")
+  error          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  newsletter  Newsletter   @relation(fields: [newsletterId], references: [id])
+  digestSends DigestSend[]
+
+  @@map("digest_runs")
+}
+
+model DigestSend {
+  id       String    @id @default(uuid())
+  runId    String    @map("run_id")
+  userId   String    @map("user_id")
+  sentAt   DateTime? @map("sent_at")
+  status   String    // 'sent' | 'failed'
+
+  run DigestRun @relation(fields: [runId], references: [id])
+
+  @@map("digest_sends")
+}

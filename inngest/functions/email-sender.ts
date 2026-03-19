@@ -8,28 +8,30 @@ export const emailSender = inngest.createFunction(
     retries: 3,
     triggers: [{ event: "newsletter/email.generated" }],
   },
-  async ({ event }) => {
-    const { digestRunId, newsletterTitle, userId, userEmail, emailHtml } =
-      event.data;
+  async ({ event, logger }) => {
+    const { digestRunId, newsletterTitle, userId, userEmail, emailHtml } = event.data;
+    logger.info(`Sending email to ${userEmail}`, { digestRunId, userId, subject: newsletterTitle });
 
     const { data, error } = await resend.emails.send({
-      from: "The Latest <digest@thelatest.ai>",
+      from: "The Latest <onboarding@resend.dev>",
       to: userEmail,
       subject: newsletterTitle,
       html: emailHtml,
     });
 
+    if (error) {
+      logger.error(`Resend error for ${userEmail}`, { error });
+      await prisma.digestSend.create({
+        data: { runId: digestRunId, userId, sentAt: null, status: "failed" },
+      });
+      throw new Error(`Resend error: ${JSON.stringify(error)}`);
+    }
+
+    logger.info(`Email sent to ${userEmail} — messageId: ${data?.id}`);
     await prisma.digestSend.create({
-      data: {
-        runId: digestRunId,
-        userId,
-        sentAt: error ? null : new Date(),
-        status: error ? "failed" : "sent",
-      },
+      data: { runId: digestRunId, userId, sentAt: new Date(), status: "sent" },
     });
 
-    if (error) throw new Error(`Resend error: ${JSON.stringify(error)}`);
-
-    return { userId, messageId: data?.id };
+    return { userId, userEmail, messageId: data?.id };
   },
 );

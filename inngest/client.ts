@@ -5,6 +5,7 @@ type Events = {
   "newsletter/run": {
     data: {
       newsletterId: string;
+      userEmails?: string[]; // if set, skips subscriber lookup and sends only to these emails
     };
   };
 

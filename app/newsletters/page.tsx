@@ -30,7 +30,7 @@ export default async function NewslettersPage() {
             Subscribe to topics you want to stay current on.
           </p>
         </div>
-        <UserButton />
+        <UserButton userProfileUrl="/settings" userProfileMode="navigation" />
       </div>
 
       <ul className="divide-y divide-zinc-100">

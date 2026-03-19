@@ -3,25 +3,24 @@ import { prisma } from "@/lib/prisma";
 
 export const weeklyOrchestrator = inngest.createFunction(
   { id: "weekly-orchestrator", triggers: [{ cron: "0 8 * * 1" }] },
-  async ({ step }) => {
-    // Find all weekly newsletters that have at least one active subscriber
+  async ({ step, logger }) => {
+    logger.info("Weekly orchestrator started");
+
     const newsletters = await step.run("find-weekly-newsletters", async () => {
-      return prisma.newsletter.findMany({
-        where: {
-          frequency: "weekly",
-          subscriptions: {
-            some: { pausedAt: null },
-          },
-        },
+      const results = await prisma.newsletter.findMany({
+        where: { frequency: "weekly", subscriptions: { some: { pausedAt: null } } },
         select: { id: true, title: true },
       });
+      logger.info(`Found ${results.length} weekly newsletters with active subscribers`);
+      for (const n of results) logger.info(`  → ${n.title} (${n.id})`);
+      return results;
     });
 
     if (newsletters.length === 0) {
+      logger.info("No newsletters to process, exiting");
       return { fired: 0 };
     }
 
-    // Fan out — one worker invocation per newsletter
     await step.sendEvent(
       "fan-out-newsletter-workers",
       newsletters.map((n) => ({
@@ -30,6 +29,7 @@ export const weeklyOrchestrator = inngest.createFunction(
       })),
     );
 
+    logger.info(`Fired ${newsletters.length} newsletter/run events`);
     return { fired: newsletters.length };
   },
 );

@@ -1,4 +1,4 @@
-import type { DigestContent } from "./synthesize";
+import type { DigestContent } from "@/inngest/functions/newsletter-agent";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -21,17 +21,7 @@ export function renderEmail(
   newsletterTitle: string,
   frequency: string,
 ): string {
-  // Table of contents
-  const tocItems = digest.sections
-    .flatMap((s) =>
-      s.items.map(
-        (item) =>
-          `<li style="margin-bottom:4px;font-size:13px;color:#555;">${item.title}</li>`,
-      ),
-    )
-    .join("");
-
-  // Key takeaways
+  // In this edition (key takeaways)
   const takeawaysHtml = digest.keyTakeaways
     .map(
       (t) =>
@@ -81,15 +71,9 @@ export function renderEmail(
       <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">${digest.summary}</p>
     </td></tr>
 
-    <!-- Table of contents -->
-    <tr><td style="padding:20px 40px;background:#fafafa;border-bottom:1px solid #f0f0f0;">
-      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">In this edition</p>
-      <ul style="margin:0;padding-left:18px;">${tocItems}</ul>
-    </td></tr>
-
-    <!-- Key takeaways -->
+    <!-- In this edition (key takeaways) -->
     <tr><td style="padding:20px 40px;background:#fffbf0;border-bottom:1px solid #f0f0f0;">
-      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">⚡ Key takeaways</p>
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">⚡ In this edition</p>
       <ul style="margin:0;padding-left:18px;">${takeawaysHtml}</ul>
     </td></tr>
 

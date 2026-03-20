@@ -44,3 +44,6 @@ next-env.d.ts
 /markdowns/*
 
 /app/generated/prisma
+
+# smoketest output
+/scripts/smoketests/output/*.html

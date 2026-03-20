@@ -1,11 +1,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { inngest } from "@/inngest/client";
-import { filterItems } from "@/inngest/lib/filter-items";
 import { renderEmail } from "@/inngest/lib/render-email";
-import { scoreItems } from "@/inngest/lib/score-items";
-import { scrapeTwitter } from "@/inngest/lib/scrape-twitter";
-import { scrapeWeb } from "@/inngest/lib/scrape-web";
-import { synthesize } from "@/inngest/lib/synthesize";
+import { type NewsletterInput, runNewsletterAgent } from "./newsletter-agent";
 import {
   createDigestRun,
   failDigestRun,
@@ -14,7 +10,6 @@ import {
   getNewsletterSubscriptions,
   markDigestRunSent,
   saveDigestContent,
-  saveDigestItems,
 } from "./queries";
 
 function getReuseSince(frequency: string): Date {
@@ -22,7 +17,6 @@ function getReuseSince(frequency: string): Date {
   if (frequency === "daily") {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   }
-  // Start of ISO week (Monday)
   const diff = (now.getUTCDay() + 6) % 7;
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff));
 }
@@ -129,105 +123,47 @@ export const newsletterWorker = inngest.createFunction(
       return run;
     });
 
-    const sources = newsletter.sources as {
-      rss: string[];
-      twitter_queries: string[];
-      sites: string[];
-    };
+    const sources = newsletter.sources as NewsletterInput["sources"];
 
-    logger.info(
-      `Scraping — RSS: ${sources.rss?.length ?? 0}, sites: ${sources.sites?.length ?? 0}, twitter: ${sources.twitter_queries?.length ?? 0}`,
-    );
-
-    // 3. Scrape sources in parallel
-    const [webItems, twitterItems] = await Promise.all([
-      step.run("scrape-web", async () => {
-        const items = await scrapeWeb(
-          { rss: sources.rss ?? [], sites: sources.sites ?? [] },
-          newsletter.keywords,
-          newsletter.frequency,
+    // 3. Run agent — research + write newsletter
+    const { digest, stepCount, usage, toolCallCounts } = await step.run(
+      "run-agent",
+      async () => {
+        logger.info("Starting newsletter agent");
+        const result = await runNewsletterAgent({
+          title: newsletter.title,
+          description: newsletter.description,
+          frequency: newsletter.frequency,
+          keywords: newsletter.keywords,
+          sources,
+        });
+        logger.info(
+          `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount}, tokens in/out: ${result.usage.inputTokens}/${result.usage.outputTokens}, tools: ${JSON.stringify(result.toolCallCounts)}`,
         );
-        logger.info(`scrape-web returned ${items.length} items`);
-        return items;
-      }),
-      step.run("scrape-twitter", async () => {
-        const items = await scrapeTwitter(sources.twitter_queries ?? [], newsletter.keywords);
-        logger.info(`scrape-twitter returned ${items.length} items`);
-        return items;
-      }),
-    ]);
-
-    const allCandidates = [...webItems, ...twitterItems];
-    logger.info(`Total candidates: ${allCandidates.length}`);
-
-    if (allCandidates.length === 0) {
-      logger.warn("No candidates found — marking run as failed");
-      await failDigestRun(digestRun.id, "No candidates found from any source");
-      return { digestRunId: digestRun.id, skipped: true, reason: "no candidates" };
-    }
-
-    // 4. Score items
-    const scoredItems = await step.run("score-items", async () => {
-      const items = await scoreItems(
-        allCandidates,
-        newsletter.keywords,
-        newsletter.description ?? newsletter.title,
-        newsletter.frequency,
-      );
-      const avg = (items.reduce((s, i) => s + i.combinedScore, 0) / items.length).toFixed(2);
-      logger.info(`Scored ${items.length} items — avg: ${avg}`);
-      return items;
-    });
-
-    // 5. Filter + rank
-    const passingItems = await step.run("filter-items", async () => {
-      const items = filterItems(scoredItems);
-      logger.info(`${items.length}/${scoredItems.length} items passed threshold`);
-      for (const item of items) {
-        logger.info(`  [${item.combinedScore}] ${item.title}`);
-      }
-      return items;
-    });
-
-    await step.run("save-scored-items", () =>
-      saveDigestItems(digestRun.id, allCandidates, passingItems),
+        return result;
+      },
     );
 
-    if (passingItems.length === 0) {
-      logger.warn("No items passed score threshold — marking run as failed");
-      await failDigestRun(digestRun.id, "No items passed score threshold");
-      return { digestRunId: digestRun.id, skipped: true, reason: "no passing items" };
+    if (!digest) {
+      logger.warn("Agent returned no digest — marking run as failed");
+      await failDigestRun(digestRun.id, "Agent returned no digest");
+      return { digestRunId: digestRun.id, skipped: true, reason: "agent failed" };
     }
 
-    // 6. Synthesize
-    const digest = await step.run("synthesize", async () => {
-      logger.info(`Synthesizing from ${passingItems.length} items`);
-      const result = await synthesize(
-        passingItems,
-        newsletter.title,
-        newsletter.description ?? newsletter.title,
-        newsletter.frequency,
-      );
-      logger.info(
-        `Synthesis complete — "${result.editionTitle}", ${result.sections.length} section(s), ${result.keyTakeaways.length} takeaway(s)`,
-      );
-      return result;
-    });
-
-    // 7. Render email
+    // 4. Render email
     const emailHtml = await step.run("render-email", async () => {
       const html = renderEmail(digest, newsletter.title, newsletter.frequency);
       logger.info(`Email rendered (${html.length} chars)`);
       return html;
     });
 
-    // 8. Persist final content
+    // 5. Persist content
     await step.run("save-digest-content", async () => {
       await saveDigestContent(digestRun.id, digest, emailHtml);
       logger.info("Digest content saved");
     });
 
-    // 9. Fan out emails
+    // 6. Fan out emails
     await step.run("fan-out-emails", async () => {
       let emails: { userId: string; userEmail: string }[];
 
@@ -259,7 +195,7 @@ export const newsletterWorker = inngest.createFunction(
       logger.info(`Fired ${emails.length} newsletter/email.generated event(s)`);
     });
 
-    // 10. Mark as sent
+    // 7. Mark as sent
     await step.run("mark-sent", async () => {
       await markDigestRunSent(digestRun.id);
       logger.info("Digest run marked as sent");
@@ -267,6 +203,13 @@ export const newsletterWorker = inngest.createFunction(
 
     const recipientCount = recipientEmails.length || subscriptions.length;
     logger.info(`newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}`);
-    return { digestRunId: digestRun.id, recipientCount };
+    return {
+      digestRunId: digestRun.id,
+      recipientCount,
+      stepCount,
+      usage,
+      toolCallCounts,
+      agentSummary: digest.agentSummary,
+    };
   },
 );

@@ -10,11 +10,14 @@ const DIGEST_LENGTH_LIMITS: Record<string, number> = {
 
 export function filterItems(
   items: CandidateItem[],
-  digestLength = "standard"
+  digestLength = "standard",
 ): CandidateItem[] {
   const limit = DIGEST_LENGTH_LIMITS[digestLength] ?? 12;
   return items
-    .filter((item) => item.freshnessScore > 0 && item.combinedScore >= SCORE_THRESHOLD)
+    .filter(
+      (item) =>
+        item.freshnessScore > 0 && item.combinedScore >= SCORE_THRESHOLD,
+    )
     .sort((a, b) => b.combinedScore - a.combinedScore)
     .slice(0, limit);
 }

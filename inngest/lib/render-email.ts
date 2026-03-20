@@ -3,7 +3,11 @@ import type { DigestContent } from "./synthesize";
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function periodLabel(frequency: string): string {
@@ -19,7 +23,12 @@ export function renderEmail(
 ): string {
   // Table of contents
   const tocItems = digest.sections
-    .flatMap((s) => s.items.map((item) => `<li style="margin-bottom:4px;font-size:13px;color:#555;">${item.title}</li>`))
+    .flatMap((s) =>
+      s.items.map(
+        (item) =>
+          `<li style="margin-bottom:4px;font-size:13px;color:#555;">${item.title}</li>`,
+      ),
+    )
     .join("");
 
   // Key takeaways

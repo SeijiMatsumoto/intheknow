@@ -123,7 +123,8 @@ Only include articles genuinely relevant to the topics above. Skip opinion piece
   const data = await res.json();
   const raw = data.choices?.[0]?.message?.content ?? "{}";
 
-  let parsed: { articles: typeof ArticleListSchema._type.articles };
+  type ArticleList = z.infer<typeof ArticleListSchema>;
+  let parsed: ArticleList;
   try {
     parsed = ArticleListSchema.parse(JSON.parse(raw));
   } catch {

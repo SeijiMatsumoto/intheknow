@@ -1,9 +1,9 @@
 "use client";
 
-import { subscribe, unsubscribe } from "@/app/actions/subscriptions";
-import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useTransition } from "react";
+import { subscribe, unsubscribe } from "@/app/actions/subscriptions";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   newsletterId: string;
@@ -16,8 +16,8 @@ export function SubscribeButton({ newsletterId, subscriptionId }: Props) {
 
   function handleClick() {
     startTransition(async () => {
-      if (isSubscribed) {
-        await unsubscribe(subscriptionId!);
+      if (isSubscribed && subscriptionId) {
+        await unsubscribe(subscriptionId);
       } else {
         await subscribe(newsletterId);
       }

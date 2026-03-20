@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { Webhook } from "svix";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 
 const ClerkWebhookEventSchema = z.discriminatedUnion("type", [
   z.object({
@@ -36,7 +36,9 @@ export async function POST(req: Request) {
     });
     event = ClerkWebhookEventSchema.parse(verified);
   } catch {
-    return new Response("Invalid webhook signature or payload", { status: 400 });
+    return new Response("Invalid webhook signature or payload", {
+      status: 400,
+    });
   }
 
   if (event.type === "user.created") {

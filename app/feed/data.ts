@@ -18,7 +18,11 @@ export async function getFeedSends(userId: string, admin: boolean) {
   });
 }
 
-export async function getFeedDigest(runId: string, userId: string, admin: boolean) {
+export async function getFeedDigest(
+  runId: string,
+  userId: string,
+  admin: boolean,
+) {
   return prisma.digestSend.findFirst({
     where: { runId, userId: { in: userIds(userId, admin) } },
     include: {

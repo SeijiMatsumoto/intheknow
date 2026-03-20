@@ -1,12 +1,12 @@
-import { canUse } from "@/lib/gates"
-import { prisma } from "@/lib/prisma"
-import { nextRunDate } from "@/lib/schedule"
-import { auth } from "@clerk/nextjs/server"
-import { NewsletterHeader } from "@/components/newsletter-header"
-import { NewslettersClient } from "@/components/newsletters/newsletters-client"
+import { auth } from "@clerk/nextjs/server";
+import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewslettersClient } from "@/components/newsletters/newsletters-client";
+import { canUse } from "@/lib/gates";
+import { prisma } from "@/lib/prisma";
+import { nextRunDate } from "@/lib/schedule";
 
 export default async function NewslettersPage() {
-  const { userId } = await auth()
+  const { userId } = await auth();
 
   const [newsletters, subscriptions, canCreateNewsletter] = await Promise.all([
     prisma.newsletter.findMany({
@@ -18,22 +18,27 @@ export default async function NewslettersPage() {
     userId
       ? prisma.subscription.findMany({
           where: { userId },
-          select: { id: true, newsletterId: true, scheduleDays: true, scheduleHour: true },
+          select: {
+            id: true,
+            newsletterId: true,
+            scheduleDays: true,
+            scheduleHour: true,
+          },
         })
       : [],
     userId ? canUse(userId, "custom_newsletter") : false,
-  ])
+  ]);
 
-  const subMap = new Map(subscriptions.map((s) => [s.newsletterId, s]))
+  const subMap = new Map(subscriptions.map((s) => [s.newsletterId, s]));
 
   const items = newsletters.map((n) => {
-    const sub = subMap.get(n.id) ?? null
+    const sub = subMap.get(n.id) ?? null;
     const nextRun = nextRunDate(
       n.scheduleDays,
       n.scheduleHour,
       sub?.scheduleDays ?? [],
-      sub?.scheduleHour ?? null
-    )
+      sub?.scheduleHour ?? null,
+    );
 
     return {
       newsletter: {
@@ -47,10 +52,10 @@ export default async function NewslettersPage() {
       },
       subscriptionId: sub?.id ?? null,
       nextRunIso: nextRun.toISOString(),
-    }
-  })
+    };
+  });
 
-  const subscribedCount = subscriptions.length
+  const subscribedCount = subscriptions.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,11 +68,16 @@ export default async function NewslettersPage() {
             Stay in the know
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
-            Newsletters across everything that matters — AI, finance, politics, sports, and more. Subscribe to the topics you care about.
+            Newsletters across everything that matters — AI, finance, politics,
+            sports, and more. Subscribe to the topics you care about.
           </p>
         </div>
 
-        <NewslettersClient items={items} subscribedCount={subscribedCount} canCreateNewsletter={canCreateNewsletter} />
+        <NewslettersClient
+          items={items}
+          subscribedCount={subscribedCount}
+          canCreateNewsletter={canCreateNewsletter}
+        />
       </main>
 
       <footer className="border-t border-border bg-card/50 mt-16">
@@ -78,5 +88,5 @@ export default async function NewslettersPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

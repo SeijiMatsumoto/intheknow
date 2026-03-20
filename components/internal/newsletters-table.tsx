@@ -1,41 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useTransition } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Search, Trash2, Pencil, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { deleteNewsletterById } from "@/app/actions/newsletters"
-import { AddNewsletterModal } from "@/components/newsletters/add-newsletter-modal"
-import { TriggerButton } from "@/components/internal/trigger-button"
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Search,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { deleteNewsletterById } from "@/app/actions/newsletters";
+import { TriggerButton } from "@/components/internal/trigger-button";
+import { AddNewsletterModal } from "@/components/newsletters/add-newsletter-modal";
+import { cn } from "@/lib/utils";
 
 type Category = {
-  id: string
-  label: string
-}
+  id: string;
+  label: string;
+};
 
 type Newsletter = {
-  id: string
-  title: string
-  slug: string
-  frequency: string
-  categoryId: string | null
-  createdBy: string | null
-  category: { label: string } | null
-  _count: { subscriptions: number; digestRuns: number }
-}
+  id: string;
+  title: string;
+  slug: string;
+  frequency: string;
+  categoryId: string | null;
+  createdBy: string | null;
+  category: { label: string } | null;
+  _count: { subscriptions: number; digestRuns: number };
+};
 
 type DigestRun = {
-  id: string
-  status: string
-  runAt: Date
-  error: string | null
-  newsletter: { title: string }
-}
+  id: string;
+  status: string;
+  runAt: Date;
+  error: string | null;
+  newsletter: { title: string };
+};
 
 function DeleteButton({ id }: { id: string }) {
-  const [confirming, setConfirming] = useState(false)
-  const [, startTransition] = useTransition()
+  const [confirming, setConfirming] = useState(false);
+  const [, startTransition] = useTransition();
 
   if (confirming) {
     return (
@@ -56,7 +63,7 @@ function DeleteButton({ id }: { id: string }) {
           No
         </button>
       </span>
-    )
+    );
   }
 
   return (
@@ -68,7 +75,7 @@ function DeleteButton({ id }: { id: string }) {
     >
       <Trash2 className="h-3.5 w-3.5" />
     </button>
-  )
+  );
 }
 
 export function NewslettersTable({
@@ -79,28 +86,29 @@ export function NewslettersTable({
   totalPages,
   total,
 }: {
-  newsletters: Newsletter[]
-  recentRuns: DigestRun[]
-  categories: Category[]
-  page: number
-  totalPages: number
-  total: number
+  newsletters: Newsletter[];
+  recentRuns: DigestRun[];
+  categories: Category[];
+  page: number;
+  totalPages: number;
+  total: number;
 }) {
-  const router = useRouter()
-  const [showModal, setShowModal] = useState(false)
-  const [search, setSearch] = useState("")
-  const [frequency, setFrequency] = useState<"all" | "daily" | "weekly">("all")
-  const [type, setType] = useState<"all" | "system" | "user">("all")
-  const [category, setCategory] = useState<string>("all")
+  const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
+  const [frequency, setFrequency] = useState<"all" | "daily" | "weekly">("all");
+  const [type, setType] = useState<"all" | "system" | "user">("all");
+  const [category, setCategory] = useState<string>("all");
 
   const filtered = newsletters.filter((n) => {
-    if (search && !n.title.toLowerCase().includes(search.toLowerCase())) return false
-    if (frequency !== "all" && n.frequency !== frequency) return false
-    if (type === "system" && n.createdBy !== null) return false
-    if (type === "user" && n.createdBy === null) return false
-    if (category !== "all" && n.categoryId !== category) return false
-    return true
-  })
+    if (search && !n.title.toLowerCase().includes(search.toLowerCase()))
+      return false;
+    if (frequency !== "all" && n.frequency !== frequency) return false;
+    if (type === "system" && n.createdBy !== null) return false;
+    if (type === "user" && n.createdBy === null) return false;
+    if (category !== "all" && n.categoryId !== category) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-10">
@@ -174,14 +182,24 @@ export function NewslettersTable({
           >
             <option value="all">All categories</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.label}</option>
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
             ))}
           </select>
 
-          {(search || frequency !== "all" || type !== "all" || category !== "all") && (
+          {(search ||
+            frequency !== "all" ||
+            type !== "all" ||
+            category !== "all") && (
             <button
               type="button"
-              onClick={() => { setSearch(""); setFrequency("all"); setType("all"); setCategory("all") }}
+              onClick={() => {
+                setSearch("");
+                setFrequency("all");
+                setType("all");
+                setCategory("all");
+              }}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Clear
@@ -197,19 +215,34 @@ export function NewslettersTable({
           <table className="w-full text-sm">
             <thead className="bg-muted/40 border-b border-border">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Title</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Category</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Freq</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Type</th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Subs</th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Runs</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Title
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Category
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Freq
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Type
+                </th>
+                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                  Subs
+                </th>
+                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                  Runs
+                </th>
                 <th className="px-4 py-2.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-6 text-center text-sm text-muted-foreground"
+                  >
                     No newsletters match filters
                   </td>
                 </tr>
@@ -219,7 +252,9 @@ export function NewslettersTable({
                   <td className="px-4 py-2.5">
                     <div>
                       <p className="font-medium text-foreground">{n.title}</p>
-                      <p className="text-xs text-muted-foreground/60">{n.slug}</p>
+                      <p className="text-xs text-muted-foreground/60">
+                        {n.slug}
+                      </p>
                     </div>
                   </td>
                   <td className="px-4 py-2.5">
@@ -228,10 +263,14 @@ export function NewslettersTable({
                         {n.category.label}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground/40">—</span>
+                      <span className="text-xs text-muted-foreground/40">
+                        —
+                      </span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-xs capitalize text-muted-foreground">{n.frequency}</td>
+                  <td className="px-4 py-2.5 text-xs capitalize text-muted-foreground">
+                    {n.frequency}
+                  </td>
                   <td className="px-4 py-2.5">
                     <span
                       className={cn(
@@ -244,8 +283,12 @@ export function NewslettersTable({
                       {n.createdBy ? "user" : "system"}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-right text-sm tabular-nums">{n._count.subscriptions}</td>
-                  <td className="px-4 py-2.5 text-right text-sm tabular-nums">{n._count.digestRuns}</td>
+                  <td className="px-4 py-2.5 text-right text-sm tabular-nums">
+                    {n._count.subscriptions}
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-sm tabular-nums">
+                    {n._count.digestRuns}
+                  </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-1">
                       <TriggerButton newsletterId={n.id} />
@@ -323,23 +366,39 @@ export function NewslettersTable({
           <table className="w-full text-sm">
             <thead className="bg-muted/40 border-b border-border">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Newsletter</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Run At</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Error</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Newsletter
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Run At
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Error
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {recentRuns.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={4}
+                    className="px-4 py-6 text-center text-sm text-muted-foreground"
+                  >
                     No runs yet
                   </td>
                 </tr>
               )}
               {recentRuns.map((run) => (
-                <tr key={run.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-2.5 font-medium">{run.newsletter.title}</td>
+                <tr
+                  key={run.id}
+                  className="hover:bg-muted/20 transition-colors"
+                >
+                  <td className="px-4 py-2.5 font-medium">
+                    {run.newsletter.title}
+                  </td>
                   <td className="px-4 py-2.5">
                     <span
                       className={cn(
@@ -379,11 +438,11 @@ export function NewslettersTable({
           canCreate={true}
           onClose={() => setShowModal(false)}
           onCreated={() => {
-            setShowModal(false)
-            router.refresh()
+            setShowModal(false);
+            router.refresh();
           }}
         />
       )}
     </div>
-  )
+  );
 }

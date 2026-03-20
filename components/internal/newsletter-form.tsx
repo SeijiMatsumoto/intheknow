@@ -1,10 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { Button } from "@/components/ui/button";
 
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 type Sources = {
   rss?: string[];
@@ -26,7 +34,10 @@ type NewsletterFormProps = {
   };
 };
 
-export function NewsletterForm({ action, defaultValues: d = {} }: NewsletterFormProps) {
+export function NewsletterForm({
+  action,
+  defaultValues: d = {},
+}: NewsletterFormProps) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -43,15 +54,32 @@ export function NewsletterForm({ action, defaultValues: d = {} }: NewsletterForm
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Field label="Title" name="title" defaultValue={d.title} required />
-        <Field label="Slug" name="slug" defaultValue={d.slug} placeholder="auto-generated if empty" />
+        <Field
+          label="Slug"
+          name="slug"
+          defaultValue={d.slug}
+          placeholder="auto-generated if empty"
+        />
       </div>
 
-      <Field label="Description" name="description" defaultValue={d.description ?? ""} multiline rows={2} />
+      <Field
+        label="Description"
+        name="description"
+        defaultValue={d.description ?? ""}
+        multiline
+        rows={2}
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">Frequency</label>
+          <label
+            htmlFor="frequency"
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            Frequency
+          </label>
           <select
+            id="frequency"
             name="frequency"
             defaultValue={d.frequency ?? "weekly"}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -94,12 +122,15 @@ export function NewsletterForm({ action, defaultValues: d = {} }: NewsletterForm
       />
 
       <div>
-        <label className="mb-2 block text-xs font-medium text-muted-foreground">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">
           Send on (UTC)
-        </label>
+        </p>
         <div className="flex flex-wrap gap-3">
           {DAYS.map((day) => (
-            <label key={day} className="flex items-center gap-1.5 text-sm capitalize">
+            <label
+              key={day}
+              className="flex items-center gap-1.5 text-sm capitalize"
+            >
               <input
                 type="checkbox"
                 name="scheduleDays"
@@ -113,8 +144,14 @@ export function NewsletterForm({ action, defaultValues: d = {} }: NewsletterForm
       </div>
 
       <div className="w-40">
-        <label className="mb-1 block text-xs font-medium text-muted-foreground">Hour (UTC, 0–23)</label>
+        <label
+          htmlFor="scheduleHour"
+          className="mb-1 block text-xs font-medium text-muted-foreground"
+        >
+          Hour (UTC, 0–23)
+        </label>
         <input
+          id="scheduleHour"
           type="number"
           name="scheduleHour"
           min={0}
@@ -124,7 +161,7 @@ export function NewsletterForm({ action, defaultValues: d = {} }: NewsletterForm
         />
       </div>
 
-<div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save"}
         </Button>
@@ -146,14 +183,28 @@ type FieldProps = {
   rows?: number;
 };
 
-function Field({ label, name, defaultValue, placeholder, required, multiline, rows = 3 }: FieldProps) {
+function Field({
+  label,
+  name,
+  defaultValue,
+  placeholder,
+  required,
+  multiline,
+  rows = 3,
+}: FieldProps) {
   const baseClass =
     "w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring";
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>
+      <label
+        htmlFor={name}
+        className="mb-1 block text-xs font-medium text-muted-foreground"
+      >
+        {label}
+      </label>
       {multiline ? (
         <textarea
+          id={name}
           name={name}
           defaultValue={defaultValue}
           placeholder={placeholder}
@@ -162,6 +213,7 @@ function Field({ label, name, defaultValue, placeholder, required, multiline, ro
         />
       ) : (
         <input
+          id={name}
           type="text"
           name={name}
           defaultValue={defaultValue}

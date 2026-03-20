@@ -1,6 +1,6 @@
+import { NewslettersTable } from "@/components/internal/newsletters-table";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { prisma } from "@/lib/prisma";
-import { NewslettersTable } from "@/components/internal/newsletters-table";
 
 const PAGE_SIZE = 50;
 
@@ -13,25 +13,26 @@ export default async function InternalPage({
   const page = Math.max(1, Number(pageParam) || 1);
   const skip = (page - 1) * PAGE_SIZE;
 
-  const [newsletters, total, recentRuns, totalSubscriptions, categories] = await Promise.all([
-    prisma.newsletter.findMany({
-      orderBy: { title: "asc" },
-      skip,
-      take: PAGE_SIZE,
-      include: {
-        _count: { select: { subscriptions: true, digestRuns: true } },
-        category: { select: { label: true } },
-      },
-    }),
-    prisma.newsletter.count(),
-    prisma.digestRun.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      include: { newsletter: { select: { title: true } } },
-    }),
-    prisma.subscription.count({ where: { pausedAt: null } }),
-    prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
-  ]);
+  const [newsletters, total, recentRuns, totalSubscriptions, categories] =
+    await Promise.all([
+      prisma.newsletter.findMany({
+        orderBy: { title: "asc" },
+        skip,
+        take: PAGE_SIZE,
+        include: {
+          _count: { select: { subscriptions: true, digestRuns: true } },
+          category: { select: { label: true } },
+        },
+      }),
+      prisma.newsletter.count(),
+      prisma.digestRun.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        include: { newsletter: { select: { title: true } } },
+      }),
+      prisma.subscription.count({ where: { pausedAt: null } }),
+      prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
+    ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 

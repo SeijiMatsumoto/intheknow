@@ -5,10 +5,23 @@ import { Lock } from "lucide-react";
 import { useState } from "react";
 import { ScheduleEditor } from "@/components/newsletters/schedule-editor";
 
-const UTC_DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const UTC_DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
 const DAY_SHORT: Record<string, string> = {
-  monday: "Mon", tuesday: "Tue", wednesday: "Wed",
-  thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun",
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
 };
 
 function toLocalDays(utcDays: string[], nextRun: Date): string[] {
@@ -23,7 +36,11 @@ function formatScheduleLabel(localDays: string[], nextRun: Date): string {
   const timeStr = format(nextRun, "h:mmaaa");
   if (localDays.length === 0) return "No scheduled runs";
   if (localDays.length === 7) return `Every day at ${timeStr}`;
-  if (localDays.length === 5 && !localDays.includes("saturday") && !localDays.includes("sunday"))
+  if (
+    localDays.length === 5 &&
+    !localDays.includes("saturday") &&
+    !localDays.includes("sunday")
+  )
     return `Weekdays at ${timeStr}`;
   return `Every ${localDays.map((d) => DAY_SHORT[d] ?? d).join(", ")} at ${timeStr}`;
 }
@@ -97,7 +114,8 @@ export function SubscriptionRow({
           <div>
             <p className="text-sm font-medium text-foreground">Pro feature</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Upgrade to Pro to customize delivery days and time for each newsletter.
+              Upgrade to Pro to customize delivery days and time for each
+              newsletter.
             </p>
           </div>
         </div>

@@ -1,22 +1,35 @@
 "use client";
 
-import { updateSubscriptionSchedule } from "@/app/actions/subscriptions";
 import { useTransition } from "react";
+import { updateSubscriptionSchedule } from "@/app/actions/subscriptions";
 
-const ALL_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const ALL_DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 const DAY_SHORT: Record<string, string> = {
-  monday: "Mon", tuesday: "Tue", wednesday: "Wed",
-  thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun",
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
 };
 
 function utcToLocalHour(utcHour: number): number {
   const offset = new Date().getTimezoneOffset(); // minutes, positive = UTC-x
-  return ((utcHour - offset / 60) + 24) % 24;
+  return (utcHour - offset / 60 + 24) % 24;
 }
 
 function localToUtcHour(localHour: number): number {
   const offset = new Date().getTimezoneOffset();
-  return ((localHour + offset / 60) + 24) % 24;
+  return (localHour + offset / 60 + 24) % 24;
 }
 
 function formatHour(h: number): string {
@@ -28,11 +41,11 @@ function formatHour(h: number): string {
 
 type Props = {
   subscriptionId: string;
-  frequency: string;           // "daily" | "weekly"
-  newsletterHour: number;      // UTC — newsletter default
-  currentDays: string[];       // user override ([] = newsletter default)
-  currentHour: number | null;  // user override (null = newsletter default)
-  newsletterDays: string[];    // newsletter default days
+  frequency: string; // "daily" | "weekly"
+  newsletterHour: number; // UTC — newsletter default
+  currentDays: string[]; // user override ([] = newsletter default)
+  currentHour: number | null; // user override (null = newsletter default)
+  newsletterDays: string[]; // newsletter default days
   onClose: () => void;
 };
 
@@ -86,9 +99,15 @@ export function ScheduleEditor({
   const hasOverride = currentDays.length > 0 || currentHour !== null;
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 rounded-lg border bg-zinc-50 p-4 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="mt-3 rounded-lg border bg-zinc-50 p-4 space-y-4"
+    >
       {isDaily ? (
-        <p className="text-xs text-zinc-400">This is a daily newsletter — it arrives every day. You can change the time below.</p>
+        <p className="text-xs text-zinc-400">
+          This is a daily newsletter — it arrives every day. You can change the
+          time below.
+        </p>
       ) : (
         <div>
           <p className="mb-2 text-xs font-medium text-zinc-500">Day</p>
@@ -113,14 +132,18 @@ export function ScheduleEditor({
       )}
 
       <div>
-        <p className="mb-2 text-xs font-medium text-zinc-500">Time (your local time)</p>
+        <p className="mb-2 text-xs font-medium text-zinc-500">
+          Time (your local time)
+        </p>
         <select
           name="hour"
           defaultValue={defaultLocalHour}
           className="rounded-md border border-input bg-white px-3 py-1.5 text-sm"
         >
-          {Array.from({ length: 24 }, (_, i) => (
-            <option key={i} value={i}>{formatHour(i)}</option>
+          {([...Array(24).keys()] as number[]).map((hour) => (
+            <option key={hour} value={hour}>
+              {formatHour(hour)}
+            </option>
           ))}
         </select>
       </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { triggerDigest } from "@/app/actions/trigger-digest";
 import { Play } from "lucide-react";
 import { useTransition } from "react";
+import { triggerDigest } from "@/app/actions/trigger-digest";
 
 export function TriggerButton({ newsletterId }: { newsletterId: string }) {
   const [isPending, startTransition] = useTransition();

@@ -1,11 +1,11 @@
-import { SignInModalButton } from "@/components/sign-in-button"
-import { Button } from "@/components/ui/button"
-import { auth } from "@clerk/nextjs/server"
-import { Zap, ArrowRight } from "lucide-react"
-import Link from "next/link"
+import { auth } from "@clerk/nextjs/server";
+import { ArrowRight, Zap } from "lucide-react";
+import Link from "next/link";
+import { SignInModalButton } from "@/components/sign-in-button";
+import { Button } from "@/components/ui/button";
 
 export default async function Home() {
-  const { userId } = await auth()
+  const { userId } = await auth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -17,12 +17,17 @@ export default async function Home() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
                 <Zap className="h-4 w-4 text-accent-foreground" />
               </div>
-              <span className="text-lg font-semibold text-foreground">The Latest</span>
+              <span className="text-lg font-semibold text-foreground">
+                The Latest
+              </span>
             </div>
             <nav className="flex items-center gap-4">
               {userId ? (
                 <Button size="sm">
-                  <Link href="/newsletters" className="flex items-center gap-1.5">
+                  <Link
+                    href="/newsletters"
+                    className="flex items-center gap-1.5"
+                  >
                     Browse newsletters
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
@@ -44,13 +49,12 @@ export default async function Home() {
           </div>
 
           <h1 className="text-5xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl text-balance">
-            Stay ahead of{" "}
-            <span className="text-accent">what matters</span>
+            Stay ahead of <span className="text-accent">what matters</span>
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground text-pretty">
-            Curated AI-powered digests on the topics you care about, delivered on your schedule.
-            Subscribe once, stay informed always.
+            Curated AI-powered digests on the topics you care about, delivered
+            on your schedule. Subscribe once, stay informed always.
           </p>
 
           <div className="mt-10 flex items-center gap-4">
@@ -77,5 +81,5 @@ export default async function Home() {
         </div>
       </main>
     </div>
-  )
+  );
 }

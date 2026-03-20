@@ -1,45 +1,50 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
+import { auth } from "@clerk/nextjs/server";
 import {
   ArrowLeft,
   Calendar,
+  CheckCircle2,
   Clock,
   Sparkles,
-  CheckCircle2,
   Zap,
-} from "lucide-react"
-import { auth } from "@clerk/nextjs/server"
-import { prisma } from "@/lib/prisma"
-import { canUse } from "@/lib/gates"
-import { nextRunDate } from "@/lib/schedule"
-import { SubscribeButton } from "@/components/newsletters/subscribe-button"
-import { SubscriptionRow } from "@/components/newsletters/subscription-row"
-import { getCategory } from "@/lib/categories"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { SubscribeButton } from "@/components/newsletters/subscribe-button";
+import { SubscriptionRow } from "@/components/newsletters/subscription-row";
+import { getCategory } from "@/lib/categories";
+import { canUse } from "@/lib/gates";
+import { prisma } from "@/lib/prisma";
+import { nextRunDate } from "@/lib/schedule";
+import { cn } from "@/lib/utils";
 
 const DAY_LABELS: Record<string, string> = {
-  monday: "Mon", tuesday: "Tue", wednesday: "Wed",
-  thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun",
-}
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
+};
 
 function formatHour(hour: number) {
-  const h = hour % 12 || 12
-  return `${h}:00${hour < 12 ? "am" : "pm"} UTC`
+  const h = hour % 12 || 12;
+  return `${h}:00${hour < 12 ? "am" : "pm"} UTC`;
 }
 
 export default async function NewsletterDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params
-  const { userId } = await auth()
+  const { slug } = await params;
+  const { userId } = await auth();
 
   const newsletter = await prisma.newsletter.findUnique({
     where: { slug },
-  })
+  });
 
-  if (!newsletter) notFound()
+  if (!newsletter) notFound();
 
   const [subscription, canCustomize, digestRunCount] = await Promise.all([
     userId
@@ -51,14 +56,14 @@ export default async function NewsletterDetailPage({
     prisma.digestRun.count({
       where: { newsletterId: newsletter.id, status: "sent" },
     }),
-  ])
+  ]);
 
   const nextRun = nextRunDate(
     newsletter.scheduleDays,
     newsletter.scheduleHour,
     subscription?.scheduleDays ?? [],
-    subscription?.scheduleHour ?? null
-  )
+    subscription?.scheduleHour ?? null,
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,7 +83,9 @@ export default async function NewsletterDetailPage({
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
                 <Zap className="h-3.5 w-3.5 text-accent-foreground" />
               </div>
-              <span className="text-sm font-semibold text-foreground">The Latest</span>
+              <span className="text-sm font-semibold text-foreground">
+                The Latest
+              </span>
             </Link>
             <SubscribeButton
               newsletterId={newsletter.id}
@@ -93,33 +100,43 @@ export default async function NewsletterDetailPage({
         <div className="mb-12">
           <div className="flex items-start gap-6">
             {(() => {
-              const cat = getCategory(newsletter.categoryId)
-              const CatIcon = cat.icon
+              const cat = getCategory(newsletter.categoryId);
+              const CatIcon = cat.icon;
               return (
-                <div className={cn("flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl", cat.bg)}>
+                <div
+                  className={cn(
+                    "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl",
+                    cat.bg,
+                  )}
+                >
                   <CatIcon className={cn("h-10 w-10", cat.color)} />
                 </div>
-              )
+              );
             })()}
 
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3 flex-wrap">
                 {(() => {
-                  const cat = getCategory(newsletter.categoryId)
-                  const CatIcon = cat.icon
+                  const cat = getCategory(newsletter.categoryId);
+                  const CatIcon = cat.icon;
                   return (
-                    <span className={cn("flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium", cat.pill)}>
+                    <span
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                        cat.pill,
+                      )}
+                    >
                       <CatIcon className="h-3 w-3" />
                       {cat.label}
                     </span>
-                  )
+                  );
                 })()}
                 <span
                   className={cn(
                     "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
                     newsletter.frequency === "daily"
                       ? "border-accent/30 bg-accent/10 text-accent"
-                      : "border-muted-foreground/30 text-muted-foreground"
+                      : "border-muted-foreground/30 text-muted-foreground",
                   )}
                 >
                   {newsletter.frequency === "daily" ? (
@@ -170,7 +187,9 @@ export default async function NewsletterDetailPage({
           <div className="lg:col-span-2 space-y-8">
             {/* Topics covered as keywords */}
             <section className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Topics covered</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Topics covered
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {newsletter.keywords.map((kw) => (
                   <div
@@ -178,7 +197,9 @@ export default async function NewsletterDetailPage({
                     className="flex items-center gap-2 rounded-lg bg-secondary/50 px-4 py-2.5"
                   >
                     <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
-                    <span className="text-sm text-foreground capitalize">{kw}</span>
+                    <span className="text-sm text-foreground capitalize">
+                      {kw}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -187,7 +208,9 @@ export default async function NewsletterDetailPage({
             {/* Subscription schedule row (if subscribed) */}
             {subscription && (
               <section className="rounded-2xl border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Your subscription</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  Your subscription
+                </h2>
                 <SubscriptionRow
                   subscriptionId={subscription.id}
                   frequency={newsletter.frequency}
@@ -206,7 +229,9 @@ export default async function NewsletterDetailPage({
           <div className="space-y-6">
             {/* Delivery schedule */}
             <section className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Delivery schedule</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Delivery schedule
+              </h2>
 
               <div className="space-y-4">
                 <div className="rounded-xl bg-secondary/50 p-4">
@@ -216,7 +241,9 @@ export default async function NewsletterDetailPage({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">
-                        {newsletter.frequency === "daily" ? "Every day" : "Once a week"}
+                        {newsletter.frequency === "daily"
+                          ? "Every day"
+                          : "Once a week"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatHour(newsletter.scheduleHour)}
@@ -227,16 +254,26 @@ export default async function NewsletterDetailPage({
 
                 {newsletter.scheduleDays.length > 0 && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-2">Scheduled days</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Scheduled days
+                    </p>
                     <div className="flex flex-wrap gap-1">
-                      {["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].map((day) => (
+                      {[
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday",
+                      ].map((day) => (
                         <span
                           key={day}
                           className={cn(
                             "rounded-md px-2 py-1 text-xs font-medium",
                             newsletter.scheduleDays.includes(day)
                               ? "bg-accent/20 text-accent"
-                              : "bg-secondary text-muted-foreground"
+                              : "bg-secondary text-muted-foreground",
                           )}
                         >
                           {DAY_LABELS[day]}
@@ -250,16 +287,28 @@ export default async function NewsletterDetailPage({
 
             {/* Stats */}
             <section className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Stats</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Stats
+              </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Issues sent</span>
-                  <span className="text-sm font-medium text-foreground">{digestRunCount}</span>
+                  <span className="text-sm text-muted-foreground">
+                    Issues sent
+                  </span>
+                  <span className="text-sm font-medium text-foreground">
+                    {digestRunCount}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Next delivery</span>
+                  <span className="text-sm text-muted-foreground">
+                    Next delivery
+                  </span>
                   <span className="text-sm font-medium text-foreground">
-                    {nextRun.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    {nextRun.toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </span>
                 </div>
               </div>
@@ -276,5 +325,5 @@ export default async function NewsletterDetailPage({
         </div>
       </footer>
     </div>
-  )
+  );
 }

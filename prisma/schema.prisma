@@ -15,6 +15,15 @@ model UserPlan {
   @@map("user_plans")
 }
 
+model Category {
+  id        String       @id // slug e.g. "ai-tech"
+  label     String
+  sortOrder Int          @default(0) @map("sort_order")
+  newsletters Newsletter[]
+
+  @@map("categories")
+}
+
 model Newsletter {
   id           String   @id @default(uuid())
   title        String
@@ -25,14 +34,15 @@ model Newsletter {
   scheduleHour Int      @default(8) @map("schedule_hour")  // UTC hour (0–23)
   sources      Json     @default("{}")
   keywords     String[]
-  isPublic     Boolean  @default(false) @map("is_public")
-  isSystem     Boolean  @default(false) @map("is_system")
+  categoryId   String   @default("ai-tech") @map("category_id")
   createdBy    String?  @map("created_by")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  category      Category       @relation(fields: [categoryId], references: [id])
   subscriptions Subscription[]
   digestRuns    DigestRun[]
 
+  @@index([createdBy])
   @@map("newsletters")
 }
 
@@ -48,6 +58,9 @@ model Subscription {
 
   newsletter Newsletter @relation(fields: [newsletterId], references: [id])
 
+  @@index([userId])
+  @@index([newsletterId])
+  @@index([userId, newsletterId])
   @@map("subscriptions")
 }
 
@@ -66,6 +79,7 @@ model DigestRun {
   newsletter  Newsletter   @relation(fields: [newsletterId], references: [id])
   digestSends DigestSend[]
 
+  @@index([newsletterId, status, runAt])
   @@map("digest_runs")
 }
 
@@ -78,5 +92,7 @@ model DigestSend {
 
   run DigestRun @relation(fields: [runId], references: [id])
 
+  @@index([userId, status])
+  @@index([runId, userId])
   @@map("digest_sends")
 }

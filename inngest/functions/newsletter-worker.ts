@@ -1,12 +1,12 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { inngest } from "@/inngest/client";
 import { filterItems } from "@/inngest/lib/filter-items";
 import { renderEmail } from "@/inngest/lib/render-email";
+import { scoreItems } from "@/inngest/lib/score-items";
 import { scrapeTwitter } from "@/inngest/lib/scrape-twitter";
 import { scrapeWeb } from "@/inngest/lib/scrape-web";
-import { scoreItems } from "@/inngest/lib/score-items";
 import { synthesize } from "@/inngest/lib/synthesize";
 import { prisma } from "@/lib/prisma";
-import { clerkClient } from "@clerk/nextjs/server";
 
 export const newsletterWorker = inngest.createFunction(
   {
@@ -16,41 +16,153 @@ export const newsletterWorker = inngest.createFunction(
   },
   async ({ event, step, logger }) => {
     const { newsletterId, userEmails, userIds } = event.data;
-    logger.info(`newsletter-worker started`, { newsletterId, userEmails, userIds });
+    logger.info(`newsletter-worker started`, {
+      newsletterId,
+      userEmails,
+      userIds,
+    });
 
     // 1. Load newsletter + relevant subscriptions
-    const { newsletter, subscriptions } = await step.run("load-newsletter", async () => {
-      const newsletter = await prisma.newsletter.findUniqueOrThrow({
-        where: { id: newsletterId },
-      });
-      logger.info(`Loaded newsletter: "${newsletter.title}" (${newsletter.frequency})`);
+    const { newsletter, subscriptions, recentRun } = await step.run(
+      "load-newsletter",
+      async () => {
+        const newsletter = await prisma.newsletter.findUniqueOrThrow({
+          where: { id: newsletterId },
+        });
+        logger.info(
+          `Loaded newsletter: "${newsletter.title}" (${newsletter.frequency})`,
+        );
 
-      // userEmails = manual email override (internal trigger), skip subscriber lookup
-      // userIds = orchestrator-resolved subset of subscribers
-      // neither = all active subscribers
-      const subscriptions =
-        userEmails
+        // userEmails = manual email override (internal trigger), skip subscriber lookup
+        // userIds = orchestrator-resolved subset of subscribers
+        // neither = all active subscribers
+        const subscriptions = userEmails
           ? []
           : userIds
             ? await prisma.subscription.findMany({
-                where: { newsletterId, pausedAt: null, userId: { in: userIds } },
+                where: {
+                  newsletterId,
+                  pausedAt: null,
+                  userId: { in: userIds },
+                },
               })
-            : await prisma.subscription.findMany({ where: { newsletterId, pausedAt: null } });
+            : await prisma.subscription.findMany({
+                where: { newsletterId, pausedAt: null },
+              });
 
-      if (userEmails) {
-        logger.info(`Email override active — sending to: ${userEmails.join(", ")}`);
-      } else {
-        logger.info(`Found ${subscriptions.length} subscriber(s) for this run`);
-      }
+        if (userEmails) {
+          logger.info(
+            `Email override active — sending to: ${userEmails.join(", ")}`,
+          );
+        } else {
+          logger.info(
+            `Found ${subscriptions.length} subscriber(s) for this run`,
+          );
+        }
 
-      return { newsletter, subscriptions };
-    });
+        // Check for a recent sent run we can reuse (system newsletters only)
+        let recentRun = null;
+        if (!newsletter.createdBy && !userEmails) {
+          const now = new Date();
+          const since =
+            newsletter.frequency === "daily"
+              ? new Date(
+                  Date.UTC(
+                    now.getUTCFullYear(),
+                    now.getUTCMonth(),
+                    now.getUTCDate(),
+                  ),
+                )
+              : (() => {
+                  // Start of this ISO week (Monday)
+                  const day = now.getUTCDay(); // 0=Sun
+                  const diff = (day + 6) % 7; // days since Monday
+                  return new Date(
+                    Date.UTC(
+                      now.getUTCFullYear(),
+                      now.getUTCMonth(),
+                      now.getUTCDate() - diff,
+                    ),
+                  );
+                })();
+
+          recentRun = await prisma.digestRun.findFirst({
+            where: { newsletterId, status: "sent", runAt: { gte: since } },
+            orderBy: { runAt: "desc" },
+          });
+
+          if (recentRun) {
+            logger.info(
+              `Found recent run ${recentRun.id} (${recentRun.runAt.toISOString()}) — will reuse`,
+            );
+          }
+        }
+
+        return { newsletter, subscriptions, recentRun };
+      },
+    );
 
     const recipientEmails = userEmails ?? [];
 
     if (!userEmails && subscriptions.length === 0) {
       logger.info("No subscribers for this run, skipping");
-      return { newsletterId, skipped: true, reason: "no subscribers for this run" };
+      return {
+        newsletterId,
+        skipped: true,
+        reason: "no subscribers for this run",
+      };
+    }
+
+    // 2a. Reuse recent run — skip generation, fan out emails directly
+    if (recentRun?.emailHtml) {
+      logger.info(`Reusing digest run ${recentRun.id} — skipping generation`);
+
+      await step.run("fan-out-emails-reuse", async () => {
+        const clerk = await clerkClient();
+        const userList = await clerk.users.getUserList({
+          userId: subscriptions.map((s) => s.userId),
+          limit: subscriptions.length,
+        });
+        const emailMap = new Map(
+          userList.data.map((u) => [u.id, u.emailAddresses[0]?.emailAddress]),
+        );
+        const emails = subscriptions
+          .map((sub) => {
+            const email = emailMap.get(sub.userId);
+            if (!email)
+              logger.warn(`No email for userId ${sub.userId}, skipping`);
+            return email ? { userId: sub.userId, userEmail: email } : null;
+          })
+          .filter(
+            (e): e is { userId: string; userEmail: string } => e !== null,
+          );
+
+        if (emails.length === 0) {
+          logger.warn("No valid recipients for reuse — skipping");
+          return;
+        }
+
+        const content = recentRun.content as { editionTitle?: string } | null;
+        await inngest.send(
+          emails.map((e) => ({
+            name: "newsletter/email.generated" as const,
+            data: {
+              digestRunId: recentRun.id,
+              newsletterTitle: content?.editionTitle ?? newsletter.title,
+              userId: e.userId,
+              userEmail: e.userEmail,
+              emailHtml: recentRun.emailHtml,
+            },
+          })),
+        );
+        logger.info(`Fired ${emails.length} email(s) using cached run`);
+      });
+
+      return {
+        digestRunId: recentRun.id,
+        reused: true,
+        recipientCount: subscriptions.length,
+      };
     }
 
     // 2. Create digest run
@@ -69,19 +181,25 @@ export const newsletterWorker = inngest.createFunction(
     };
 
     // 3. Scrape sources in parallel
-    logger.info(`Scraping — RSS: ${sources.rss?.length ?? 0}, sites: ${sources.sites?.length ?? 0}, twitter queries: ${sources.twitter_queries?.length ?? 0}`);
+    logger.info(
+      `Scraping — RSS: ${sources.rss?.length ?? 0}, sites: ${sources.sites?.length ?? 0}, twitter queries: ${sources.twitter_queries?.length ?? 0}`,
+    );
 
     const [webItems, twitterItems] = await Promise.all([
       step.run("scrape-web", async () => {
         const items = await scrapeWeb(
           { rss: sources.rss ?? [], sites: sources.sites ?? [] },
           newsletter.keywords,
+          newsletter.frequency,
         );
         logger.info(`scrape-web returned ${items.length} items`);
         return items;
       }),
       step.run("scrape-twitter", async () => {
-        const items = await scrapeTwitter(sources.twitter_queries ?? [], newsletter.keywords);
+        const items = await scrapeTwitter(
+          sources.twitter_queries ?? [],
+          newsletter.keywords,
+        );
         logger.info(`scrape-twitter returned ${items.length} items`);
         return items;
       }),
@@ -91,12 +209,21 @@ export const newsletterWorker = inngest.createFunction(
     logger.info(`Total candidates: ${allCandidates.length}`);
 
     if (allCandidates.length === 0) {
-      logger.warn("No candidates found from any source — marking run as failed");
+      logger.warn(
+        "No candidates found from any source — marking run as failed",
+      );
       await prisma.digestRun.update({
         where: { id: digestRun.id },
-        data: { status: "failed", error: "No candidates found from any source" },
+        data: {
+          status: "failed",
+          error: "No candidates found from any source",
+        },
       });
-      return { digestRunId: digestRun.id, skipped: true, reason: "no candidates" };
+      return {
+        digestRunId: digestRun.id,
+        skipped: true,
+        reason: "no candidates",
+      };
     }
 
     // 4. Score items
@@ -107,7 +234,9 @@ export const newsletterWorker = inngest.createFunction(
         newsletter.description ?? newsletter.title,
         newsletter.frequency,
       );
-      const avg = (items.reduce((s, i) => s + i.combinedScore, 0) / items.length).toFixed(2);
+      const avg = (
+        items.reduce((s, i) => s + i.combinedScore, 0) / items.length
+      ).toFixed(2);
       logger.info(`Scored ${items.length} items — avg combined score: ${avg}`);
       return items;
     });
@@ -115,7 +244,9 @@ export const newsletterWorker = inngest.createFunction(
     // 5. Filter + rank
     const passingItems = await step.run("filter-items", async () => {
       const items = filterItems(scoredItems);
-      logger.info(`${items.length}/${scoredItems.length} items passed threshold`);
+      logger.info(
+        `${items.length}/${scoredItems.length} items passed threshold`,
+      );
       for (const item of items) {
         logger.info(`  [${item.combinedScore}] ${item.title}`);
       }
@@ -135,7 +266,11 @@ export const newsletterWorker = inngest.createFunction(
         where: { id: digestRun.id },
         data: { status: "failed", error: "No items passed score threshold" },
       });
-      return { digestRunId: digestRun.id, skipped: true, reason: "no passing items" };
+      return {
+        digestRunId: digestRun.id,
+        skipped: true,
+        reason: "no passing items",
+      };
     }
 
     // 6. Synthesize
@@ -147,7 +282,9 @@ export const newsletterWorker = inngest.createFunction(
         newsletter.description ?? newsletter.title,
         newsletter.frequency,
       );
-      logger.info(`Synthesis complete — "${result.editionTitle}", ${result.sections.length} section(s), ${result.keyTakeaways.length} takeaway(s)`);
+      logger.info(
+        `Synthesis complete — "${result.editionTitle}", ${result.sections.length} section(s), ${result.keyTakeaways.length} takeaway(s)`,
+      );
       return result;
     });
 
@@ -172,20 +309,32 @@ export const newsletterWorker = inngest.createFunction(
       let emails: { userId: string; userEmail: string }[];
 
       if (recipientEmails.length > 0) {
-        emails = recipientEmails.map((email: string) => ({ userId: "manual", userEmail: email }));
-        logger.info(`Using email override — recipients: ${emails.map((e) => e.userEmail).join(", ")}`);
+        emails = recipientEmails.map((email: string) => ({
+          userId: "manual",
+          userEmail: email,
+        }));
+        logger.info(
+          `Using email override — recipients: ${emails.map((e) => e.userEmail).join(", ")}`,
+        );
       } else {
         const clerk = await clerkClient();
-        emails = (
-          await Promise.all(
-            subscriptions.map(async (sub) => {
-              const user = await clerk.users.getUser(sub.userId);
-              const email = user.emailAddresses[0]?.emailAddress;
-              if (!email) logger.warn(`No email found for userId ${sub.userId}, skipping`);
-              return email ? { userId: sub.userId, userEmail: email } : null;
-            }),
-          )
-        ).filter((e): e is { userId: string; userEmail: string } => e !== null);
+        const userList = await clerk.users.getUserList({
+          userId: subscriptions.map((s) => s.userId),
+          limit: subscriptions.length,
+        });
+        const emailMap = new Map(
+          userList.data.map((u) => [u.id, u.emailAddresses[0]?.emailAddress]),
+        );
+        emails = subscriptions
+          .map((sub) => {
+            const email = emailMap.get(sub.userId);
+            if (!email)
+              logger.warn(`No email found for userId ${sub.userId}, skipping`);
+            return email ? { userId: sub.userId, userEmail: email } : null;
+          })
+          .filter(
+            (e): e is { userId: string; userEmail: string } => e !== null,
+          );
         logger.info(`Resolved ${emails.length} recipient email(s) from Clerk`);
       }
 
@@ -219,7 +368,9 @@ export const newsletterWorker = inngest.createFunction(
     });
 
     const recipientCount = recipientEmails.length || subscriptions.length;
-    logger.info(`newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}`);
+    logger.info(
+      `newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}`,
+    );
     return { digestRunId: digestRun.id, recipientCount };
   },
 );

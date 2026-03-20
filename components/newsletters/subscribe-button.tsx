@@ -2,6 +2,7 @@
 
 import { subscribe, unsubscribe } from "@/app/actions/subscriptions";
 import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 import { useTransition } from "react";
 
 interface Props {
@@ -25,12 +26,26 @@ export function SubscribeButton({ newsletterId, subscriptionId }: Props) {
 
   return (
     <Button
-      variant={isSubscribed ? "outline" : "default"}
+      variant={isSubscribed ? "secondary" : "default"}
       size="sm"
       onClick={handleClick}
       disabled={isPending}
+      className={
+        isSubscribed
+          ? "bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30 min-w-[110px]"
+          : "min-w-[110px]"
+      }
     >
-      {isPending ? "..." : isSubscribed ? "Subscribed" : "Subscribe"}
+      {isPending ? (
+        "..."
+      ) : isSubscribed ? (
+        <>
+          <Check className="h-3.5 w-3.5" />
+          Subscribed
+        </>
+      ) : (
+        "Subscribe"
+      )}
     </Button>
   );
 }

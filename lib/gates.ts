@@ -8,7 +8,7 @@
  *   3. Features in `FREE_FEATURES` remain available to free users
  */
 
-import { getUserPlan, isPro } from "./user";
+import { getUserPlan, isAdmin, isPro } from "./user";
 
 export type ProFeature =
   | "custom_schedule" // customize delivery days per subscription
@@ -26,5 +26,5 @@ export async function canUse(userId: string, feature: ProFeature): Promise<boole
   if (!GATING_ENABLED) return true;
   if (FREE_FEATURES.has(feature)) return true;
   const plan = await getUserPlan(userId);
-  return isPro(plan);
+  return isAdmin(plan) || isPro(plan);
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { format, isToday, isTomorrow } from "date-fns";
+import { Lock } from "lucide-react";
 import { useState } from "react";
-import { ScheduleEditor } from "./schedule-editor";
+import { ScheduleEditor } from "@/components/newsletters/schedule-editor";
 
 const UTC_DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 const DAY_SHORT: Record<string, string> = {
@@ -56,6 +57,7 @@ export function SubscriptionRow({
   canCustomize,
 }: Props) {
   const [editing, setEditing] = useState(false);
+  const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
 
   const nextRun = new Date(nextRunIso);
   const effectiveDays = currentDays.length > 0 ? currentDays : newsletterDays;
@@ -69,19 +71,37 @@ export function SubscriptionRow({
         <span>{scheduleLabel}</span>
         <span>·</span>
         <span className="text-zinc-500">Next: {nextRunLabel}</span>
-        {canCustomize && (
-          <>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={() => setEditing((v) => !v)}
-              className="text-zinc-400 underline underline-offset-2 hover:text-zinc-700"
-            >
-              {editing ? "Cancel" : "Customize"}
-            </button>
-          </>
+        <span>·</span>
+        {canCustomize ? (
+          <button
+            type="button"
+            onClick={() => setEditing((v) => !v)}
+            className="text-zinc-400 underline underline-offset-2 hover:text-zinc-700"
+          >
+            {editing ? "Cancel" : "Customize"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowUpgradeNudge((v) => !v)}
+            className="flex items-center gap-1 text-zinc-400 underline underline-offset-2 hover:text-zinc-700"
+          >
+            <Lock className="h-3 w-3" />
+            Customize
+          </button>
         )}
       </div>
+      {showUpgradeNudge && !canCustomize && (
+        <div className="mt-3 flex items-start gap-3 rounded-lg border border-border bg-secondary/50 px-4 py-3">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Pro feature</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Upgrade to Pro to customize delivery days and time for each newsletter.
+            </p>
+          </div>
+        </div>
+      )}
       {editing && (
         <ScheduleEditor
           subscriptionId={subscriptionId}

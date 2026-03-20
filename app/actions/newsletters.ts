@@ -1,8 +1,10 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { canUse } from "@/lib/gates";
+import { prisma } from "@/lib/prisma";
 
 function slugify(title: string): string {
   return title
@@ -42,8 +44,6 @@ export async function createNewsletter(formData: FormData) {
   const rss = parseLines(formData.get("rss") as string);
   const twitter_queries = parseLines(formData.get("twitter_queries") as string);
   const sites = parseLines(formData.get("sites") as string);
-  const isPublic = formData.get("isPublic") === "on";
-  const isSystem = formData.get("isSystem") === "on";
   const { scheduleDays, scheduleHour } = parseSchedule(formData);
 
   await prisma.newsletter.create({
@@ -56,8 +56,6 @@ export async function createNewsletter(formData: FormData) {
       scheduleHour,
       keywords,
       sources: { rss, twitter_queries, sites },
-      isPublic,
-      isSystem,
     },
   });
 
@@ -74,8 +72,6 @@ export async function updateNewsletter(id: string, formData: FormData) {
   const rss = parseLines(formData.get("rss") as string);
   const twitter_queries = parseLines(formData.get("twitter_queries") as string);
   const sites = parseLines(formData.get("sites") as string);
-  const isPublic = formData.get("isPublic") === "on";
-  const isSystem = formData.get("isSystem") === "on";
   const { scheduleDays, scheduleHour } = parseSchedule(formData);
 
   await prisma.newsletter.update({
@@ -89,8 +85,6 @@ export async function updateNewsletter(id: string, formData: FormData) {
       scheduleHour,
       keywords,
       sources: { rss, twitter_queries, sites },
-      isPublic,
-      isSystem,
     },
   });
 
@@ -102,4 +96,51 @@ export async function deleteNewsletter(id: string) {
   await prisma.newsletter.delete({ where: { id } });
   revalidatePath("/internal");
   redirect("/internal");
+}
+
+export async function deleteNewsletterById(id: string) {
+  await prisma.newsletter.delete({ where: { id } });
+  revalidatePath("/internal");
+  revalidatePath("/newsletters");
+}
+
+export async function createUserNewsletter(data: {
+  title: string;
+  description: string;
+  categoryId: string;
+  frequency: string;
+  scheduleDays: string[];
+  scheduleHour: number;
+  keywords: string[];
+}): Promise<{ error?: string }> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { error: "Not authenticated" };
+    if (!(await canUse(userId, "custom_newsletter")))
+      return { error: "Pro plan required" };
+
+    const slug = `${slugify(data.title)}-${Math.random().toString(36).slice(2, 7)}`;
+
+    await prisma.newsletter.create({
+      data: {
+        title: data.title,
+        slug,
+        description: data.description || null,
+        categoryId: data.categoryId,
+        frequency: data.frequency,
+        scheduleDays: data.scheduleDays,
+        scheduleHour: data.scheduleHour,
+        keywords: data.keywords,
+        sources: { rss: [], twitter_queries: [], sites: [] },
+        createdBy: userId,
+      },
+    });
+
+    revalidatePath("/newsletters");
+    return {};
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Failed to create newsletter",
+    };
+  }
 }

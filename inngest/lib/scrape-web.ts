@@ -1,8 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { perplexity } from "@ai-sdk/perplexity";
-import { generateText, Output } from "ai";
 import { z } from "zod";
 import type { CandidateItem } from "./types";
+
+const RECENCY_FILTER: Record<string, string> = {
+  daily: "day",
+  weekly: "week",
+};
 
 const ArticleListSchema = z.object({
   articles: z.array(
@@ -41,11 +44,11 @@ function freshnessFromDate(isoDate: string): number {
 export async function scrapeWeb(
   sources: { rss: string[]; sites: string[] },
   keywords: string[],
+  frequency: string,
 ): Promise<CandidateItem[]> {
   if (keywords.length === 0) return [];
 
   const keywordStr = keywords.join(", ");
-
   const allSources = [...(sources.rss ?? []), ...(sources.sites ?? [])];
   const domainHints = allSources.map(extractDomain).filter(Boolean).slice(0, 6);
   const siteContext =
@@ -54,13 +57,43 @@ export async function scrapeWeb(
       : "";
 
   const today = new Date().toISOString().split("T")[0];
+  const windowLabel = frequency === "daily" ? "24 hours" : "7 days";
+  const recencyFilter = RECENCY_FILTER[frequency] ?? "week";
 
-  const { output } = await generateText({
-    model: perplexity("sonar"),
-    experimental_output: Output.object({ schema: ArticleListSchema }),
-    prompt: `Today is ${today}. You are a research assistant helping build a newsletter digest.
+  const body = {
+    model: "sonar",
+    search_recency_filter: recencyFilter,
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        schema: {
+          type: "object",
+          properties: {
+            articles: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  url: { type: "string" },
+                  summary: { type: "string" },
+                  source: { type: "string" },
+                  publishedAt: { type: "string" },
+                },
+                required: ["title", "url", "summary", "source", "publishedAt"],
+              },
+            },
+          },
+          required: ["articles"],
+        },
+      },
+    },
+    messages: [
+      {
+        role: "user",
+        content: `Today is ${today}. You are a research assistant helping build a newsletter digest.
 
-${siteContext}Find 10–15 real, recent articles (published within the last 7 days) about: ${keywordStr}.
+${siteContext}Find 10–15 real, recent articles (published within the last ${windowLabel}) about: ${keywordStr}.
 
 For each article return:
 - title: the article's headline (exact)
@@ -70,9 +103,34 @@ For each article return:
 - publishedAt: publication date as YYYY-MM-DD (use today's date if unknown)
 
 Only include articles genuinely relevant to the topics above. Skip opinion pieces and press releases unless highly relevant.`,
+      },
+    ],
+  };
+
+  const res = await fetch("https://api.perplexity.ai/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
   });
 
-  return output.articles
+  if (!res.ok) {
+    throw new Error(`Perplexity API error: ${res.status} ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  const raw = data.choices?.[0]?.message?.content ?? "{}";
+
+  let parsed: { articles: typeof ArticleListSchema._type.articles };
+  try {
+    parsed = ArticleListSchema.parse(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+
+  return parsed.articles
     .filter((a) => a.url.startsWith("http") && a.title && a.summary)
     .map((article) => ({
       id: randomUUID(),

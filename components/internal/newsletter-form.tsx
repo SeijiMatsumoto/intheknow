@@ -23,8 +23,6 @@ type NewsletterFormProps = {
     scheduleHour?: number;
     keywords?: string[];
     sources?: Sources;
-    isPublic?: boolean;
-    isSystem?: boolean;
   };
 };
 
@@ -126,18 +124,7 @@ export function NewsletterForm({ action, defaultValues: d = {} }: NewsletterForm
         />
       </div>
 
-      <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="isPublic" defaultChecked={d.isPublic} />
-          Public
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="isSystem" defaultChecked={d.isSystem} />
-          System newsletter
-        </label>
-      </div>
-
-      <div className="flex gap-3 pt-2">
+<div className="flex gap-3 pt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save"}
         </Button>

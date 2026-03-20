@@ -1,8 +1,9 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { canUse } from "@/lib/gates";
+import { prisma } from "@/lib/prisma";
 
 export async function subscribe(newsletterId: string) {
   const { userId } = await auth();
@@ -28,6 +29,7 @@ export async function unsubscribe(subscriptionId: string) {
   });
 
   revalidatePath("/newsletters");
+  revalidatePath("/settings");
 }
 
 export async function updateSubscriptionSchedule(
@@ -37,6 +39,7 @@ export async function updateSubscriptionSchedule(
 ) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthenticated");
+  if (!(await canUse(userId, "custom_schedule"))) throw new Error("Pro plan required");
 
   await prisma.subscription.updateMany({
     where: { id: subscriptionId, userId },

@@ -1,5 +1,6 @@
 import { deleteNewsletter, updateNewsletter } from "@/app/actions/newsletters";
-import { NewsletterForm } from "@/app/internal/_components/newsletter-form";
+import { NewsletterForm } from "@/components/internal/newsletter-form";
+import { NewsletterHeader } from "@/components/newsletter-header";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -21,6 +22,8 @@ export default async function EditNewsletterPage({ params }: Props) {
   const deleteWithId = deleteNewsletter.bind(null, id);
 
   return (
+    <div className="min-h-screen bg-background">
+      <NewsletterHeader />
     <div className="mx-auto max-w-2xl px-6 py-12">
       <div className="mb-8">
         <Link href="/internal" className="mb-4 block text-xs text-muted-foreground hover:underline">
@@ -40,8 +43,6 @@ export default async function EditNewsletterPage({ params }: Props) {
           scheduleHour: newsletter.scheduleHour,
           keywords: newsletter.keywords,
           sources,
-          isPublic: newsletter.isPublic,
-          isSystem: newsletter.isSystem,
         }}
       />
 
@@ -56,6 +57,7 @@ export default async function EditNewsletterPage({ params }: Props) {
           </button>
         </form>
       </div>
+    </div>
     </div>
   );
 }

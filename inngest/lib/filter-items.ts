@@ -14,7 +14,7 @@ export function filterItems(
 ): CandidateItem[] {
   const limit = DIGEST_LENGTH_LIMITS[digestLength] ?? 12;
   return items
-    .filter((item) => item.combinedScore >= SCORE_THRESHOLD)
+    .filter((item) => item.freshnessScore > 0 && item.combinedScore >= SCORE_THRESHOLD)
     .sort((a, b) => b.combinedScore - a.combinedScore)
     .slice(0, limit);
 }

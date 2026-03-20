@@ -32,7 +32,7 @@ export function ProfileButton() {
   const initials =
     [user.firstName, user.lastName]
       .filter(Boolean)
-      .map((n) => n![0])
+      .map((n) => n?.[0] ?? "")
       .join("")
       .toUpperCase() ||
     user.emailAddresses[0]?.emailAddress[0]?.toUpperCase() ||
@@ -49,6 +49,8 @@ export function ProfileButton() {
           <Image
             src={user.imageUrl}
             alt={initials}
+            width={28}
+            height={28}
             className="h-7 w-7 rounded-full object-cover"
           />
         ) : (

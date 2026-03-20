@@ -170,6 +170,8 @@ export function SettingsClient({
                   <img
                     src={user.imageUrl}
                     alt={initials}
+                    width={56}
+                    height={56}
                     referrerPolicy="no-referrer"
                     className="h-14 w-14 rounded-full object-cover"
                   />

@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NewsletterHeader } from "@/components/newsletter-header";
@@ -31,16 +32,17 @@ export default async function FeedPage() {
         {sends.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-lg font-medium text-foreground">
-              No digests yet
+              Nothing here yet
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Subscribe to newsletters and your digests will appear here.
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              Subscribe to newsletters and your digests will show up here once they're sent.
             </p>
             <Link
               href="/newsletters"
-              className="mt-6 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
+              className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
             >
               Browse newsletters
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         ) : (

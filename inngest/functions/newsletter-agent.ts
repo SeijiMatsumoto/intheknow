@@ -100,7 +100,7 @@ Writing tone: Friendly, conversational, warm — like a smart friend catching yo
 submitAnswer schema rules:
 - editionTitle: punchy, creative one-liner capturing the biggest story or theme. Think: newsletter subject line.
 - summary: 2-3 sentence friendly intro. What's the vibe this ${frequency === "daily" ? "day" : "week"}?
-- keyTakeaways: 3-5 punchy bullets. Start each with a strong verb or number.
+- keyTakeaways: 3-5 punchy one-sentence bullets summarizing the key story. Write each as a complete sentence, e.g. "Xiaomi plans to pour $8.7B into AI over the next three years."
 - sections: group related items under short descriptive headings.
 - Each item needs: plainLead (one plain-English sentence — why it matters to a non-expert), detail (2-3 sentences with specifics, numbers, names), quote (only if genuinely interesting, otherwise null).
 - URLs must be real URLs from your research — never invent them.

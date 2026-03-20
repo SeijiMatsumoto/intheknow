@@ -44,7 +44,9 @@ export default async function NewsletterDetailPage({
     where: { slug },
   });
 
+  // 404 if not found, or if it's another user's custom newsletter
   if (!newsletter) notFound();
+  if (newsletter.createdBy !== null && newsletter.createdBy !== userId) notFound();
 
   const [subscription, canCustomize, digestRunCount] = await Promise.all([
     userId

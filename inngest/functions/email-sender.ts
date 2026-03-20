@@ -1,6 +1,6 @@
 import { inngest } from "@/inngest/client";
-import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
+import { createDigestSend } from "./queries";
 
 export const emailSender = inngest.createFunction(
   {
@@ -21,16 +21,12 @@ export const emailSender = inngest.createFunction(
 
     if (error) {
       logger.error(`Resend error for ${userEmail}`, { error });
-      await prisma.digestSend.create({
-        data: { runId: digestRunId, userId, sentAt: null, status: "failed" },
-      });
+      await createDigestSend(digestRunId, userId, "failed", null);
       throw new Error(`Resend error: ${JSON.stringify(error)}`);
     }
 
     logger.info(`Email sent to ${userEmail} — messageId: ${data?.id}`);
-    await prisma.digestSend.create({
-      data: { runId: digestRunId, userId, sentAt: new Date(), status: "sent" },
-    });
+    await createDigestSend(digestRunId, userId, "sent", new Date());
 
     return { userId, userEmail, messageId: data?.id };
   },

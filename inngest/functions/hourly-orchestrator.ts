@@ -1,5 +1,5 @@
 import { inngest } from "@/inngest/client";
-import { prisma } from "@/lib/prisma";
+import { getActiveSubscriptionsWithSchedule } from "./queries";
 
 const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -12,23 +12,10 @@ export const hourlyOrchestrator = inngest.createFunction(
 
     logger.info(`Hourly orchestrator — ${currentDay} ${currentHour}:00 UTC`);
 
-    // Load all active subscriptions with their newsletter's default schedule
-    const subscriptions = await step.run("load-subscriptions", async () => {
-      return prisma.subscription.findMany({
-        where: { pausedAt: null },
-        select: {
-          userId: true,
-          newsletterId: true,
-          scheduleDays: true,
-          scheduleHour: true,
-          newsletter: {
-            select: { id: true, title: true, scheduleDays: true, scheduleHour: true },
-          },
-        },
-      });
-    });
+    const subscriptions = await step.run("load-subscriptions", () =>
+      getActiveSubscriptionsWithSchedule(),
+    );
 
-    // Resolve effective schedule per subscription and filter to those due right now
     const due = subscriptions.filter((sub) => {
       const days = sub.scheduleDays.length > 0 ? sub.scheduleDays : sub.newsletter.scheduleDays;
       const hour = sub.scheduleHour ?? sub.newsletter.scheduleHour;
@@ -36,7 +23,6 @@ export const hourlyOrchestrator = inngest.createFunction(
     });
 
     logger.info(`${due.length} subscription(s) due this hour`);
-
     if (due.length === 0) return { fired: 0 };
 
     // Group by newsletterId

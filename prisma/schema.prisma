@@ -69,8 +69,6 @@ model DigestRun {
   newsletterId   String    @map("newsletter_id")
   runAt          DateTime  @map("run_at")
   status         String    @default("pending") // 'pending' | 'running' | 'sent' | 'failed'
-  candidateItems Json?     @map("candidate_items")
-  passingItems   Json?     @map("passing_items")
   content        Json?
   emailHtml      String?   @map("email_html")
   error          String?

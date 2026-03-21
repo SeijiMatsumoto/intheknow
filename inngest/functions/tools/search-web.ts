@@ -13,6 +13,8 @@ type SearchResult = {
 async function webSearch(query: string, frequency: Frequency): Promise<string> {
   const { after, before } = perplexityDateRange(frequency);
 
+  console.log(`[searchWeb] query="${query}" dateRange=${after}→${before}`);
+
   const res = await fetch("https://api.perplexity.ai/search", {
     method: "POST",
     headers: {
@@ -27,10 +29,18 @@ async function webSearch(query: string, frequency: Frequency): Promise<string> {
     }),
   });
 
-  if (!res.ok) return `Web search failed: ${res.status}`;
+  if (!res.ok) {
+    console.warn(`[searchWeb] FAILED query="${query}" status=${res.status}`);
+    return `Web search failed: ${res.status}`;
+  }
 
   const data = await res.json();
   const results: SearchResult[] = data.results ?? [];
+
+  console.log(
+    `[searchWeb] query="${query}" results=${results.length}${results.length > 0 ? ` | top: "${results[0].title}" (${results[0].date})` : ""}`,
+  );
+
   if (results.length === 0) return "No results found.";
 
   return results

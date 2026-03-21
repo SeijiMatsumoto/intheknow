@@ -22,14 +22,18 @@ export const DigestSchema = z.object({
   keyTakeaways: z
     .array(z.string())
     .describe(
-      "3-5 one-sentence bullets summarizing the biggest stories. Each should be a complete sentence.",
+      "3-5 short, punchy teaser bullets — just enough to hook the reader without giving away the full story. E.g. 'OpenAI drops a new model — and it's free', 'The Fed holds rates, but the real signal is elsewhere'",
     ),
   sections: z.array(
     z.object({
       heading: z.string(),
       items: z.array(
         z.object({
-          title: z.string(),
+          title: z
+            .string()
+            .describe(
+              "Editorial, opinionated headline with an emoji prefix. Not a restated article title — a punchy take. E.g. '🔥 OpenAI Just Made GPT-5 Free — Here's the Catch', '📉 The Fed Blinked, and Markets Noticed'",
+            ),
           url: z.string().describe("Real URL from research — never invented."),
           publishedAt: z
             .string()
@@ -41,14 +45,11 @@ export const DigestSchema = z.object({
             .describe(
               "Publication or domain name. E.g. 'The Verge', 'techcrunch.com'",
             ),
-          plainLead: z
-            .string()
-            .describe(
-              "One plain-English sentence explaining why this matters to a non-expert.",
-            ),
           detail: z
             .string()
-            .describe("2-3 sentences with specifics, numbers, and names."),
+            .describe(
+              "2-3 sentences focusing on what readers actually care about — the impact, the why, the 'so what'. Skip background filler.",
+            ),
           quote: z
             .string()
             .nullable()
@@ -174,6 +175,9 @@ export async function runNewsletterAgent(
 - Write in a friendly, conversational, warm tone — like a smart friend catching you up over coffee.
 - Use "you" to address the reader. Occasional light humor welcome.
 - Only include stories that are genuinely newsworthy — never pad with fluff. A shorter, high-quality digest is always better than a longer one stuffed with filler.
+- Each item title must be an editorial, opinionated headline with an emoji prefix — not a restated article title. Make it punchy and attention-grabbing.
+- The detail field should focus on what readers actually care about — the impact, the why, the "so what". Skip background filler.
+- keyTakeaways should be short teaser bullets — hook the reader without giving away the full story.
 - URLs must be real URLs from your research — never invent them.
 - Only include a quote if it's genuinely interesting, otherwise set it to null.${socialConsensusInstruction}${depthInstruction}
 </guidelines>

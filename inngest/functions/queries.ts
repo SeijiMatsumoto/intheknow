@@ -1,5 +1,6 @@
 import type { InputJsonValue } from "@prisma/client/runtime/client";
 import { prisma } from "@/lib/prisma";
+import type { Plan } from "@/lib/user";
 
 // ── Subscriptions ────────────────────────────────────────────────────────────
 
@@ -36,6 +37,28 @@ export function getNewsletterSubscriptions(
   });
 }
 
+const TIER_RANK: Record<Plan, number> = {
+  free: 0,
+  plus: 1,
+  pro: 2,
+  admin: 3,
+};
+
+/** Return the highest plan among a set of userIds. Defaults to "free". */
+export async function highestTierAmong(userIds: string[]): Promise<Plan> {
+  if (userIds.length === 0) return "free";
+  const plans = await prisma.userPlan.findMany({
+    where: { userId: { in: userIds } },
+    select: { plan: true },
+  });
+  let best: Plan = "free";
+  for (const { plan } of plans) {
+    const p = plan as Plan;
+    if (TIER_RANK[p] > TIER_RANK[best]) best = p;
+  }
+  return best;
+}
+
 // ── Newsletter ────────────────────────────────────────────────────────────────
 
 export function getNewsletterById(id: string) {
@@ -54,17 +77,6 @@ export function findRecentDigestRun(newsletterId: string, since: Date) {
 export function createDigestRun(newsletterId: string) {
   return prisma.digestRun.create({
     data: { newsletterId, runAt: new Date(), status: "running" },
-  });
-}
-
-export function saveDigestItems(
-  id: string,
-  candidateItems: InputJsonValue,
-  passingItems: InputJsonValue,
-) {
-  return prisma.digestRun.update({
-    where: { id },
-    data: { candidateItems, passingItems },
   });
 }
 

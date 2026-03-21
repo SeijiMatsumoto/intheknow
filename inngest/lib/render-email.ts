@@ -16,6 +16,9 @@ function periodLabel(frequency: Frequency): string {
   return `${freq} · ${date}`;
 }
 
+/** Placeholder replaced per-recipient in email-sender. */
+export const UNSUBSCRIBE_PLACEHOLDER = "{{unsubscribe_url}}";
+
 export function renderEmail(
   digest: DigestContent,
   newsletterTitle: string,
@@ -33,9 +36,9 @@ export function renderEmail(
   const sectionsHtml = digest.sections
     .map(
       (section) => `
-    <tr><td style="padding:8px 0 0;">
+    <tr><td style="padding:0;">
       <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td style="padding:10px 24px;background:#f5f5f5;border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5;">
+        <tr><td style="padding:8px 24px;background:#f5f5f5;border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5;">
           <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin:0;">${section.heading}</p>
         </td></tr>
         <tr><td style="padding:0 24px;">
@@ -43,12 +46,11 @@ export function renderEmail(
             .map(
               (item) => `
           <div style="padding:20px 0;border-bottom:1px solid #f0f0f0;">
-            <p style="font-size:12px;color:#aaa;margin:0 0 5px;">${formatDate(item.publishedAt)} · ${item.source}</p>
             <p style="font-size:15px;font-weight:600;color:#111;margin:0 0 10px;line-height:1.35;">${item.title}</p>
-            <p style="font-size:14px;color:#333;line-height:1.65;margin:0 0 8px;"><strong>${item.plainLead}</strong></p>
             <p style="font-size:13px;color:#555;line-height:1.65;margin:0 0 10px;">${item.detail}</p>
             ${item.quote ? `<blockquote style="margin:0 0 10px;padding:8px 14px;border-left:3px solid #ddd;color:#666;font-style:italic;font-size:13px;line-height:1.55;">"${item.quote}"</blockquote>` : ""}
             <a href="${item.url}" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;border-bottom:1px solid #ddd;">Read more →</a>
+            <span style="font-size:11px;color:#bbb;margin-left:8px;">${formatDate(item.publishedAt)} · ${item.source}</span>
           </div>`,
             )
             .join("")}
@@ -120,7 +122,8 @@ export function renderEmail(
 
     <!-- Footer -->
     <tr><td style="padding:20px 24px;border-top:1px solid #f0f0f0;text-align:center;">
-      <p style="font-size:11px;color:#ccc;margin:0;">You're receiving this because you subscribed to <strong>${newsletterTitle}</strong> on The Latest.</p>
+      <p style="font-size:11px;color:#ccc;margin:0 0 8px;">You're receiving this because you subscribed to <strong>${newsletterTitle}</strong> on The Latest.</p>
+      <a href="${UNSUBSCRIBE_PLACEHOLDER}" style="font-size:11px;color:#aaa;text-decoration:underline;">Unsubscribe</a>
     </td></tr>
 
   </table>

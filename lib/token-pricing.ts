@@ -81,8 +81,8 @@ export function digestCostBreakdown(
   const webSearchCost = webSearches * API_PRICING.perplexitySearch;
 
   const twitterSearches = toolCallCounts.searchTwitter ?? 0;
-  // Estimate ~20 tweets per search (1 page)
-  const twitterCost = twitterSearches * 20 * (API_PRICING.twitterPer1K / 1000);
+  // Estimate ~30 tweets per search (up to 3 queries × 10 tweets each)
+  const twitterCost = twitterSearches * 30 * (API_PRICING.twitterPer1K / 1000);
 
   return {
     model,

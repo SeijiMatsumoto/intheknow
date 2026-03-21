@@ -51,26 +51,41 @@ async function twitterSearch(
 ): Promise<string> {
   const apiKey = process.env.TWITTERAPI_IO_KEY;
   if (!apiKey) {
+    console.warn("[searchTwitter] no API key configured");
     return `Twitter search not available (no API key). Queries attempted: ${queries.join(", ")}`;
   }
+
+  console.log(`[searchTwitter] ${queries.length} queries: ${queries.join(" | ")}`);
 
   const allTweets: Tweet[] = [];
 
   for (const q of queries) {
     const fullQuery = buildTwitterQuery(q, frequency);
-    const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&queryType=Top`;
+    const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&queryType=Top&count=10`;
+
+    console.log(`[searchTwitter] fetching query="${q}" fullQuery="${fullQuery}"`);
 
     const res = await fetch(url, {
       headers: { "x-api-key": apiKey },
     });
 
-    if (!res.ok) continue;
+    if (!res.ok) {
+      console.warn(`[searchTwitter] FAILED query="${q}" status=${res.status}`);
+      continue;
+    }
 
     const data: TwitterSearchResponse = await res.json();
-    if (data.tweets?.length) {
-      allTweets.push(...data.tweets);
-    }
+    const count = data.tweets?.length ?? 0;
+    allTweets.push(...(data.tweets ?? []));
+
+    console.log(
+      `[searchTwitter] query="${q}" tweets=${count}${count > 0 ? ` | top: @${data.tweets[0].author.userName} (${data.tweets[0].likeCount} likes)` : ""}`,
+    );
   }
+
+  console.log(
+    `[searchTwitter] total raw=${allTweets.length} across ${queries.length} queries`,
+  );
 
   if (allTweets.length === 0) {
     return `No tweets found for: ${queries.join(", ")}`;
@@ -91,6 +106,10 @@ async function twitterSearch(
     )
     .slice(0, 20);
 
+  console.log(
+    `[searchTwitter] after dedup=${unique.length}, returning top ${sorted.length}`,
+  );
+
   return sorted
     .map(
       (t, i) =>
@@ -106,8 +125,9 @@ export function makeSearchTwitterTool(frequency: Frequency) {
     inputSchema: z.object({
       queries: z
         .array(z.string())
+        .max(3)
         .describe(
-          "Twitter search queries. Use keywords, hashtags, or phrases. E.g. ['GPT-5 launch reactions', '#AI agents']",
+          "1-3 Twitter search queries. Use keywords, hashtags, or phrases. E.g. ['GPT-5 launch reactions', '#AI agents']",
         ),
     }),
     execute: async ({ queries }) => twitterSearch(queries, frequency),

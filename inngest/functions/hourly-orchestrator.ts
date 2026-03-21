@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
-import { getActiveSubscriptionsWithSchedule } from "./queries";
+import type { Plan } from "@/lib/user";
+import { getActiveSubscriptionsWithSchedule, highestTierAmong } from "./queries";
 
 const DAYS = [
   "sunday",
@@ -50,15 +51,24 @@ export const hourlyOrchestrator = inngest.createFunction(
       byNewsletter.set(sub.newsletterId, entry);
     }
 
-    for (const [, { title, userIds }] of byNewsletter) {
-      logger.info(`  → ${title}: ${userIds.length} recipient(s)`);
+    // Resolve highest subscriber tier per newsletter
+    const tiers = await step.run("resolve-tiers", async () => {
+      const result: Record<string, Plan> = {};
+      for (const [newsletterId, { userIds }] of byNewsletter) {
+        result[newsletterId] = await highestTierAmong(userIds);
+      }
+      return result;
+    });
+
+    for (const [newsletterId, { title, userIds }] of byNewsletter) {
+      logger.info(`  → ${title}: ${userIds.length} recipient(s), tier=${tiers[newsletterId]}`);
     }
 
     await step.sendEvent(
       "fan-out-newsletter-workers",
       [...byNewsletter.entries()].map(([newsletterId, { userIds }]) => ({
         name: "newsletter/run" as const,
-        data: { newsletterId, userIds },
+        data: { newsletterId, userIds, tier: tiers[newsletterId] },
       })),
     );
 

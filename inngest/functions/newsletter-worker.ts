@@ -2,6 +2,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { startOfDay, startOfWeek } from "date-fns";
 import { inngest } from "@/inngest/client";
 import { renderEmail } from "@/inngest/lib/render-email";
+import { getDigestConfig } from "@/lib/digest-config";
 import type { Frequency } from "@/lib/frequency";
 import { digestCostBreakdown, formatCostLog } from "@/lib/token-pricing";
 import { runNewsletterAgent } from "./newsletter-agent";
@@ -50,8 +51,17 @@ export const newsletterWorker = inngest.createFunction(
   },
   async ({ event, step, logger }) => {
     const { newsletterId, userEmails, userIds, tier = "pro" } = event.data;
+    const digestConfig = getDigestConfig(tier);
     logger.info("newsletter-worker started", {
       newsletterId,
+      tier,
+      generationGates: {
+        model: digestConfig.model,
+        maxSteps: digestConfig.maxSteps,
+        storyTarget: digestConfig.storyTarget,
+        socialConsensus: digestConfig.socialConsensus,
+        deepResearch: digestConfig.deepResearch,
+      },
       userEmails,
       userIds,
     });
@@ -116,6 +126,7 @@ export const newsletterWorker = inngest.createFunction(
             name: "newsletter/email.generated" as const,
             data: {
               digestRunId: recentRun.id,
+              newsletterId,
               newsletterTitle: content?.editionTitle ?? newsletter.title,
               userId: e.userId,
               userEmail: e.userEmail,
@@ -236,6 +247,7 @@ export const newsletterWorker = inngest.createFunction(
           name: "newsletter/email.generated" as const,
           data: {
             digestRunId: digestRun.id,
+            newsletterId,
             newsletterTitle: digest.editionTitle,
             userId: e.userId,
             userEmail: e.userEmail,
@@ -264,6 +276,7 @@ export const newsletterWorker = inngest.createFunction(
     );
     return {
       digestRunId: digestRun.id,
+      tier,
       recipientCount,
       stepCount,
       usage,

@@ -4,7 +4,7 @@ import { Lock, MessageCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { NewsletterHeader } from "@/components/newsletter-header";
-import { canUse } from "@/lib/gates";
+import { canUsePlan } from "@/lib/gates";
 import { getUserPlan, isAdmin } from "@/lib/user";
 import { type DigestContent, getFeedDigest } from "../data";
 
@@ -33,7 +33,14 @@ export default async function FeedDetailPage({
   const content = send.run.content as DigestContent | null;
   if (!content) notFound();
 
-  const hasFullAccess = await canUse(userId, "full_digest");
+  const hasFullAccess = canUsePlan(plan, "full_digest");
+  const renderGates = {
+    plan,
+    fullDigest: hasFullAccess,
+    socialConsensus: canUsePlan(plan, "social_consensus"),
+    deepResearch: canUsePlan(plan, "deep_research"),
+  };
+  console.log(`[render-gates] runId=${runId}`, renderGates);
 
   const sentDate = send.sentAt
     ? format(new Date(send.sentAt), "EEEE, MMMM d, yyyy")
@@ -95,7 +102,7 @@ export default async function FeedDetailPage({
               <div className="pb-6">
                 {content.sections?.map((section) => (
                   <div key={section.heading}>
-                    <div className="border-y border-border bg-secondary px-6 sm:px-10 py-3">
+                    <div className="border-y border-border bg-secondary px-6 sm:px-10 py-2.5">
                       <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                         {section.heading}
                       </h2>
@@ -103,17 +110,9 @@ export default async function FeedDetailPage({
                     <div className="divide-y divide-border px-6 sm:px-10">
                       {section.items.map((item) => (
                         <div key={item.url} className="py-6">
-                          <p className="mb-1.5 text-xs text-muted-foreground/60">
-                            {formatDate(item.publishedAt)} · {item.source}
-                          </p>
                           <p className="mb-2.5 text-[15px] font-semibold leading-snug text-foreground">
                             {item.title}
                           </p>
-                          {item.plainLead && (
-                            <p className="mb-2 text-sm font-semibold leading-relaxed text-foreground/80">
-                              {item.plainLead}
-                            </p>
-                          )}
                           {item.detail && (
                             <p className="mb-2.5 text-[13px] leading-relaxed text-muted-foreground">
                               {item.detail}
@@ -124,14 +123,19 @@ export default async function FeedDetailPage({
                               &ldquo;{item.quote}&rdquo;
                             </blockquote>
                           )}
-                          <a
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
-                          >
-                            Read more →
-                          </a>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
+                            >
+                              Read more →
+                            </a>
+                            <span className="text-xs text-muted-foreground/40">
+                              {formatDate(item.publishedAt)} · {item.source}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -199,7 +203,7 @@ export default async function FeedDetailPage({
               <div className="pb-2">
                 {content.sections?.map((section) => (
                   <div key={section.heading}>
-                    <div className="border-y border-border bg-secondary px-6 sm:px-10 py-3">
+                    <div className="border-y border-border bg-secondary px-6 sm:px-10 py-2.5">
                       <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                         {section.heading}
                       </h2>
@@ -207,20 +211,22 @@ export default async function FeedDetailPage({
                     <div className="divide-y divide-border px-6 sm:px-10">
                       {section.items.map((item) => (
                         <div key={item.url} className="py-4">
-                          <p className="mb-1 text-xs text-muted-foreground/60">
-                            {formatDate(item.publishedAt)} · {item.source}
-                          </p>
                           <p className="text-[15px] font-semibold leading-snug text-foreground">
                             {item.title}
                           </p>
-                          <a
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-1 inline-block text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
-                          >
-                            Read source →
-                          </a>
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
+                            >
+                              Read source →
+                            </a>
+                            <span className="text-xs text-muted-foreground/40">
+                              {item.source}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>

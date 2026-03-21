@@ -39,9 +39,7 @@ export type DigestItem = {
   url: string;
   title: string;
   source: string;
-  summary: string;
   publishedAt: string;
-  plainLead?: string;
   detail?: string;
   quote?: string;
 };

@@ -1,5 +1,7 @@
 import { inngest } from "@/inngest/client";
+import { UNSUBSCRIBE_PLACEHOLDER } from "@/inngest/lib/render-email";
 import { resend } from "@/lib/resend";
+import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
 import { createDigestSend } from "./queries";
 
 export const emailSender = inngest.createFunction(
@@ -9,19 +11,36 @@ export const emailSender = inngest.createFunction(
     triggers: [{ event: "newsletter/email.generated" }],
   },
   async ({ event, logger }) => {
-    const { digestRunId, newsletterTitle, userId, userEmail, emailHtml } =
-      event.data;
+    const {
+      digestRunId,
+      newsletterId,
+      newsletterTitle,
+      userId,
+      userEmail,
+      emailHtml,
+    } = event.data;
     logger.info(`Sending email to ${userEmail}`, {
       digestRunId,
       userId,
       subject: newsletterTitle,
     });
 
+    const unsubscribeUrl =
+      userId !== "manual"
+        ? buildUnsubscribeUrl(userId, newsletterId)
+        : `${process.env.NEXT_PUBLIC_APP_URL ?? "https://thelatest.app"}/settings`;
+
+    const html = emailHtml.replaceAll(UNSUBSCRIBE_PLACEHOLDER, unsubscribeUrl);
+
     const { data, error } = await resend.emails.send({
       from: "The Latest <onboarding@resend.dev>",
       to: userEmail,
       subject: newsletterTitle,
-      html: emailHtml,
+      html,
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
 
     if (error) {

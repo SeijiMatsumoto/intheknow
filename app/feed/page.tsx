@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NewsletterHeader } from "@/components/newsletter-header";
+import { PageHeader } from "@/components/page-header";
 import { getCategory } from "@/lib/categories";
 import { getUserPlan, isAdmin } from "@/lib/user";
 import { cn } from "@/lib/utils";
@@ -19,15 +20,11 @@ export default async function FeedPage() {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-6 py-12">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            My Feed
-          </h1>
-          <p className="mt-3 text-muted-foreground">
-            Your digest history across all subscriptions.
-          </p>
-        </div>
+      <main className="mx-auto max-w-5xl px-6 py-6 pb-24 sm:py-12 sm:pb-12">
+        <PageHeader
+          title="My Feed"
+          description="Your digest history across all subscriptions."
+        />
 
         {sends.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -35,7 +32,8 @@ export default async function FeedPage() {
               Nothing here yet
             </p>
             <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-              Subscribe to newsletters and your digests will show up here once they're sent.
+              Subscribe to newsletters and your digests will show up here once
+              they're sent.
             </p>
             <Link
               href="/newsletters"

@@ -39,7 +39,8 @@ export async function updateSubscriptionSchedule(
 ) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthenticated");
-  if (!(await canUse(userId, "custom_schedule"))) throw new Error("Pro plan required");
+  if (!(await canUse(userId, "custom_schedule")))
+    throw new Error("Pro plan required");
 
   await prisma.subscription.updateMany({
     where: { id: subscriptionId, userId },

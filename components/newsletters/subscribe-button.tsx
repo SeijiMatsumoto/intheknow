@@ -8,9 +8,14 @@ import { Button } from "@/components/ui/button";
 interface Props {
   newsletterId: string;
   subscriptionId: string | null;
+  className?: string;
 }
 
-export function SubscribeButton({ newsletterId, subscriptionId }: Props) {
+export function SubscribeButton({
+  newsletterId,
+  subscriptionId,
+  className,
+}: Props) {
   const [isPending, startTransition] = useTransition();
   const isSubscribed = subscriptionId !== null;
 
@@ -32,8 +37,8 @@ export function SubscribeButton({ newsletterId, subscriptionId }: Props) {
       disabled={isPending}
       className={
         isSubscribed
-          ? "bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30 min-w-[110px]"
-          : "min-w-[110px]"
+          ? `bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30 min-w-[110px] ${className ?? ""}`
+          : `min-w-[110px] ${className ?? ""}`
       }
     >
       {isPending ? (

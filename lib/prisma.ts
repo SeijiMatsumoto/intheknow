@@ -4,7 +4,13 @@ import { PrismaClient } from "../app/generated/prisma/client";
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 function createPrismaClient() {
-  const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! });
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("Database url not defined");
+  }
+  const adapter = new PrismaNeon({
+    connectionString: databaseUrl,
+  });
   return new PrismaClient({ adapter });
 }
 

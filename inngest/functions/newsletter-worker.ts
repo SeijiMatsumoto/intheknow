@@ -15,10 +15,14 @@ import {
 function getReuseSince(frequency: string): Date {
   const now = new Date();
   if (frequency === "daily") {
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    return new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
   }
   const diff = (now.getUTCDay() + 6) % 7;
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff));
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff),
+  );
 }
 
 async function resolveRecipientEmails(
@@ -48,14 +52,20 @@ export const newsletterWorker = inngest.createFunction(
   },
   async ({ event, step, logger }) => {
     const { newsletterId, userEmails, userIds } = event.data;
-    logger.info("newsletter-worker started", { newsletterId, userEmails, userIds });
+    logger.info("newsletter-worker started", {
+      newsletterId,
+      userEmails,
+      userIds,
+    });
 
     // 1. Load newsletter + subscriptions + check for reusable run
     const { newsletter, subscriptions, recentRun } = await step.run(
       "load-newsletter",
       async () => {
         const newsletter = await getNewsletterById(newsletterId);
-        logger.info(`Loaded newsletter: "${newsletter.title}" (${newsletter.frequency})`);
+        logger.info(
+          `Loaded newsletter: "${newsletter.title}" (${newsletter.frequency})`,
+        );
 
         const subscriptions = userEmails
           ? []
@@ -70,9 +80,14 @@ export const newsletterWorker = inngest.createFunction(
         // Check for reusable run (system newsletters only)
         let recentRun = null;
         if (!newsletter.createdBy && !userEmails) {
-          recentRun = await findRecentDigestRun(newsletterId, getReuseSince(newsletter.frequency));
+          recentRun = await findRecentDigestRun(
+            newsletterId,
+            getReuseSince(newsletter.frequency),
+          );
           if (recentRun) {
-            logger.info(`Found reusable run ${recentRun.id} (${recentRun.runAt.toISOString()})`);
+            logger.info(
+              `Found reusable run ${recentRun.id} (${recentRun.runAt.toISOString()})`,
+            );
           }
         }
 
@@ -113,7 +128,11 @@ export const newsletterWorker = inngest.createFunction(
         logger.info(`Fired ${emails.length} email(s) using cached run`);
       });
 
-      return { digestRunId: recentRun.id, reused: true, recipientCount: subscriptions.length };
+      return {
+        digestRunId: recentRun.id,
+        reused: true,
+        recipientCount: subscriptions.length,
+      };
     }
 
     // 2. Create digest run
@@ -147,7 +166,11 @@ export const newsletterWorker = inngest.createFunction(
     if (!digest) {
       logger.warn("Agent returned no digest — marking run as failed");
       await failDigestRun(digestRun.id, "Agent returned no digest");
-      return { digestRunId: digestRun.id, skipped: true, reason: "agent failed" };
+      return {
+        digestRunId: digestRun.id,
+        skipped: true,
+        reason: "agent failed",
+      };
     }
 
     // 4. Render email
@@ -168,8 +191,13 @@ export const newsletterWorker = inngest.createFunction(
       let emails: { userId: string; userEmail: string }[];
 
       if (recipientEmails.length > 0) {
-        emails = recipientEmails.map((email: string) => ({ userId: "manual", userEmail: email }));
-        logger.info(`Email override — recipients: ${emails.map((e) => e.userEmail).join(", ")}`);
+        emails = recipientEmails.map((email: string) => ({
+          userId: "manual",
+          userEmail: email,
+        }));
+        logger.info(
+          `Email override — recipients: ${emails.map((e) => e.userEmail).join(", ")}`,
+        );
       } else {
         emails = await resolveRecipientEmails(subscriptions);
         logger.info(`Resolved ${emails.length} recipient(s) from Clerk`);
@@ -202,7 +230,9 @@ export const newsletterWorker = inngest.createFunction(
     });
 
     const recipientCount = recipientEmails.length || subscriptions.length;
-    logger.info(`newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}`);
+    logger.info(
+      `newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}`,
+    );
     return {
       digestRunId: digestRun.id,
       recipientCount,

@@ -1,11 +1,22 @@
-const UTC_DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const UTC_DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
 
 /**
  * Returns the effective delivery days for a subscription.
  * If the user has set custom days, those act as a filter on the newsletter's schedule.
  * Otherwise the user receives all newsletter runs.
  */
-export function effectiveDays(newsletterDays: string[], subDays: string[]): string[] {
+export function effectiveDays(
+  newsletterDays: string[],
+  subDays: string[],
+): string[] {
   if (subDays.length === 0) return newsletterDays;
   return newsletterDays.filter((d) => subDays.includes(d));
 }

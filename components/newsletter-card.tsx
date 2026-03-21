@@ -39,79 +39,90 @@ export function NewsletterCard({
         className="absolute inset-0 rounded-xl"
       />
 
+      {/* Top row: content + button (desktop only button) */}
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div
-            className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110",
-              cat.bg,
-            )}
-          >
-            <Icon className={cn("h-6 w-6", cat.color)} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110",
+                cat.bg,
+              )}
+            >
+              <Icon className={cn("h-5 w-5", cat.color)} />
+            </div>
+            <p className="text-base font-semibold text-foreground leading-snug">
+              {newsletter.title}
+            </p>
           </div>
 
-          <div className="flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-lg font-semibold text-foreground">
-                {newsletter.title}
-              </span>
-              <span
-                className={cn(
-                  "rounded-full border px-2 py-0.5 text-xs font-medium",
-                  cat.pill,
-                )}
-              >
-                {cat.label}
-              </span>
-              <span
-                className={cn(
-                  "rounded-full border px-2 py-0.5 text-xs font-medium",
-                  newsletter.frequency === "daily"
-                    ? "border-accent/50 text-accent"
-                    : "border-muted-foreground/30 text-muted-foreground",
-                )}
-              >
-                {newsletter.frequency}
-              </span>
-            </div>
-
-            {newsletter.description && (
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                {newsletter.description}
-              </p>
-            )}
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {newsletter.keywords.slice(0, 3).map((kw) => (
-                <span
-                  key={kw}
-                  className="rounded-md bg-secondary px-2 py-0.5 text-xs text-secondary-foreground"
-                >
-                  {kw}
-                </span>
-              ))}
-              {newsletter.keywords.length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{newsletter.keywords.length - 3} more
-                </span>
+          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <span
+              className={cn(
+                "rounded-full border px-2 py-0.5 text-xs font-medium",
+                cat.pill,
               )}
-            </div>
+            >
+              {cat.label}
+            </span>
+            <span
+              className={cn(
+                "rounded-full border px-2 py-0.5 text-xs font-medium",
+                newsletter.frequency === "daily"
+                  ? "border-accent/50 text-accent"
+                  : "border-muted-foreground/30 text-muted-foreground",
+              )}
+            >
+              {newsletter.frequency}
+            </span>
+          </div>
 
-            <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                Next: {nextDateLabel}
+          {newsletter.description && (
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed line-clamp-2">
+              {newsletter.description}
+            </p>
+          )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            {newsletter.keywords.slice(0, 3).map((kw) => (
+              <span
+                key={kw}
+                className="rounded-md bg-secondary px-2 py-0.5 text-xs text-secondary-foreground"
+              >
+                {kw}
               </span>
-            </div>
+            ))}
+            {newsletter.keywords.length > 3 && (
+              <span className="text-xs text-muted-foreground">
+                +{newsletter.keywords.length - 3} more
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              Next: {nextDateLabel}
+            </span>
           </div>
         </div>
 
-        <div className="relative z-10 flex shrink-0 flex-col items-end gap-3">
+        {/* Desktop: button top-right */}
+        <div className="relative z-10 hidden shrink-0 sm:flex flex-col items-end gap-3">
           <SubscribeButton
             newsletterId={newsletter.id}
             subscriptionId={subscriptionId}
           />
         </div>
+      </div>
+
+      {/* Mobile: full-width button at bottom */}
+      <div className="relative z-10 mt-4 sm:hidden">
+        <SubscribeButton
+          newsletterId={newsletter.id}
+          subscriptionId={subscriptionId}
+          className="w-full justify-center"
+        />
       </div>
     </div>
   );

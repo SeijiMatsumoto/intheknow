@@ -22,7 +22,10 @@ const FREE_FEATURES = new Set<ProFeature>([
 
 const GATING_ENABLED = false;
 
-export async function canUse(userId: string, feature: ProFeature): Promise<boolean> {
+export async function canUse(
+  userId: string,
+  feature: ProFeature,
+): Promise<boolean> {
   if (!GATING_ENABLED) return true;
   if (FREE_FEATURES.has(feature)) return true;
   const plan = await getUserPlan(userId);

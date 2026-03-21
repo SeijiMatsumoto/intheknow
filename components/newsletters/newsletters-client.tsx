@@ -3,9 +3,17 @@
 import { Plus, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useMemo, useState } from "react";
-import { CategoryFilter } from "@/components/category-filter";
 import { NewsletterCard } from "@/components/newsletter-card";
 import { AddNewsletterModal } from "@/components/newsletters/add-newsletter-modal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CATEGORIES } from "@/lib/categories";
+import { cn } from "@/lib/utils";
 
 interface Newsletter {
   id: string;
@@ -15,6 +23,7 @@ interface Newsletter {
   frequency: string;
   keywords: string[];
   category: string;
+  isCustom: boolean;
 }
 
 interface NewsletterWithMeta {
@@ -38,25 +47,55 @@ export function NewslettersClient({
     defaultValue: "all",
     shallow: true,
   });
+  const [frequency, setFrequency] = useState("all");
   const [searchQuery, setSearchQuery] = useQueryState("q", {
     defaultValue: "",
     shallow: true,
   });
   const [showModal, setShowModal] = useState(false);
 
-  const filteredItems = useMemo(() => {
-    return items.filter(({ newsletter }) => {
+  // Filter without frequency (for counting per-frequency totals)
+  const applyBaseFilters = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return ({ newsletter }: NewsletterWithMeta) => {
       const matchesCategory =
         category === "all" || newsletter.category === category;
-      const query = searchQuery.toLowerCase();
       const matchesSearch =
         query === "" ||
         newsletter.title.toLowerCase().includes(query) ||
         (newsletter.description ?? "").toLowerCase().includes(query) ||
         newsletter.keywords.some((kw) => kw.toLowerCase().includes(query));
       return matchesCategory && matchesSearch;
-    });
-  }, [items, category, searchQuery]);
+    };
+  }, [category, searchQuery]);
+
+  const frequencyCounts = useMemo(() => {
+    const base = items.filter(applyBaseFilters);
+    return {
+      all: base.length,
+      daily: base.filter((i) => i.newsletter.frequency === "daily").length,
+      weekly: base.filter((i) => i.newsletter.frequency === "weekly").length,
+    };
+  }, [items, applyBaseFilters]);
+
+  const applyFilters = useMemo(() => {
+    return (item: NewsletterWithMeta) => {
+      if (!applyBaseFilters(item)) return false;
+      return frequency === "all" || item.newsletter.frequency === frequency;
+    };
+  }, [applyBaseFilters, frequency]);
+
+  const customItems = useMemo(
+    () =>
+      items.filter((item) => item.newsletter.isCustom && applyFilters(item)),
+    [items, applyFilters],
+  );
+
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => !item.newsletter.isCustom && applyFilters(item)),
+    [items, applyFilters],
+  );
 
   return (
     <>
@@ -71,43 +110,108 @@ export function NewslettersClient({
         />
       )}
 
-      {/* Filters and Search */}
-      <div className="mb-6 flex flex-col gap-4">
-        <CategoryFilter selected={category} onChange={(v) => setCategory(v)} />
-        <div className="flex items-center justify-between gap-4">
+      {/* Filters */}
+      <div className="mb-6 flex flex-col gap-3">
+        {/* Search + filters */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search newsletters..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-secondary pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+            />
+          </div>
+
+          <Select value={category} onValueChange={(v) => setCategory(v)}>
+            <SelectTrigger className="shrink-0 h-9">
+              <SelectValue placeholder="All categories">
+                {category === "all"
+                  ? "All categories"
+                  : CATEGORIES.find((c) => c.id === category)?.label ?? category}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="hidden sm:flex h-9 shrink-0 items-center rounded-lg border border-border p-0.5">
+            {(["all", "daily", "weekly"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFrequency(f)}
+                className={cn(
+                  "flex h-full items-center justify-center rounded-md px-3 text-sm font-medium transition-colors",
+                  frequency === f
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {f === "all" ? "All" : f === "daily" ? "Daily" : "Weekly"}
+                <span className="ml-1.5 text-xs opacity-60">
+                  {frequencyCounts[f]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Stats + Add custom */}
+        <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             <span className="font-medium text-accent">{subscribedCount}</span>{" "}
             subscribed
             <span className="mx-2 inline-block h-1 w-1 rounded-full bg-muted-foreground/50 align-middle" />
             <span className="font-medium text-foreground">
-              {filteredItems.length}
+              {filteredItems.length + customItems.length}
             </span>{" "}
             shown
           </p>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-56 rounded-lg border border-border bg-secondary pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="flex h-9 items-center gap-2 rounded-lg bg-accent px-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
-            >
-              <Plus className="h-4 w-4" />
-              Add custom
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" />
+            Add custom
+          </button>
         </div>
       </div>
 
-      {/* Newsletter List */}
+      {/* Custom newsletters */}
+      {customItems.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            My newsletters
+          </h2>
+          <div className="space-y-4">
+            {customItems.map(({ newsletter, subscriptionId, nextRunIso }) => (
+              <NewsletterCard
+                key={newsletter.id}
+                newsletter={newsletter}
+                subscriptionId={subscriptionId}
+                nextRunIso={nextRunIso}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Curated newsletters */}
+      {customItems.length > 0 && (
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+          Curated
+        </h2>
+      )}
       <div className="space-y-4">
         {filteredItems.map(({ newsletter, subscriptionId, nextRunIso }) => (
           <NewsletterCard
@@ -119,13 +223,20 @@ export function NewslettersClient({
         ))}
       </div>
 
-      {filteredItems.length === 0 && (
+      {filteredItems.length === 0 && customItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-lg font-medium text-foreground">
             No newsletters found
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Try adjusting your search or filter
+          </p>
+        </div>
+      )}
+      {filteredItems.length === 0 && customItems.length > 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            No curated newsletters match your search
           </p>
         </div>
       )}

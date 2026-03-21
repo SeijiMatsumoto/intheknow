@@ -1,7 +1,15 @@
 import { inngest } from "@/inngest/client";
 import { getActiveSubscriptionsWithSchedule } from "./queries";
 
-const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
 
 export const hourlyOrchestrator = inngest.createFunction(
   { id: "hourly-orchestrator", triggers: [{ cron: "0 * * * *" }] },
@@ -17,7 +25,10 @@ export const hourlyOrchestrator = inngest.createFunction(
     );
 
     const due = subscriptions.filter((sub) => {
-      const days = sub.scheduleDays.length > 0 ? sub.scheduleDays : sub.newsletter.scheduleDays;
+      const days =
+        sub.scheduleDays.length > 0
+          ? sub.scheduleDays
+          : sub.newsletter.scheduleDays;
       const hour = sub.scheduleHour ?? sub.newsletter.scheduleHour;
       return days.includes(currentDay) && hour === currentHour;
     });
@@ -26,7 +37,10 @@ export const hourlyOrchestrator = inngest.createFunction(
     if (due.length === 0) return { fired: 0 };
 
     // Group by newsletterId
-    const byNewsletter = new Map<string, { title: string; userIds: string[] }>();
+    const byNewsletter = new Map<
+      string,
+      { title: string; userIds: string[] }
+    >();
     for (const sub of due) {
       const entry = byNewsletter.get(sub.newsletterId) ?? {
         title: sub.newsletter.title,

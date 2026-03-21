@@ -1,7 +1,11 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText, hasToolCall, stepCountIs } from "ai";
 import { z } from "zod";
-import { makeSearchTwitterTool, makeSearchWebTool, makeSubmitAnswerTool } from "./tools";
+import {
+  makeSearchTwitterTool,
+  makeSearchWebTool,
+  makeSubmitAnswerTool,
+} from "./tools";
 
 // ── Output schema ─────────────────────────────────────────────────────────────
 
@@ -81,7 +85,9 @@ export async function runNewsletterAgent(
     tools: {
       searchWeb: makeSearchWebTool(keywords, frequency),
       searchTwitter: makeSearchTwitterTool(keywords),
-      submitAnswer: makeSubmitAnswerTool((digest) => { output = digest; }),
+      submitAnswer: makeSubmitAnswerTool((digest) => {
+        output = digest;
+      }),
     },
     stopWhen: [hasToolCall("submitAnswer"), stepCountIs(4)],
     system: `You are an expert newsletter writer and research editor for "${title}".

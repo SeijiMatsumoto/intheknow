@@ -1,12 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
@@ -46,17 +39,21 @@ export default async function NewsletterDetailPage({
 
   // 404 if not found, or if it's another user's custom newsletter
   if (!newsletter) notFound();
-  if (newsletter.createdBy !== null && newsletter.createdBy !== userId) notFound();
+  if (newsletter.createdBy !== null && newsletter.createdBy !== userId)
+    notFound();
 
-  const [subscription, canCustomize, digestRunCount] = await Promise.all([
+  const [subscription, canCustomize, pastRuns] = await Promise.all([
     userId
       ? prisma.subscription.findFirst({
           where: { userId, newsletterId: newsletter.id },
         })
       : null,
     userId ? canUse(userId, "custom_schedule") : false,
-    prisma.digestRun.count({
+    prisma.digestRun.findMany({
       where: { newsletterId: newsletter.id, status: "sent" },
+      orderBy: { runAt: "desc" },
+      take: 10,
+      select: { id: true, runAt: true, content: true },
     }),
   ]);
 
@@ -97,7 +94,7 @@ export default async function NewsletterDetailPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-12">
+      <main className="mx-auto max-w-5xl px-6 py-12 pb-24 sm:pb-12">
         {/* Hero */}
         <div className="mb-12">
           <div className="flex items-start gap-6">
@@ -148,12 +145,6 @@ export default async function NewsletterDetailPage({
                   )}
                   {newsletter.frequency === "daily" ? "Daily" : "Weekly"}
                 </span>
-                {subscription && (
-                  <span className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Subscribed
-                  </span>
-                )}
               </div>
 
               <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
@@ -187,26 +178,6 @@ export default async function NewsletterDetailPage({
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Topics covered as keywords */}
-            <section className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">
-                Topics covered
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {newsletter.keywords.map((kw) => (
-                  <div
-                    key={kw}
-                    className="flex items-center gap-2 rounded-lg bg-secondary/50 px-4 py-2.5"
-                  >
-                    <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
-                    <span className="text-sm text-foreground capitalize">
-                      {kw}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
             {/* Subscription schedule row (if subscribed) */}
             {subscription && (
               <section className="rounded-2xl border border-border bg-card p-6">
@@ -223,6 +194,70 @@ export default async function NewsletterDetailPage({
                   nextRunIso={nextRun.toISOString()}
                   canCustomize={canCustomize}
                 />
+              </section>
+            )}
+
+            {/* Past editions */}
+            {pastRuns.length > 0 ? (
+              <section>
+                <h2 className="mb-4 text-lg font-semibold text-foreground">
+                  Past editions
+                </h2>
+                <div className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
+                  {pastRuns.map((run) => {
+                    const content = run.content as {
+                      editionTitle?: string;
+                      title?: string;
+                      summary?: string;
+                    } | null;
+                    const title =
+                      content?.editionTitle ??
+                      content?.title ??
+                      "Untitled edition";
+                    const summary = content?.summary;
+                    const date = new Date(run.runAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      },
+                    );
+                    return (
+                      <Link
+                        key={run.id}
+                        href={`/feed/${run.id}`}
+                        className="flex items-start justify-between gap-4 px-6 py-4 hover:bg-secondary/50 transition-colors group"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {date}
+                          </p>
+                          <p className="font-medium text-foreground group-hover:text-accent transition-colors truncate">
+                            {title}
+                          </p>
+                          {summary && (
+                            <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
+                              {summary}
+                            </p>
+                          )}
+                        </div>
+                        <ArrowLeft className="h-4 w-4 shrink-0 rotate-180 text-muted-foreground/40 group-hover:text-accent transition-colors mt-1" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : (
+              <section className="rounded-2xl border border-border bg-card p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-2">
+                  Past editions
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  No editions have been sent yet. Subscribe to get notified when
+                  the first one goes out.
+                </p>
               </section>
             )}
           </div>
@@ -284,24 +319,8 @@ export default async function NewsletterDetailPage({
                     </div>
                   </div>
                 )}
-              </div>
-            </section>
 
-            {/* Stats */}
-            <section className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">
-                Stats
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Issues sent
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    {digestRunCount}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-1">
                   <span className="text-sm text-muted-foreground">
                     Next delivery
                   </span>

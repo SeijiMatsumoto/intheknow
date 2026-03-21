@@ -13,7 +13,6 @@ export type CandidateItem = {
     score?: number; // HN / Reddit score
   };
   freshnessScore: number; // 0–10
-  worthScore: number;    // 0–10
+  worthScore: number; // 0–10
   combinedScore: number; // 0–10
 };
-

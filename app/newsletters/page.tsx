@@ -4,6 +4,7 @@ import { NewslettersClient } from "@/components/newsletters/newsletters-client";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 import { nextRunDate } from "@/lib/schedule";
+import { PageHeader } from "@/components/page-header";
 
 export default async function NewslettersPage() {
   const { userId } = await auth();
@@ -49,6 +50,7 @@ export default async function NewslettersPage() {
         frequency: n.frequency,
         keywords: n.keywords,
         category: n.categoryId,
+        isCustom: n.createdBy !== null,
       },
       subscriptionId: sub?.id ?? null,
       nextRunIso: nextRun.toISOString(),
@@ -61,17 +63,12 @@ export default async function NewslettersPage() {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-6 py-12">
+      <main className="mx-auto max-w-5xl px-6 py-6 pb-24 md:py-12 md:pb-12">
         {/* Hero */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl text-balance">
-            Stay in the know
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
-            Newsletters across everything that matters — AI, finance, politics,
-            sports, and more. Subscribe to the topics you care about.
-          </p>
-        </div>
+        <PageHeader
+          title="Browse"
+          description="Newsletters across everything that matters — AI, finance, politics, sports, and more."
+        />
 
         <NewslettersClient
           items={items}

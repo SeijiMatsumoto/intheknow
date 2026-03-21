@@ -9,8 +9,13 @@ export const emailSender = inngest.createFunction(
     triggers: [{ event: "newsletter/email.generated" }],
   },
   async ({ event, logger }) => {
-    const { digestRunId, newsletterTitle, userId, userEmail, emailHtml } = event.data;
-    logger.info(`Sending email to ${userEmail}`, { digestRunId, userId, subject: newsletterTitle });
+    const { digestRunId, newsletterTitle, userId, userEmail, emailHtml } =
+      event.data;
+    logger.info(`Sending email to ${userEmail}`, {
+      digestRunId,
+      userId,
+      subject: newsletterTitle,
+    });
 
     const { data, error } = await resend.emails.send({
       from: "The Latest <onboarding@resend.dev>",

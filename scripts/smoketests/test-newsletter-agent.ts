@@ -8,7 +8,14 @@ const newsletter = {
   description:
     "A weekly digest of the latest AI agent frameworks, LLM releases, and practical tooling for engineers.",
   frequency: "weekly",
-  keywords: ["AI agents", "LLMs", "OpenAI", "Anthropic", "RAG", "function calling"],
+  keywords: [
+    "AI agents",
+    "LLMs",
+    "OpenAI",
+    "Anthropic",
+    "RAG",
+    "function calling",
+  ],
   sources: {
     rss: [],
     sites: ["techcrunch.com", "theverge.com", "huggingface.co/blog"],
@@ -49,7 +56,11 @@ async function main() {
   }
   console.log(`\nBottom line: ${result.digest.bottomLine}`);
 
-  const html = renderEmail(result.digest, newsletter.title, newsletter.frequency);
+  const html = renderEmail(
+    result.digest,
+    newsletter.title,
+    newsletter.frequency,
+  );
   const outPath = resolve("scripts/smoketests/output/newsletter-agent.html");
   writeFileSync(outPath, html, "utf-8");
   console.log(`\nHTML written to: ${outPath}`);

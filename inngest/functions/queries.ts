@@ -12,13 +12,21 @@ export function getActiveSubscriptionsWithSchedule() {
       scheduleDays: true,
       scheduleHour: true,
       newsletter: {
-        select: { id: true, title: true, scheduleDays: true, scheduleHour: true },
+        select: {
+          id: true,
+          title: true,
+          scheduleDays: true,
+          scheduleHour: true,
+        },
       },
     },
   });
 }
 
-export function getNewsletterSubscriptions(newsletterId: string, userIds?: string[]) {
+export function getNewsletterSubscriptions(
+  newsletterId: string,
+  userIds?: string[],
+) {
   return prisma.subscription.findMany({
     where: {
       newsletterId,
@@ -60,7 +68,11 @@ export function saveDigestItems(
   });
 }
 
-export function saveDigestContent(id: string, content: InputJsonValue, emailHtml: string) {
+export function saveDigestContent(
+  id: string,
+  content: InputJsonValue,
+  emailHtml: string,
+) {
   return prisma.digestRun.update({
     where: { id },
     data: { content, emailHtml },

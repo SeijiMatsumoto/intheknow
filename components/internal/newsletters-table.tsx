@@ -207,12 +207,73 @@ export function NewslettersTable({
             </button>
           )}
 
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
             {filtered.length} of {newsletters.length}
           </span>
         </div>
 
-        <div className="overflow-hidden rounded-md border border-border">
+        {/* Mobile card layout */}
+        <div className="md:hidden space-y-3">
+          {filtered.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No newsletters match filters
+            </p>
+          )}
+          {filtered.map((n) => (
+            <div
+              key={n.id}
+              className="rounded-md border border-border p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground truncate">
+                    {n.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 truncate">
+                    {n.slug}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <TriggerButton newsletterId={n.id} />
+                  <Link
+                    href={`/internal/newsletters/${n.id}/edit`}
+                    className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Link>
+                  <DeleteButton id={n.id} />
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {n.category && (
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
+                    {n.category.label}
+                  </span>
+                )}
+                <span className="capitalize text-muted-foreground">
+                  {n.frequency}
+                </span>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 font-medium",
+                    n.createdBy
+                      ? "bg-accent/10 text-accent"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {n.createdBy ? "user" : "system"}
+                </span>
+                <span className="ml-auto text-muted-foreground tabular-nums">
+                  {n._count.subscriptions} subs · {n._count.digestRuns} runs
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block overflow-hidden rounded-md border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 border-b border-border">
               <tr>
@@ -363,8 +424,8 @@ export function NewslettersTable({
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Recent Digest Runs
         </h2>
-        <div className="overflow-hidden rounded-md border border-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full text-sm min-w-[500px]">
             <thead className="bg-muted/40 border-b border-border">
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">

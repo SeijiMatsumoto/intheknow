@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { type Frequency, twitterDateRange } from "@/lib/frequency";
+import { checkRelevancyAndSummarize } from "./check-relevancy";
 
 type TweetAuthor = {
   userName: string;
@@ -45,17 +46,26 @@ function buildTwitterQuery(query: string, frequency: Frequency): string {
   return `${query} since:${since} until:${until} -filter:replies`;
 }
 
+type TwitterToolContext = {
+  frequency: Frequency;
+  newsletterTitle: string;
+  newsletterDescription?: string | null;
+};
+
 async function twitterSearch(
   queries: string[],
-  frequency: Frequency,
+  ctx: TwitterToolContext,
 ): Promise<string> {
+  const frequency = ctx.frequency;
   const apiKey = process.env.TWITTERAPI_IO_KEY;
   if (!apiKey) {
     console.warn("[searchTwitter] no API key configured");
     return `Twitter search not available (no API key). Queries attempted: ${queries.join(", ")}`;
   }
 
-  console.log(`[searchTwitter] ${queries.length} queries: ${queries.join(" | ")}`);
+  console.log(
+    `[searchTwitter] ${queries.length} queries: ${queries.join(" | ")}`,
+  );
 
   const allTweets: Tweet[] = [];
 
@@ -63,7 +73,9 @@ async function twitterSearch(
     const fullQuery = buildTwitterQuery(q, frequency);
     const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&queryType=Top&count=10`;
 
-    console.log(`[searchTwitter] fetching query="${q}" fullQuery="${fullQuery}"`);
+    console.log(
+      `[searchTwitter] fetching query="${q}" fullQuery="${fullQuery}"`,
+    );
 
     const res = await fetch(url, {
       headers: { "x-api-key": apiKey },
@@ -106,19 +118,41 @@ async function twitterSearch(
     )
     .slice(0, 20);
 
-  console.log(
-    `[searchTwitter] after dedup=${unique.length}, returning top ${sorted.length}`,
+  // Filter for relevancy and summarize
+  const combinedQuery = queries.join(", ");
+  const relevancy = await checkRelevancyAndSummarize(
+    combinedQuery,
+    sorted.map((t) => ({
+      title: `@${t.author.userName} (${t.author.name})`,
+      content: t.text,
+    })),
+    {
+      newsletterTitle: ctx.newsletterTitle,
+      newsletterDescription: ctx.newsletterDescription,
+    },
   );
 
-  return sorted
+  const relevant = sorted
+    .map((t, i) => ({ tweet: t, ...relevancy[i] }))
+    .filter((r) => r.relevant);
+
+  console.log(
+    `[searchTwitter] after dedup=${unique.length}, relevant=${relevant.length}, filtered=${sorted.length - relevant.length}`,
+  );
+
+  if (relevant.length === 0) {
+    return `No relevant tweets found for: ${queries.join(", ")}`;
+  }
+
+  return relevant
     .map(
-      (t, i) =>
-        `${i + 1}. @${t.author.userName} (${t.author.name}${t.author.isBlueVerified ? " ✓" : ""}, ${t.author.followers.toLocaleString()} followers)\n   ${t.text.slice(0, 280)}\n   ${formatEngagement(t)}\n   ${t.url}\n   ${t.createdAt}`,
+      (r, i) =>
+        `${i + 1}. @${r.tweet.author.userName} (${r.tweet.author.name}${r.tweet.author.isBlueVerified ? " ✓" : ""}, ${r.tweet.author.followers.toLocaleString()} followers)\n   ${r.summary}\n   ${formatEngagement(r.tweet)}\n   ${r.tweet.url}\n   ${r.tweet.createdAt}`,
     )
     .join("\n\n");
 }
 
-export function makeSearchTwitterTool(frequency: Frequency) {
+export function makeSearchTwitterTool(ctx: TwitterToolContext) {
   return tool({
     description:
       "Search Twitter/X for public discussion, hot takes, and reactions about the newsletter topic. Returns top tweets sorted by engagement. Use focused queries to find relevant discourse.",
@@ -130,6 +164,6 @@ export function makeSearchTwitterTool(frequency: Frequency) {
           "1-3 Twitter search queries. Use keywords, hashtags, or phrases. E.g. ['GPT-5 launch reactions', '#AI agents']",
         ),
     }),
-    execute: async ({ queries }) => twitterSearch(queries, frequency),
+    execute: async ({ queries }) => twitterSearch(queries, ctx),
   });
 }

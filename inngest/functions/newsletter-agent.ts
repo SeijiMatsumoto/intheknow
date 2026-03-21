@@ -1,4 +1,5 @@
 import { openai } from "@ai-sdk/openai";
+import { getTracer } from "@lmnr-ai/lmnr";
 import { generateText, hasToolCall, stepCountIs, type Tool } from "ai";
 import { z } from "zod";
 import { getDigestConfig } from "@/lib/digest-config";
@@ -141,8 +142,14 @@ export async function runNewsletterAgent(
 
   const config = getDigestConfig(tier);
 
+  const toolCtx = {
+    frequency,
+    newsletterTitle: title,
+    newsletterDescription: description,
+  };
+
   const tools: Record<string, Tool> = {
-    searchWeb: makeSearchWebTool(frequency),
+    searchWeb: makeSearchWebTool(toolCtx),
     submitAnswer: makeSubmitAnswerTool((digest) => {
       output = digest;
     }),
@@ -150,7 +157,7 @@ export async function runNewsletterAgent(
 
   // Only include Twitter search when tier supports it
   if (config.socialConsensus) {
-    tools.searchTwitter = makeSearchTwitterTool(frequency);
+    tools.searchTwitter = makeSearchTwitterTool(toolCtx);
   }
 
   // Tier-specific instructions
@@ -169,6 +176,11 @@ export async function runNewsletterAgent(
     model: openai(config.model),
     tools,
     stopWhen: [hasToolCall("submitAnswer"), stepCountIs(config.maxSteps)],
+    experimental_telemetry: {
+      isEnabled: true,
+      tracer: getTracer(),
+      metadata: { newsletterTitle: title, tier, frequency },
+    },
     system: `You are an expert newsletter writer and research editor.
 
 <guidelines>

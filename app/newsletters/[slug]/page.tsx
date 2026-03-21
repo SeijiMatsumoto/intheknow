@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { ArrowLeft, Calendar, Clock, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BottomNav } from "@/components/bottom-nav";
+import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { SubscriptionRow } from "@/components/newsletters/subscription-row";
 import { getCategory } from "@/lib/categories";
@@ -68,57 +70,51 @@ export default async function NewsletterDetailPage({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-5xl items-center justify-between px-6">
           <Link
             href="/newsletters"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            All newsletters
+            <span className="hidden sm:inline">All newsletters</span>
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2 mr-4">
+            <Link href="/" className="flex items-center gap-2 sm:mr-4">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
                 <Zap className="h-3.5 w-3.5 text-accent-foreground" />
               </div>
               <span className="text-sm font-semibold text-foreground">
-                The Latest
+                ITK
               </span>
             </Link>
-            <SubscribeButton
-              newsletterId={newsletter.id}
-              subscriptionId={subscription?.id ?? null}
-            />
+            <div className="hidden sm:flex items-center gap-2">
+              {newsletter.createdBy !== null && (
+                <DeleteNewsletterButton
+                  newsletterId={newsletter.id}
+                  newsletterTitle={newsletter.title}
+                />
+              )}
+              <SubscribeButton
+                newsletterId={newsletter.id}
+                subscriptionId={subscription?.id ?? null}
+              />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-12 pb-24 sm:pb-12">
+      <main className="mx-auto max-w-5xl px-6 py-6 pb-24 sm:py-12 sm:pb-12">
         {/* Hero */}
-        <div className="mb-12">
-          <div className="flex items-start gap-6">
-            {(() => {
-              const cat = getCategory(newsletter.categoryId);
-              const CatIcon = cat.icon;
-              return (
-                <div
-                  className={cn(
-                    "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl",
-                    cat.bg,
-                  )}
-                >
-                  <CatIcon className={cn("h-10 w-10", cat.color)} />
-                </div>
-              );
-            })()}
-
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                {(() => {
-                  const cat = getCategory(newsletter.categoryId);
-                  const CatIcon = cat.icon;
-                  return (
+        <div className="mb-8 sm:mb-12">
+          {(() => {
+            const cat = getCategory(newsletter.categoryId);
+            const CatIcon = cat.icon;
+            return (
+              <>
+                {/* Mobile: icon inline with title */}
+                <div className="sm:hidden">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span
                       className={cn(
                         "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
@@ -128,44 +124,122 @@ export default async function NewsletterDetailPage({
                       <CatIcon className="h-3 w-3" />
                       {cat.label}
                     </span>
-                  );
-                })()}
-                <span
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-                    newsletter.frequency === "daily"
-                      ? "border-accent/30 bg-accent/10 text-accent"
-                      : "border-muted-foreground/30 text-muted-foreground",
-                  )}
-                >
-                  {newsletter.frequency === "daily" ? (
-                    <Sparkles className="h-3 w-3" />
-                  ) : (
-                    <Calendar className="h-3 w-3" />
-                  )}
-                  {newsletter.frequency === "daily" ? "Daily" : "Weekly"}
-                </span>
-              </div>
+                    <span
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                        newsletter.frequency === "daily"
+                          ? "border-accent/30 bg-accent/10 text-accent"
+                          : "border-muted-foreground/30 text-muted-foreground",
+                      )}
+                    >
+                      {newsletter.frequency === "daily" ? (
+                        <Sparkles className="h-3 w-3" />
+                      ) : (
+                        <Calendar className="h-3 w-3" />
+                      )}
+                      {newsletter.frequency === "daily" ? "Daily" : "Weekly"}
+                    </span>
+                  </div>
 
-              <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
-                {newsletter.title}
-              </h1>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        cat.bg,
+                      )}
+                    >
+                      <CatIcon className={cn("h-5 w-5", cat.color)} />
+                    </div>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
+                      {newsletter.title}
+                    </h1>
+                  </div>
 
-              {newsletter.description && (
-                <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
-                  {newsletter.description}
-                </p>
-              )}
-            </div>
-          </div>
+                  {newsletter.description && (
+                    <p className="mt-2 text-sm text-muted-foreground text-pretty">
+                      {newsletter.description}
+                    </p>
+                  )}
+
+                  <div className="mt-4 space-y-2">
+                    <SubscribeButton
+                      newsletterId={newsletter.id}
+                      subscriptionId={subscription?.id ?? null}
+                      className="w-full"
+                    />
+                    {newsletter.createdBy !== null && (
+                      <DeleteNewsletterButton
+                        newsletterId={newsletter.id}
+                        newsletterTitle={newsletter.title}
+                        className="w-full justify-center"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Desktop: original layout */}
+                <div className="hidden sm:block">
+                  <div className="flex items-start gap-6">
+                    <div
+                      className={cn(
+                        "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl",
+                        cat.bg,
+                      )}
+                    >
+                      <CatIcon className={cn("h-10 w-10", cat.color)} />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3 flex-wrap">
+                        <span
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                            cat.pill,
+                          )}
+                        >
+                          <CatIcon className="h-3 w-3" />
+                          {cat.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                            newsletter.frequency === "daily"
+                              ? "border-accent/30 bg-accent/10 text-accent"
+                              : "border-muted-foreground/30 text-muted-foreground",
+                          )}
+                        >
+                          {newsletter.frequency === "daily" ? (
+                            <Sparkles className="h-3 w-3" />
+                          ) : (
+                            <Calendar className="h-3 w-3" />
+                          )}
+                          {newsletter.frequency === "daily" ? "Daily" : "Weekly"}
+                        </span>
+                      </div>
+
+                      <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
+                        {newsletter.title}
+                      </h1>
+
+                      {newsletter.description && (
+                        <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
+                          {newsletter.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Keywords */}
           {newsletter.keywords.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-2">
+            <div className="mt-4 sm:mt-8 flex flex-wrap gap-2">
               {newsletter.keywords.map((kw) => (
                 <span
                   key={kw}
-                  className="rounded-full bg-secondary px-3 py-1.5 text-sm text-muted-foreground"
+                  className="rounded-full bg-secondary px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-muted-foreground"
                 >
                   {kw}
                 </span>
@@ -177,7 +251,7 @@ export default async function NewsletterDetailPage({
         {/* Content Grid */}
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
             {/* Subscription schedule row (if subscribed) */}
             {subscription && (
               <section className="rounded-2xl border border-border bg-card p-6">
@@ -263,7 +337,7 @@ export default async function NewsletterDetailPage({
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 order-1 lg:order-2">
             {/* Delivery schedule */}
             <section className="rounded-2xl border border-border bg-card p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4">
@@ -338,13 +412,15 @@ export default async function NewsletterDetailPage({
         </div>
       </main>
 
-      <footer className="border-t border-border bg-card/50 mt-16">
+      <footer className="border-t border-border bg-card/50 mt-16 mb-16 sm:mb-0">
         <div className="mx-auto max-w-5xl px-6 py-8">
           <p className="text-center text-sm text-muted-foreground">
             Unsubscribe anytime. We respect your inbox.
           </p>
         </div>
       </footer>
+
+      {userId && <BottomNav />}
     </div>
   );
 }

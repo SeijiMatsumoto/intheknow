@@ -41,7 +41,7 @@ export default async function FeedDetailPage({
       })
     : null;
 
-  const title = content.editionTitle ?? (content as { title?: string }).title;
+  const title = content.editionTitle ?? content.title;
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,7 +57,7 @@ export default async function FeedDetailPage({
 
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           {/* Header */}
-          <div className="border-b border-border px-10 pb-6 pt-8">
+          <div className="border-b border-border px-6 sm:px-10 pb-6 pt-8">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
               {send.run.newsletter.title}
             </p>
@@ -74,7 +74,7 @@ export default async function FeedDetailPage({
 
           {/* In this edition */}
           {content.keyTakeaways?.length > 0 && (
-            <div className="border-b border-border bg-amber-50 px-10 py-5 dark:bg-amber-950/20">
+            <div className="border-b border-border bg-amber-50 px-6 sm:px-10 py-5 dark:bg-amber-950/20">
               <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
                 ⚡ In this edition
               </p>
@@ -95,12 +95,12 @@ export default async function FeedDetailPage({
           <div className="pb-6">
             {content.sections?.map((section) => (
               <div key={section.heading}>
-                <div className="border-y border-border bg-secondary px-10 py-3">
+                <div className="border-y border-border bg-secondary px-6 sm:px-10 py-3">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     {section.heading}
                   </h2>
                 </div>
-                <div className="divide-y divide-border px-10">
+                <div className="divide-y divide-border px-6 sm:px-10">
                   {section.items.map((item) => (
                     <div key={item.url} className="py-6">
                       <p className="mb-1.5 text-xs text-muted-foreground/60">

@@ -1,10 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { NewslettersClient } from "@/components/newsletters/newsletters-client";
+import { PageHeader } from "@/components/page-header";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 import { nextRunDate } from "@/lib/schedule";
-import { PageHeader } from "@/components/page-header";
 
 export default async function NewslettersPage() {
   const { userId } = await auth();
@@ -63,7 +63,7 @@ export default async function NewslettersPage() {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-6 py-6 pb-24 md:py-12 md:pb-12">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-0 md:py-6">
         {/* Hero */}
         <PageHeader
           title="Browse"
@@ -77,7 +77,7 @@ export default async function NewslettersPage() {
         />
       </main>
 
-      <footer className="border-t border-border bg-card/50 mt-16">
+      <footer className="border-t border-border bg-card/50 mt-16 mb-16 sm:mb-0">
         <div className="mx-auto max-w-5xl px-6 py-8">
           <p className="text-center text-sm text-muted-foreground">
             Unsubscribe anytime. We respect your inbox.

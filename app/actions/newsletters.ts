@@ -104,6 +104,44 @@ export async function deleteNewsletterById(id: string) {
   revalidatePath("/newsletters");
 }
 
+export async function deleteCustomNewsletter(
+  newsletterId: string,
+): Promise<{ error?: string }> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { error: "Not authenticated" };
+
+    const newsletter = await prisma.newsletter.findUnique({
+      where: { id: newsletterId },
+    });
+    if (!newsletter) return { error: "Newsletter not found" };
+    if (newsletter.createdBy !== userId)
+      return { error: "You can only delete your own newsletters" };
+
+    // Cascade: digestSend → digestRun → subscription → newsletter
+    const runs = await prisma.digestRun.findMany({
+      where: { newsletterId },
+      select: { id: true },
+    });
+    if (runs.length > 0) {
+      await prisma.digestSend.deleteMany({
+        where: { runId: { in: runs.map((r) => r.id) } },
+      });
+      await prisma.digestRun.deleteMany({ where: { newsletterId } });
+    }
+    await prisma.subscription.deleteMany({ where: { newsletterId } });
+    await prisma.newsletter.delete({ where: { id: newsletterId } });
+
+    revalidatePath("/newsletters");
+    return {};
+  } catch (e) {
+    return {
+      error:
+        e instanceof Error ? e.message : "Failed to delete newsletter",
+    };
+  }
+}
+
 export async function createUserNewsletter(data: {
   title: string;
   description: string;

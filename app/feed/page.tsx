@@ -20,7 +20,7 @@ export default async function FeedPage() {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-6 py-6 pb-24 sm:py-12 sm:pb-12">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-24 sm:py-12 sm:pb-12">
         <PageHeader
           title="My Feed"
           description="Your digest history across all subscriptions."
@@ -44,7 +44,7 @@ export default async function FeedPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {sends.map((send) => {
               const { run } = send;
               const content = run.content as DigestContent | null;
@@ -63,20 +63,22 @@ export default async function FeedPage() {
                 <Link
                   key={send.id}
                   href={`/feed/${run.id}`}
-                  className="group block rounded-xl border border-border bg-card p-6 transition-all hover:border-muted-foreground/30 hover:bg-secondary/50"
+                  className="group block rounded-xl border border-border bg-card p-4 sm:p-6 transition-all hover:border-muted-foreground/30 hover:bg-secondary/50"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4">
                     <div
                       className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                        "flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg",
                         cat.bg,
                       )}
                     >
-                      <CatIcon className={cn("h-5 w-5", cat.color)} />
+                      <CatIcon
+                        className={cn("h-4 w-4 sm:h-5 sm:w-5", cat.color)}
+                      />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         <span className="text-xs font-medium text-muted-foreground">
                           {run.newsletter.title}
                         </span>
@@ -87,19 +89,19 @@ export default async function FeedPage() {
                         )}
                       </div>
 
-                      <p className="mt-1 font-semibold text-foreground group-hover:text-accent transition-colors">
+                      <p className="mt-0.5 sm:mt-1 text-sm sm:text-base font-semibold text-foreground group-hover:text-accent transition-colors">
                         {content?.title ?? run.newsletter.title}
                       </p>
 
                       {content?.summary && (
-                        <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                        <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                           {content.summary}
                         </p>
                       )}
 
                       {content?.keyTakeaways &&
                         content.keyTakeaways.length > 0 && (
-                          <p className="mt-3 text-xs text-muted-foreground/70">
+                          <p className="mt-2 sm:mt-3 text-xs text-muted-foreground/70">
                             {content.keyTakeaways.length} key takeaways ·{" "}
                             {content.sections?.length ?? 0} sections
                           </p>

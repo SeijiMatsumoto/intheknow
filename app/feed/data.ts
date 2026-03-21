@@ -35,22 +35,27 @@ export async function getFeedDigest(
   });
 }
 
-export interface DigestItem {
+export type DigestItem = {
   url: string;
   title: string;
   source: string;
   summary: string;
+  publishedAt: string;
+  plainLead?: string;
+  detail?: string;
   quote?: string;
-}
+};
 
-export interface DigestSection {
+export type DigestSection = {
   heading: string;
   items: DigestItem[];
-}
+};
 
-export interface DigestContent {
+export type DigestContent = {
+  editionTitle: string;
   title: string;
   summary: string;
   sections: DigestSection[];
   keyTakeaways: string[];
-}
+  bottomLine?: string;
+};

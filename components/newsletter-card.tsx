@@ -1,5 +1,6 @@
 import { Clock } from "lucide-react";
 import Link from "next/link";
+import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { getCategory } from "@/lib/categories";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ interface NewsletterCardProps {
     frequency: string;
     keywords: string[];
     category: string; // categoryId slug
+    isCustom?: boolean;
   };
   subscriptionId: string | null;
   nextRunIso: string;
@@ -113,16 +115,29 @@ export function NewsletterCard({
             newsletterId={newsletter.id}
             subscriptionId={subscriptionId}
           />
+          {newsletter.isCustom && (
+            <DeleteNewsletterButton
+              newsletterId={newsletter.id}
+              newsletterTitle={newsletter.title}
+            />
+          )}
         </div>
       </div>
 
       {/* Mobile: full-width button at bottom */}
-      <div className="relative z-10 mt-4 sm:hidden">
+      <div className="relative z-10 mt-4 sm:hidden space-y-2">
         <SubscribeButton
           newsletterId={newsletter.id}
           subscriptionId={subscriptionId}
           className="w-full justify-center"
         />
+        {newsletter.isCustom && (
+          <DeleteNewsletterButton
+            newsletterId={newsletter.id}
+            newsletterTitle={newsletter.title}
+            className="w-full justify-center"
+          />
+        )}
       </div>
     </div>
   );

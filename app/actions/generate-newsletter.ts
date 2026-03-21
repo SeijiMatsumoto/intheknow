@@ -15,7 +15,7 @@ const DAYS = [
   "sunday",
 ] as const;
 
-export interface GeneratedNewsletter {
+export type GeneratedNewsletter = {
   title: string;
   description: string;
   categoryId: string;

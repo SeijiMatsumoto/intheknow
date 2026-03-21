@@ -3,7 +3,7 @@
 import { CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 
-interface CategoryFilterProps {
+type CategoryFilterProps = {
   selected: string;
   onChange: (category: string) => void;
 }

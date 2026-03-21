@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ProfileButton } from "@/components/profile-button";
 import { SignInModalButton } from "@/components/sign-in-button";
 
-interface Props {
+type Props = {
   userId: string | null;
   admin: boolean;
   hideProfile?: boolean;

@@ -37,7 +37,7 @@ function formatHour(h: number): string {
   return `${display}:00 ${period}`;
 }
 
-interface FormState {
+type FormState = {
   title: string;
   description: string;
   categoryId: string;
@@ -56,7 +56,7 @@ const DEFAULT_FORM: Omit<FormState, "scheduleHour"> = {
   keywords: "",
 };
 
-interface Props {
+type Props = {
   canCreate: boolean;
   onClose: () => void;
   onCreated: () => void;

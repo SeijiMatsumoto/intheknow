@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { subscribe, unsubscribe } from "@/app/actions/subscriptions";
 import { Button } from "@/components/ui/button";
 
-interface Props {
+type Props = {
   newsletterId: string;
   subscriptionId: string | null;
   className?: string;

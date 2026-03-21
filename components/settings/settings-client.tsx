@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useState, useTransition } from "react";
 import { unsubscribe } from "@/app/actions/subscriptions";
+import type { Frequency } from "@/lib/frequency";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,7 +65,7 @@ type SubscriptionData = {
   newsletterTitle: string;
   newsletterSlug: string;
   newsletterCategoryId: string | null;
-  frequency: string;
+  frequency: Frequency;
   scheduleDays: string[];
   scheduleHour: number;
   createdAt: string;

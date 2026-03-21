@@ -1,5 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import type { Frequency } from "@/lib/frequency";
 import { runNewsletterAgent } from "@/inngest/functions/newsletter-agent";
 import { renderEmail } from "@/inngest/lib/render-email";
 
@@ -7,7 +8,7 @@ const newsletter = {
   title: "AI & LLMs Weekly",
   description:
     "A weekly digest of the latest AI agent frameworks, LLM releases, and practical tooling for engineers.",
-  frequency: "weekly",
+  frequency: "weekly" as Frequency,
   keywords: [
     "AI agents",
     "LLMs",

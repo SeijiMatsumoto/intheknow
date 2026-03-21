@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { SettingsClient } from "@/components/settings/settings-client";
+import type { Frequency } from "@/lib/frequency";
 import { prisma } from "@/lib/prisma";
 import { getUserPlan } from "@/lib/user";
 
@@ -36,7 +37,7 @@ export default async function SettingsPage() {
     newsletterTitle: s.newsletter.title,
     newsletterSlug: s.newsletter.slug,
     newsletterCategoryId: s.newsletter.categoryId,
-    frequency: s.newsletter.frequency,
+    frequency: s.newsletter.frequency as Frequency,
     scheduleDays:
       s.scheduleDays.length > 0 ? s.scheduleDays : s.newsletter.scheduleDays,
     scheduleHour: s.scheduleHour ?? s.newsletter.scheduleHour,

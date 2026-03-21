@@ -12,27 +12,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Frequency } from "@/lib/frequency";
 import { CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 
-interface Newsletter {
+type Newsletter = {
   id: string;
   title: string;
   slug: string;
   description: string | null;
-  frequency: string;
+  frequency: Frequency;
   keywords: string[];
   category: string;
   isCustom: boolean;
 }
 
-interface NewsletterWithMeta {
+type NewsletterWithMeta = {
   newsletter: Newsletter;
   subscriptionId: string | null;
   nextRunIso: string;
 }
 
-interface Props {
+type Props = {
   items: NewsletterWithMeta[];
   subscribedCount: number;
   canCreateNewsletter: boolean;

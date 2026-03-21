@@ -7,7 +7,7 @@
 
 import type { Plan } from "./user";
 
-export interface DigestTierConfig {
+export type DigestTierConfig = {
   /** OpenAI model ID for generation. */
   model: string;
   /** Max agentic loop steps. */

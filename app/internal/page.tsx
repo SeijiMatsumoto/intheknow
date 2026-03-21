@@ -1,5 +1,6 @@
 import { NewslettersTable } from "@/components/internal/newsletters-table";
 import { NewsletterHeader } from "@/components/newsletter-header";
+import type { Frequency } from "@/lib/frequency";
 import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 50;
@@ -48,7 +49,7 @@ export default async function InternalPage({
         </div>
 
         <NewslettersTable
-          newsletters={newsletters}
+          newsletters={newsletters.map((n) => ({ ...n, frequency: n.frequency as Frequency }))}
           recentRuns={recentRuns}
           categories={categories}
           page={page}

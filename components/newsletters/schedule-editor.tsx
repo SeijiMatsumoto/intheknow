@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { updateSubscriptionSchedule } from "@/app/actions/subscriptions";
+import type { Frequency } from "@/lib/frequency";
 
 const ALL_DAYS = [
   "monday",
@@ -41,7 +42,7 @@ function formatHour(h: number): string {
 
 type Props = {
   subscriptionId: string;
-  frequency: string; // "daily" | "weekly"
+  frequency: Frequency;
   newsletterHour: number; // UTC — newsletter default
   currentDays: string[]; // user override ([] = newsletter default)
   currentHour: number | null; // user override (null = newsletter default)

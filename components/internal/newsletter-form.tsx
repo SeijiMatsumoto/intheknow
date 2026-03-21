@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import type { Frequency } from "@/lib/frequency";
 import { Button } from "@/components/ui/button";
 
 const DAYS = [
@@ -26,7 +27,7 @@ type NewsletterFormProps = {
     title?: string;
     slug?: string;
     description?: string;
-    frequency?: string;
+    frequency?: Frequency;
     scheduleDays?: string[];
     scheduleHour?: number;
     keywords?: string[];

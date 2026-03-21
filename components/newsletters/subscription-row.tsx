@@ -3,6 +3,7 @@
 import { format, isToday, isTomorrow } from "date-fns";
 import { Lock } from "lucide-react";
 import { useState } from "react";
+import type { Frequency } from "@/lib/frequency";
 import { ScheduleEditor } from "@/components/newsletters/schedule-editor";
 
 const UTC_DAYS = [
@@ -54,7 +55,7 @@ function formatNextRun(nextRun: Date): string {
 
 type Props = {
   subscriptionId: string;
-  frequency: string;
+  frequency: Frequency;
   newsletterDays: string[];
   newsletterHour: number;
   currentDays: string[];

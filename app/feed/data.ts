@@ -51,11 +51,26 @@ export type DigestSection = {
   items: DigestItem[];
 };
 
+export type SocialHighlight = {
+  text: string;
+  author: string;
+  authorName: string;
+  url: string;
+  engagement: string | null;
+};
+
+export type SocialConsensus = {
+  overview: string;
+  highlights: SocialHighlight[];
+};
+
 export type DigestContent = {
   editionTitle: string;
   title: string;
   summary: string;
   sections: DigestSection[];
   keyTakeaways: string[];
+  socialConsensus?: SocialConsensus | null;
   bottomLine?: string;
+  agentSummary?: string;
 };

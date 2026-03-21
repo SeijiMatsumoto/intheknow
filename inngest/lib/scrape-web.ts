@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { format } from "date-fns";
 import { z } from "zod";
+import type { Frequency } from "@/lib/frequency";
 import type { CandidateItem } from "./types";
 
 const RECENCY_FILTER: Record<string, string> = {
@@ -44,7 +46,7 @@ function freshnessFromDate(isoDate: string): number {
 export async function scrapeWeb(
   sources: { rss: string[]; sites: string[] },
   keywords: string[],
-  frequency: string,
+  frequency: Frequency,
 ): Promise<CandidateItem[]> {
   if (keywords.length === 0) return [];
 
@@ -56,7 +58,7 @@ export async function scrapeWeb(
       ? `Prioritise content from these sites when available: ${domainHints.join(", ")}. `
       : "";
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = format(new Date(), "yyyy-MM-dd");
   const windowLabel = frequency === "daily" ? "24 hours" : "7 days";
   const recencyFilter = RECENCY_FILTER[frequency] ?? "week";
 

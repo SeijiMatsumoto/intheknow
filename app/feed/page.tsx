@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { format } from "date-fns";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -51,12 +52,7 @@ export default async function FeedPage() {
               const cat = getCategory(run.newsletter.categoryId);
               const CatIcon = cat.icon;
               const sentDate = send.sentAt
-                ? new Date(send.sentAt).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
+                ? format(new Date(send.sentAt), "EEE, MMM d, yyyy")
                 : null;
 
               return (

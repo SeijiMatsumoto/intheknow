@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import type { Frequency } from "@/lib/frequency";
 import type { CandidateItem } from "./types";
 
 const FRESHNESS_WINDOW_DAYS: Record<string, number> = {
@@ -9,7 +10,7 @@ const FRESHNESS_WINDOW_DAYS: Record<string, number> = {
   biweekly: 14,
 };
 
-function scoreFreshness(publishedAt: string, frequency: string): number {
+function scoreFreshness(publishedAt: string, frequency: Frequency): number {
   const windowDays = FRESHNESS_WINDOW_DAYS[frequency] ?? 7;
   const ageDays = (Date.now() - new Date(publishedAt).getTime()) / 86_400_000;
   if (ageDays > windowDays) return 0;
@@ -31,7 +32,7 @@ export async function scoreItems(
   items: CandidateItem[],
   keywords: string[],
   newsletterDescription: string,
-  frequency: string,
+  frequency: Frequency,
 ): Promise<CandidateItem[]> {
   if (items.length === 0) return [];
 

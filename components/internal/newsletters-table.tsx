@@ -14,6 +14,7 @@ import { useState, useTransition } from "react";
 import { deleteNewsletterById } from "@/app/actions/newsletters";
 import { TriggerButton } from "@/components/internal/trigger-button";
 import { AddNewsletterModal } from "@/components/newsletters/add-newsletter-modal";
+import type { Frequency } from "@/lib/frequency";
 import { cn } from "@/lib/utils";
 
 type Category = {
@@ -25,7 +26,7 @@ type Newsletter = {
   id: string;
   title: string;
   slug: string;
-  frequency: string;
+  frequency: Frequency;
   categoryId: string | null;
   createdBy: string | null;
   category: { label: string } | null;

@@ -1,17 +1,19 @@
+import { format } from "date-fns";
 import { Clock } from "lucide-react";
 import Link from "next/link";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
+import type { Frequency } from "@/lib/frequency";
 import { getCategory } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 
-interface NewsletterCardProps {
+type NewsletterCardProps = {
   newsletter: {
     id: string;
     title: string;
     slug: string;
     description: string | null;
-    frequency: string;
+    frequency: Frequency;
     keywords: string[];
     category: string; // categoryId slug
     isCustom?: boolean;
@@ -28,11 +30,7 @@ export function NewsletterCard({
   const cat = getCategory(newsletter.category);
   const Icon = cat.icon;
   const nextDate = new Date(nextRunIso);
-  const nextDateLabel = nextDate.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  const nextDateLabel = format(nextDate, "EEE, MMM d");
 
   return (
     <div className="group relative rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:border-muted-foreground/30 hover:bg-secondary/50">

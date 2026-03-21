@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { Lock, Sparkles } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Lock, MessageCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { NewsletterHeader } from "@/components/newsletter-header";
@@ -8,13 +9,11 @@ import { getUserPlan, isAdmin } from "@/lib/user";
 import { type DigestContent, getFeedDigest } from "../data";
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  try {
+    return format(parseISO(iso), "MMMM d, yyyy");
+  } catch {
+    return iso;
+  }
 }
 
 export default async function FeedDetailPage({
@@ -37,12 +36,7 @@ export default async function FeedDetailPage({
   const hasFullAccess = await canUse(userId, "full_digest");
 
   const sentDate = send.sentAt
-    ? new Date(send.sentAt).toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
+    ? format(new Date(send.sentAt), "EEEE, MMMM d, yyyy")
     : null;
 
   const title = content.editionTitle ?? content.title;
@@ -69,7 +63,7 @@ export default async function FeedDetailPage({
               {title}
             </h1>
             <p className="mb-4 text-xs text-muted-foreground/60">
-              {sentDate ?? formatDate(new Date().toISOString().split("T")[0])}
+              {sentDate ?? format(new Date(), "MMMM d, yyyy")}
             </p>
             <p className="text-sm leading-relaxed text-muted-foreground">
               {content.summary}
@@ -144,6 +138,48 @@ export default async function FeedDetailPage({
                   </div>
                 ))}
               </div>
+
+              {/* Social consensus (Pro only) */}
+              {content.socialConsensus && (
+                <div className="border-t border-border bg-blue-50 px-6 sm:px-10 py-6 dark:bg-blue-950/20">
+                  <div className="mb-4 flex items-center gap-2">
+                    <MessageCircle className="h-3.5 w-3.5 text-blue-400" />
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-blue-400">
+                      The discourse
+                    </p>
+                  </div>
+                  <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
+                    {content.socialConsensus.overview}
+                  </p>
+                  <div className="divide-y divide-blue-100 dark:divide-blue-900/30">
+                    {content.socialConsensus.highlights.map((h) => (
+                      <div key={h.url} className="py-3">
+                        <p className="text-[13px] leading-snug text-foreground/80">
+                          &ldquo;{h.text}&rdquo;
+                        </p>
+                        <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+                          <a
+                            href={h.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+                          >
+                            {h.authorName}
+                          </a>
+                          <span className="text-muted-foreground/50">
+                            {h.author}
+                          </span>
+                          {h.engagement && (
+                            <span className="text-muted-foreground/40">
+                              · {h.engagement}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Bottom line */}
               {content.bottomLine && (

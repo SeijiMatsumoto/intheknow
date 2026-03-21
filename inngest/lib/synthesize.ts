@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import type { Frequency } from "@/lib/frequency";
 import type { CandidateItem } from "./types";
 
 const DigestSchema = z.object({
@@ -32,7 +33,7 @@ export async function synthesize(
   items: CandidateItem[],
   newsletterTitle: string,
   newsletterDescription: string,
-  frequency: string,
+  frequency: Frequency,
 ): Promise<DigestContent> {
   const { output: digest } = await generateText({
     model: openai("gpt-4o-mini"),

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { NewslettersClient } from "@/components/newsletters/newsletters-client";
 import { PageHeader } from "@/components/page-header";
+import type { Frequency } from "@/lib/frequency";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 import { nextRunDate } from "@/lib/schedule";
@@ -47,7 +48,7 @@ export default async function NewslettersPage() {
         title: n.title,
         slug: n.slug,
         description: n.description,
-        frequency: n.frequency,
+        frequency: n.frequency as Frequency,
         keywords: n.keywords,
         category: n.categoryId,
         isCustom: n.createdBy !== null,

@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { Frequency } from "@/lib/frequency";
 import { canUse, getLimit } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 
@@ -146,7 +147,7 @@ export async function createUserNewsletter(data: {
   title: string;
   description: string;
   categoryId: string;
-  frequency: string;
+  frequency: Frequency;
   scheduleDays: string[];
   scheduleHour: number;
   keywords: string[];

@@ -1,7 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { startOfDay, startOfWeek } from "date-fns";
 import { inngest } from "@/inngest/client";
+import type { Frequency } from "@/lib/frequency";
 import { renderEmail } from "@/inngest/lib/render-email";
-import { type NewsletterInput, runNewsletterAgent } from "./newsletter-agent";
+import { runNewsletterAgent } from "./newsletter-agent";
 import {
   createDigestRun,
   failDigestRun,
@@ -12,17 +14,12 @@ import {
   saveDigestContent,
 } from "./queries";
 
-function getReuseSince(frequency: string): Date {
+function getReuseSince(frequency: Frequency): Date {
   const now = new Date();
   if (frequency === "daily") {
-    return new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    );
+    return startOfDay(now);
   }
-  const diff = (now.getUTCDay() + 6) % 7;
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff),
-  );
+  return startOfWeek(now, { weekStartsOn: 1 });
 }
 
 async function resolveRecipientEmails(
@@ -82,7 +79,7 @@ export const newsletterWorker = inngest.createFunction(
         if (!newsletter.createdBy && !userEmails) {
           recentRun = await findRecentDigestRun(
             newsletterId,
-            getReuseSince(newsletter.frequency),
+            getReuseSince(newsletter.frequency as Frequency),
           );
           if (recentRun) {
             logger.info(
@@ -142,7 +139,21 @@ export const newsletterWorker = inngest.createFunction(
       return run;
     });
 
-    const sources = newsletter.sources as NewsletterInput["sources"];
+    // Extract domain hints from sources
+    const sources = (newsletter.sources ?? {}) as {
+      rss?: string[];
+      sites?: string[];
+    };
+    const domainHints = [...(sources.rss ?? []), ...(sources.sites ?? [])]
+      .map((u) => {
+        try {
+          return new URL(u).hostname.replace(/^www\./, "");
+        } catch {
+          return u;
+        }
+      })
+      .filter(Boolean)
+      .slice(0, 6);
 
     // 3. Run agent — research + write newsletter
     const { digest, stepCount, usage, toolCallCounts } = await step.run(
@@ -152,9 +163,9 @@ export const newsletterWorker = inngest.createFunction(
         const result = await runNewsletterAgent({
           title: newsletter.title,
           description: newsletter.description,
-          frequency: newsletter.frequency,
+          frequency: newsletter.frequency as Frequency,
           keywords: newsletter.keywords,
-          sources,
+          domainHints,
           tier,
         });
         logger.info(
@@ -176,7 +187,7 @@ export const newsletterWorker = inngest.createFunction(
 
     // 4. Render email
     const emailHtml = await step.run("render-email", async () => {
-      const html = renderEmail(digest, newsletter.title, newsletter.frequency);
+      const html = renderEmail(digest, newsletter.title, newsletter.frequency as Frequency);
       logger.info(`Email rendered (${html.length} chars)`);
       return html;
     });

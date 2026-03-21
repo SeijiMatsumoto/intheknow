@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { deleteCustomNewsletter } from "@/app/actions/newsletters";
 import { cn } from "@/lib/utils";
 
-interface Props {
+type Props = {
   newsletterId: string;
   newsletterTitle: string;
   className?: string;

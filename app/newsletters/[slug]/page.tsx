@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { format } from "date-fns";
 import { ArrowLeft, Calendar, Clock, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,6 +7,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { SubscriptionRow } from "@/components/newsletters/subscription-row";
+import type { Frequency } from "@/lib/frequency";
 import { getCategory } from "@/lib/categories";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
@@ -260,7 +262,7 @@ export default async function NewsletterDetailPage({
                 </h2>
                 <SubscriptionRow
                   subscriptionId={subscription.id}
-                  frequency={newsletter.frequency}
+                  frequency={newsletter.frequency as Frequency}
                   newsletterDays={newsletter.scheduleDays}
                   newsletterHour={newsletter.scheduleHour}
                   currentDays={subscription.scheduleDays}
@@ -289,15 +291,7 @@ export default async function NewsletterDetailPage({
                       content?.title ??
                       "Untitled edition";
                     const summary = content?.summary;
-                    const date = new Date(run.runAt).toLocaleDateString(
-                      "en-US",
-                      {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      },
-                    );
+                    const date = format(new Date(run.runAt), "EEE, MMM d, yyyy");
                     return (
                       <Link
                         key={run.id}
@@ -399,11 +393,7 @@ export default async function NewsletterDetailPage({
                     Next delivery
                   </span>
                   <span className="text-sm font-medium text-foreground">
-                    {nextRun.toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {format(nextRun, "EEE, MMM d")}
                   </span>
                 </div>
               </div>

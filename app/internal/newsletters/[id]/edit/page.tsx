@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteNewsletter, updateNewsletter } from "@/app/actions/newsletters";
 import { NewsletterForm } from "@/components/internal/newsletter-form";
+import type { Frequency } from "@/lib/frequency";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { prisma } from "@/lib/prisma";
 
@@ -43,7 +44,7 @@ export default async function EditNewsletterPage({ params }: Props) {
             title: newsletter.title,
             slug: newsletter.slug,
             description: newsletter.description ?? "",
-            frequency: newsletter.frequency,
+            frequency: newsletter.frequency as Frequency,
             scheduleDays: newsletter.scheduleDays,
             scheduleHour: newsletter.scheduleHour,
             keywords: newsletter.keywords,

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type FrequencyFilter = "all" | "daily" | "weekly";
 
-interface FrequencyFilterProps {
+type FrequencyFilterProps = {
   selected: FrequencyFilter;
   onChange: (filter: FrequencyFilter) => void;
   counts: {

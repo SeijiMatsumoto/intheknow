@@ -35,7 +35,7 @@ const systemNewsletters = [
     description:
       "Everything that happened in AI today — model drops, product launches, industry moves, and the tools worth knowing about.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     scheduleHour: 8,
     categoryId: "ai-tech",
     keywords: [
@@ -148,7 +148,7 @@ const systemNewsletters = [
     description:
       "What moved markets today — equities, crypto, commodities, and the macro signals driving them.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     scheduleHour: 7,
     categoryId: "finance",
     keywords: [
@@ -199,7 +199,7 @@ const systemNewsletters = [
     description:
       "The day's most important political stories — US politics, policy, legislation, and global affairs.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     scheduleHour: 7,
     categoryId: "politics",
     keywords: [
@@ -401,7 +401,7 @@ const systemNewsletters = [
     description:
       "Medical breakthroughs, public health updates, nutrition research, and wellness trends worth knowing.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     scheduleHour: 7,
     categoryId: "health",
     keywords: [
@@ -458,7 +458,7 @@ const systemNewsletters = [
     description:
       "The most important global stories — conflicts, diplomacy, elections, and events shaping the world beyond US borders.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     scheduleHour: 7,
     categoryId: "world-news",
     keywords: [
@@ -485,7 +485,7 @@ const systemNewsletters = [
     description:
       "Token prices, protocol updates, regulatory moves, and the signals that matter in crypto and Web3.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
     scheduleHour: 8,
     categoryId: "crypto",
     keywords: [

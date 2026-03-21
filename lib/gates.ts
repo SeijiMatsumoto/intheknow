@@ -1,33 +1,172 @@
 /**
- * Pro feature gating.
+ * Feature gating & plan limits.
  *
- * All features are currently unlocked for everyone.
- * When billing is ready:
- *   1. Uncomment the plan check in `canUse`
- *   2. Flip `GATING_ENABLED` to true
- *   3. Features in `FREE_FEATURES` remain available to free users
+ * ┌─────────────────────────┬──────────┬──────────┬──────────┐
+ * │ Feature                 │ Free     │ Plus     │ Pro      │
+ * ├─────────────────────────┼──────────┼──────────┼──────────┤
+ * │ Curated subscriptions   │ 1        │ 10       │ ∞        │
+ * │ Full digest (analysis)  │ ✗        │ ✓        │ ✓        │
+ * │ Custom schedule         │ ✗        │ ✓        │ ✓        │
+ * │ Digest length pref      │ ✗        │ ✓        │ ✓        │
+ * │ Custom newsletters      │ ✗        │ 2        │ 5        │
+ * │ Social consensus        │ ✗        │ ✗        │ ✓        │
+ * │ Deep research           │ ✗        │ ✗        │ ✓        │
+ * │ Daily cadence (custom)  │ ✗        │ ✗        │ ✓        │
+ * └─────────────────────────┴──────────┴──────────┴──────────┘
+ *
+ * To add a new gated feature:
+ *   1. Add it to the Feature type
+ *   2. Add its value to each plan in PLAN_CONFIG
+ *   3. Use canUse() / canUsePlan() in your code
+ *
+ * To add a new numeric limit:
+ *   1. Add it to the LimitKey type
+ *   2. Add its value to each plan in LIMITS
+ *   3. Use getLimit() / getLimitForPlan() in your code
  */
 
-import { getUserPlan, isAdmin, isPro } from "./user";
+import { type Plan, getUserPlan } from "./user";
 
-export type ProFeature =
-  | "custom_schedule" // customize delivery days per subscription
-  | "digest_length" // choose brief / standard / deep_dive
+// ─── Feature registry ────────────────────────────────────────────────
+
+export type Feature =
+  | "full_digest" // AI analysis, quotes, bottom line in digests
+  | "custom_schedule" // customize delivery days/time per subscription
+  | "digest_length" // choose brief / standard / deep dive
   | "custom_newsletter" // create custom newsletters
-  | "multiple_newsletters"; // subscribe to more than the free-tier limit
+  | "multiple_subscriptions" // subscribe to more than free limit
+  | "social_consensus" // "what people are saying" from Twitter/social
+  | "deep_research" // deeper sourcing, more articles, extended analysis
+  | "daily_custom"; // allow daily cadence on custom newsletters
 
-const FREE_FEATURES = new Set<ProFeature>([
-  // add features here when you want to open them to free users
-]);
+// ─── Plan feature config ─────────────────────────────────────────────
 
-const GATING_ENABLED = false;
+type FeatureValue = boolean | number;
+type PlanFeatures = Record<Feature, FeatureValue>;
 
+const PLAN_CONFIG: Record<Plan, PlanFeatures> = {
+  free: {
+    full_digest: false,
+    custom_schedule: false,
+    digest_length: false,
+    custom_newsletter: false,
+    multiple_subscriptions: false,
+    social_consensus: false,
+    deep_research: false,
+    daily_custom: false,
+  },
+  plus: {
+    full_digest: true,
+    custom_schedule: true,
+    digest_length: true,
+    custom_newsletter: true,
+    multiple_subscriptions: true,
+    social_consensus: false,
+    deep_research: false,
+    daily_custom: false,
+  },
+  pro: {
+    full_digest: true,
+    custom_schedule: true,
+    digest_length: true,
+    custom_newsletter: true,
+    multiple_subscriptions: true,
+    social_consensus: true,
+    deep_research: true,
+    daily_custom: true,
+  },
+  admin: {
+    full_digest: true,
+    custom_schedule: true,
+    digest_length: true,
+    custom_newsletter: true,
+    multiple_subscriptions: true,
+    social_consensus: true,
+    deep_research: true,
+    daily_custom: true,
+  },
+};
+
+// ─── Numeric limits ──────────────────────────────────────────────────
+
+export type LimitKey =
+  | "max_subscriptions"
+  | "max_custom_newsletters";
+
+const LIMITS: Record<Plan, Record<LimitKey, number>> = {
+  free: {
+    max_subscriptions: 1,
+    max_custom_newsletters: 0,
+  },
+  plus: {
+    max_subscriptions: 10,
+    max_custom_newsletters: 2,
+  },
+  pro: {
+    max_subscriptions: Infinity,
+    max_custom_newsletters: 5,
+  },
+  admin: {
+    max_subscriptions: Infinity,
+    max_custom_newsletters: Infinity,
+  },
+};
+
+// ─── Kill switch ─────────────────────────────────────────────────────
+
+const GATING_ENABLED = true;
+
+// ─── Public API ──────────────────────────────────────────────────────
+
+/** Check if a user can use a feature (async — fetches plan). */
 export async function canUse(
   userId: string,
-  feature: ProFeature,
+  feature: Feature,
 ): Promise<boolean> {
   if (!GATING_ENABLED) return true;
-  if (FREE_FEATURES.has(feature)) return true;
   const plan = await getUserPlan(userId);
-  return isAdmin(plan) || isPro(plan);
+  return canUsePlan(plan, feature);
 }
+
+/** Synchronous check when you already have the plan. */
+export function canUsePlan(plan: Plan, feature: Feature): boolean {
+  if (!GATING_ENABLED) return true;
+  const value = PLAN_CONFIG[plan][feature];
+  return value === true || (typeof value === "number" && value > 0);
+}
+
+/** Get a numeric limit for a user (async — fetches plan). */
+export async function getLimit(
+  userId: string,
+  limit: LimitKey,
+): Promise<number> {
+  if (!GATING_ENABLED) return Infinity;
+  const plan = await getUserPlan(userId);
+  return LIMITS[plan][limit];
+}
+
+/** Synchronous limit check when you already have the plan. */
+export function getLimitForPlan(plan: Plan, limit: LimitKey): number {
+  if (!GATING_ENABLED) return Infinity;
+  return LIMITS[plan][limit];
+}
+
+/** Full config for a plan (for settings/upgrade UI). */
+export function getPlanConfig(plan: Plan) {
+  return {
+    features: PLAN_CONFIG[plan],
+    limits: LIMITS[plan],
+  };
+}
+
+/** All plan configs (for comparison/pricing tables). */
+export function getAllPlanConfigs() {
+  return (["free", "plus", "pro"] as const).map((plan) => ({
+    plan,
+    features: PLAN_CONFIG[plan],
+    limits: LIMITS[plan],
+  }));
+}
+
+// Re-export for convenience
+export type { Plan };

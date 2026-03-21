@@ -2,12 +2,26 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { canUse } from "@/lib/gates";
+import { canUse, getLimit } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 
-export async function subscribe(newsletterId: string) {
+export async function subscribe(
+  newsletterId: string,
+): Promise<{ error?: string }> {
   const { userId } = await auth();
-  if (!userId) throw new Error("Unauthenticated");
+  if (!userId) return { error: "Unauthenticated" };
+
+  const canMultiple = await canUse(userId, "multiple_subscriptions");
+
+  if (!canMultiple) {
+    const limit = await getLimit(userId, "max_subscriptions");
+    const count = await prisma.subscription.count({ where: { userId } });
+    if (count >= limit) {
+      return {
+        error: `Free plan is limited to ${limit} subscription. Upgrade to Pro for unlimited.`,
+      };
+    }
+  }
 
   await prisma.subscription.create({
     data: {
@@ -18,6 +32,7 @@ export async function subscribe(newsletterId: string) {
   });
 
   revalidatePath("/newsletters");
+  return {};
 }
 
 export async function unsubscribe(subscriptionId: string) {

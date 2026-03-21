@@ -2,9 +2,11 @@
 
 import { inngest } from "@/inngest/client";
 
-export async function triggerDigest(newsletterId: string) {
+export type DigestTier = "free" | "plus" | "pro";
+
+export async function triggerDigest(newsletterId: string, tier: DigestTier = "pro") {
   await inngest.send({
     name: "newsletter/run",
-    data: { newsletterId, userEmails: ["seijim27@gmail.com"] },
+    data: { newsletterId, tier, userEmails: ["seijim27@gmail.com"] },
   });
 }

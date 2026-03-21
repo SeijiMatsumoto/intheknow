@@ -75,7 +75,7 @@ export function SettingsClient({
   plan,
 }: {
   subscriptions: SubscriptionData[];
-  plan: "free" | "pro" | "admin";
+  plan: "free" | "plus" | "pro" | "admin";
 }) {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
@@ -216,15 +216,25 @@ export function SettingsClient({
               ? "bg-rose-500/20 text-rose-500"
               : plan === "pro"
                 ? "bg-accent/20 text-accent"
-                : "bg-secondary text-muted-foreground",
+                : plan === "plus"
+                  ? "bg-blue-500/20 text-blue-500"
+                  : "bg-secondary text-muted-foreground",
           )}
         >
-          {plan === "admin" ? "Admin" : plan === "pro" ? "Pro" : "Free"}
+          {plan === "admin"
+            ? "Admin"
+            : plan === "pro"
+              ? "Pro"
+              : plan === "plus"
+                ? "Plus"
+                : "Free"}
         </span>
         <p className="text-sm text-muted-foreground">
           {plan === "free"
-            ? "Upgrade to Pro to unlock custom newsletters and more."
-            : "You have access to all Pro features."}
+            ? "Upgrade to unlock full digests, more subscriptions, and custom newsletters."
+            : plan === "plus"
+              ? "Upgrade to Pro for social consensus, deep research, and daily custom newsletters."
+              : "You have access to all features."}
         </p>
       </div>
       <div className="border-t border-border pt-4 space-y-1">

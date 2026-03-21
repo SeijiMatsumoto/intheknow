@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { canUse } from "@/lib/gates";
+import { canUse, getLimit } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 
 function slugify(title: string): string {
@@ -156,6 +156,16 @@ export async function createUserNewsletter(data: {
     if (!userId) return { error: "Not authenticated" };
     if (!(await canUse(userId, "custom_newsletter")))
       return { error: "Pro plan required" };
+
+    const maxCustom = await getLimit(userId, "max_custom_newsletters");
+    const currentCount = await prisma.newsletter.count({
+      where: { createdBy: userId },
+    });
+    if (currentCount >= maxCustom) {
+      return {
+        error: `You've reached the limit of ${maxCustom} custom newsletters. Contact support to request more.`,
+      };
+    }
 
     const slug = `${slugify(data.title)}-${Math.random().toString(36).slice(2, 7)}`;
 

@@ -8,7 +8,7 @@ type SearchResult = {
   snippet: string;
   date: string;
   last_updated: string;
-}
+};
 
 async function webSearch(query: string, frequency: Frequency): Promise<string> {
   const { after, before } = perplexityDateRange(frequency);

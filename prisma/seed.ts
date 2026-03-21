@@ -447,10 +447,7 @@ const systemNewsletters = [
     ],
     sources: {
       rss: ["https://variety.com/feed/"],
-      sites: [
-        "https://www.hollywoodreporter.com",
-        "https://deadline.com",
-      ],
+      sites: ["https://www.hollywoodreporter.com", "https://deadline.com"],
     },
   },
 
@@ -477,10 +474,7 @@ const systemNewsletters = [
     ],
     sources: {
       rss: ["https://feeds.bbci.co.uk/news/world/rss.xml"],
-      sites: [
-        "https://www.reuters.com/world/",
-        "https://www.aljazeera.com",
-      ],
+      sites: ["https://www.reuters.com/world/", "https://www.aljazeera.com"],
     },
   },
 
@@ -508,10 +502,7 @@ const systemNewsletters = [
     ],
     sources: {
       rss: ["https://cointelegraph.com/rss"],
-      sites: [
-        "https://www.coindesk.com",
-        "https://www.theblock.co",
-      ],
+      sites: ["https://www.coindesk.com", "https://www.theblock.co"],
     },
   },
 

@@ -18,7 +18,7 @@ export type DigestTierConfig = {
   socialConsensus: boolean;
   /** Extended analysis with more specifics in each item. */
   deepResearch: boolean;
-}
+};
 
 /** Plans that can trigger digest generation (free users cannot). */
 export type DigestTier = Exclude<Plan, "free">;

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 type CategoryFilterProps = {
   selected: string;
   onChange: (category: string) => void;
-}
+};
 
 export function CategoryFilter({ selected, onChange }: CategoryFilterProps) {
   return (

@@ -137,8 +137,7 @@ export async function deleteCustomNewsletter(
     return {};
   } catch (e) {
     return {
-      error:
-        e instanceof Error ? e.message : "Failed to delete newsletter",
+      error: e instanceof Error ? e.message : "Failed to delete newsletter",
     };
   }
 }

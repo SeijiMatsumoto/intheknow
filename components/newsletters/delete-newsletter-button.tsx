@@ -10,7 +10,7 @@ type Props = {
   newsletterId: string;
   newsletterTitle: string;
   className?: string;
-}
+};
 
 export function DeleteNewsletterButton({
   newsletterId,
@@ -61,8 +61,8 @@ export function DeleteNewsletterButton({
               ?
             </p>
             <p className="mt-2 text-sm text-destructive">
-              This will permanently delete all past digests and
-              subscriptions. This action cannot be undone.
+              This will permanently delete all past digests and subscriptions.
+              This action cannot be undone.
             </p>
             <div className="mt-6 flex gap-3">
               <button

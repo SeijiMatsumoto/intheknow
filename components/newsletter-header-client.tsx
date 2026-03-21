@@ -9,7 +9,7 @@ type Props = {
   userId: string | null;
   admin: boolean;
   hideProfile?: boolean;
-}
+};
 
 export function NewsletterHeaderClient({ userId, admin, hideProfile }: Props) {
   return (

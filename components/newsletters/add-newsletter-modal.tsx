@@ -45,7 +45,7 @@ type FormState = {
   scheduleDays: string[];
   scheduleHour: number;
   keywords: string;
-}
+};
 
 const DEFAULT_FORM: Omit<FormState, "scheduleHour"> = {
   title: "",
@@ -60,7 +60,7 @@ type Props = {
   canCreate: boolean;
   onClose: () => void;
   onCreated: () => void;
-}
+};
 
 export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
   const [tab, setTab] = useState<"ai" | "manual">("ai");

@@ -23,7 +23,7 @@ export type GeneratedNewsletter = {
   scheduleDays: (typeof DAYS)[number][];
   scheduleHour: number;
   keywords: string[];
-}
+};
 
 function buildSchema(categoryIds: [string, ...string[]]) {
   return z.object({

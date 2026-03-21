@@ -12,7 +12,7 @@ type FrequencyFilterProps = {
     daily: number;
     weekly: number;
   };
-}
+};
 
 export function FrequencyFilter({
   selected,

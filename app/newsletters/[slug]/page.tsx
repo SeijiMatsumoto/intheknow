@@ -86,9 +86,7 @@ export default async function NewsletterDetailPage({
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
                 <Zap className="h-3.5 w-3.5 text-accent-foreground" />
               </div>
-              <span className="text-sm font-semibold text-foreground">
-                ITK
-              </span>
+              <span className="text-sm font-semibold text-foreground">ITK</span>
             </Link>
             <div className="hidden sm:flex items-center gap-2">
               {newsletter.createdBy !== null && (
@@ -215,7 +213,9 @@ export default async function NewsletterDetailPage({
                           ) : (
                             <Calendar className="h-3 w-3" />
                           )}
-                          {newsletter.frequency === "daily" ? "Daily" : "Weekly"}
+                          {newsletter.frequency === "daily"
+                            ? "Daily"
+                            : "Weekly"}
                         </span>
                       </div>
 
@@ -291,7 +291,10 @@ export default async function NewsletterDetailPage({
                       content?.title ??
                       "Untitled edition";
                     const summary = content?.summary;
-                    const date = format(new Date(run.runAt), "EEE, MMM d, yyyy");
+                    const date = format(
+                      new Date(run.runAt),
+                      "EEE, MMM d, yyyy",
+                    );
                     return (
                       <Link
                         key={run.id}

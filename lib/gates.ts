@@ -89,9 +89,7 @@ const PLAN_CONFIG: Record<Plan, PlanFeatures> = {
 
 // ─── Numeric limits ──────────────────────────────────────────────────
 
-export type LimitKey =
-  | "max_subscriptions"
-  | "max_custom_newsletters";
+export type LimitKey = "max_subscriptions" | "max_custom_newsletters";
 
 const LIMITS: Record<Plan, Record<LimitKey, number>> = {
   free: {

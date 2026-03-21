@@ -187,7 +187,11 @@ export const newsletterWorker = inngest.createFunction(
 
     // 4. Render email
     const emailHtml = await step.run("render-email", async () => {
-      const html = renderEmail(digest, newsletter.title, newsletter.frequency as Frequency);
+      const html = renderEmail(
+        digest,
+        newsletter.title,
+        newsletter.frequency as Frequency,
+      );
       logger.info(`Email rendered (${html.length} chars)`);
       return html;
     });

@@ -6,7 +6,12 @@ import { triggerDigest } from "@/app/actions/trigger-digest";
 import type { Plan } from "@/lib/user";
 import { cn } from "@/lib/utils";
 
-const TIERS: { id: Plan; label: string; description: string; icon: typeof Zap }[] = [
+const TIERS: {
+  id: Plan;
+  label: string;
+  description: string;
+  icon: typeof Zap;
+}[] = [
   {
     id: "free",
     label: "Free",
@@ -88,9 +93,7 @@ export function TriggerButton({ newsletterId }: { newsletterId: string }) {
                     <div
                       className={cn(
                         "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                        selected === tier.id
-                          ? "bg-accent/10"
-                          : "bg-secondary",
+                        selected === tier.id ? "bg-accent/10" : "bg-secondary",
                       )}
                     >
                       <Icon

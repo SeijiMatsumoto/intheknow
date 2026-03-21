@@ -13,13 +13,17 @@ import { makeSubmitAnswerTool } from "./tools/submit-answer";
 export const DigestSchema = z.object({
   editionTitle: z
     .string()
-    .describe("Punchy, creative one-liner for the subject line. E.g. 'OpenAI Goes Nuclear'"),
+    .describe(
+      "Punchy, creative one-liner for the subject line. E.g. 'OpenAI Goes Nuclear'",
+    ),
   summary: z
     .string()
     .describe("2-3 sentence friendly intro setting the tone for this edition."),
   keyTakeaways: z
     .array(z.string())
-    .describe("3-5 one-sentence bullets summarizing the biggest stories. Each should be a complete sentence."),
+    .describe(
+      "3-5 one-sentence bullets summarizing the biggest stories. Each should be a complete sentence.",
+    ),
   sections: z.array(
     z.object({
       heading: z.string(),
@@ -27,18 +31,30 @@ export const DigestSchema = z.object({
         z.object({
           title: z.string(),
           url: z.string().describe("Real URL from research — never invented."),
-          publishedAt: z.string().describe("ISO date string or human-readable date of the source article."),
-          source: z.string().describe("Publication or domain name. E.g. 'The Verge', 'techcrunch.com'"),
+          publishedAt: z
+            .string()
+            .describe(
+              "ISO date string or human-readable date of the source article.",
+            ),
+          source: z
+            .string()
+            .describe(
+              "Publication or domain name. E.g. 'The Verge', 'techcrunch.com'",
+            ),
           plainLead: z
             .string()
-            .describe("One plain-English sentence explaining why this matters to a non-expert."),
+            .describe(
+              "One plain-English sentence explaining why this matters to a non-expert.",
+            ),
           detail: z
             .string()
             .describe("2-3 sentences with specifics, numbers, and names."),
           quote: z
             .string()
             .nullable()
-            .describe("A notable quote from the article. Null if nothing genuinely interesting."),
+            .describe(
+              "A notable quote from the article. Null if nothing genuinely interesting.",
+            ),
         }),
       ),
     }),
@@ -47,25 +63,37 @@ export const DigestSchema = z.object({
     .object({
       overview: z
         .string()
-        .describe("2-3 sentence synthesis of the overall public conversation and sentiment."),
+        .describe(
+          "2-3 sentence synthesis of the overall public conversation and sentiment.",
+        ),
       highlights: z.array(
         z.object({
-          text: z.string().describe("The take — paraphrased or directly quoted."),
+          text: z
+            .string()
+            .describe("The take — paraphrased or directly quoted."),
           author: z.string().describe("Twitter/X handle. E.g. '@karpathy'"),
-          authorName: z.string().describe("Display name. E.g. 'Andrej Karpathy'"),
+          authorName: z
+            .string()
+            .describe("Display name. E.g. 'Andrej Karpathy'"),
           url: z.string().describe("Direct link to the tweet."),
           engagement: z
             .string()
             .nullable()
-            .describe("Engagement summary if notable. E.g. '12K likes'. Null if unknown."),
+            .describe(
+              "Engagement summary if notable. E.g. '12K likes'. Null if unknown.",
+            ),
         }),
       ),
     })
     .nullable()
-    .describe("Public reaction and discourse from Twitter/X. Null when not available."),
+    .describe(
+      "Public reaction and discourse from Twitter/X. Null when not available.",
+    ),
   bottomLine: z
     .string()
-    .describe("2-3 sentence wrap-up. What does it all mean? End on a forward-looking note."),
+    .describe(
+      "2-3 sentence wrap-up. What does it all mean? End on a forward-looking note.",
+    ),
   agentSummary: z
     .string()
     .describe(
@@ -84,7 +112,7 @@ export type NewsletterInput = {
   keywords: string[];
   domainHints?: string[];
   tier?: Plan;
-}
+};
 
 // ── Main agent ────────────────────────────────────────────────────────────────
 
@@ -93,7 +121,7 @@ export type AgentResult = {
   stepCount: number;
   usage: { inputTokens: number; outputTokens: number };
   toolCallCounts: Record<string, number>;
-}
+};
 
 export async function runNewsletterAgent(
   newsletter: NewsletterInput,

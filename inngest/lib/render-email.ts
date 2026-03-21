@@ -89,11 +89,15 @@ export function renderEmail(
     </td></tr>
 
     <!-- Social consensus (Pro only) -->
-    ${digest.socialConsensus ? `
+    ${
+      digest.socialConsensus
+        ? `
     <tr><td style="padding:24px 24px;background:#f0f7ff;border-top:1px solid #e0eaf5;">
       <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#7aa2d4;margin:0 0 8px;">💬 The discourse</p>
       <p style="font-size:14px;color:#444;line-height:1.65;margin:0 0 16px;">${digest.socialConsensus.overview}</p>
-      ${digest.socialConsensus.highlights.map((h) => `
+      ${digest.socialConsensus.highlights
+        .map(
+          (h) => `
       <div style="padding:12px 0;border-top:1px solid #e0eaf5;">
         <p style="font-size:13px;color:#333;line-height:1.55;margin:0 0 4px;">"${h.text}"</p>
         <p style="font-size:12px;color:#888;margin:0;">
@@ -101,8 +105,12 @@ export function renderEmail(
           <span style="color:#aaa;"> ${h.author}</span>
           ${h.engagement ? `<span style="color:#aaa;"> · ${h.engagement}</span>` : ""}
         </p>
-      </div>`).join("")}
-    </td></tr>` : ""}
+      </div>`,
+        )
+        .join("")}
+    </td></tr>`
+        : ""
+    }
 
     <!-- Bottom line -->
     <tr><td style="padding:24px 24px;background:#f7f7f7;border-top:1px solid #f0f0f0;">

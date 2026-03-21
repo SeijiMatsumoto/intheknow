@@ -25,19 +25,19 @@ type Newsletter = {
   keywords: string[];
   category: string;
   isCustom: boolean;
-}
+};
 
 type NewsletterWithMeta = {
   newsletter: Newsletter;
   subscriptionId: string | null;
   nextRunIso: string;
-}
+};
 
 type Props = {
   items: NewsletterWithMeta[];
   subscribedCount: number;
   canCreateNewsletter: boolean;
-}
+};
 
 export function NewslettersClient({
   items,
@@ -131,7 +131,8 @@ export function NewslettersClient({
               <SelectValue placeholder="All categories">
                 {category === "all"
                   ? "All categories"
-                  : CATEGORIES.find((c) => c.id === category)?.label ?? category}
+                  : (CATEGORIES.find((c) => c.id === category)?.label ??
+                    category)}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

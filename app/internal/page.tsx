@@ -49,7 +49,10 @@ export default async function InternalPage({
         </div>
 
         <NewslettersTable
-          newsletters={newsletters.map((n) => ({ ...n, frequency: n.frequency as Frequency }))}
+          newsletters={newsletters.map((n) => ({
+            ...n,
+            frequency: n.frequency as Frequency,
+          }))}
           recentRuns={recentRuns}
           categories={categories}
           page={page}

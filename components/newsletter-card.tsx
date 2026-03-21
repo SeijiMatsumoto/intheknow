@@ -20,7 +20,7 @@ type NewsletterCardProps = {
   };
   subscriptionId: string | null;
   nextRunIso: string;
-}
+};
 
 export function NewsletterCard({
   newsletter,

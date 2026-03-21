@@ -10,7 +10,7 @@ type Props = {
   newsletterId: string;
   subscriptionId: string | null;
   className?: string;
-}
+};
 
 export function SubscribeButton({
   newsletterId,

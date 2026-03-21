@@ -2,10 +2,11 @@
 
 import { Play, Sparkles, X, Zap } from "lucide-react";
 import { useState, useTransition } from "react";
-import { type DigestTier, triggerDigest } from "@/app/actions/trigger-digest";
+import { triggerDigest } from "@/app/actions/trigger-digest";
+import type { Plan } from "@/lib/user";
 import { cn } from "@/lib/utils";
 
-const TIERS: { id: DigestTier; label: string; description: string; icon: typeof Zap }[] = [
+const TIERS: { id: Plan; label: string; description: string; icon: typeof Zap }[] = [
   {
     id: "free",
     label: "Free",
@@ -29,7 +30,7 @@ const TIERS: { id: DigestTier; label: string; description: string; icon: typeof 
 export function TriggerButton({ newsletterId }: { newsletterId: string }) {
   const [isPending, startTransition] = useTransition();
   const [showModal, setShowModal] = useState(false);
-  const [selected, setSelected] = useState<DigestTier>("pro");
+  const [selected, setSelected] = useState<Plan>("pro");
 
   function handleRun() {
     setShowModal(false);

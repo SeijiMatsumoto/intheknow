@@ -51,7 +51,7 @@ export const newsletterWorker = inngest.createFunction(
     triggers: [{ event: "newsletter/run" }],
   },
   async ({ event, step, logger }) => {
-    const { newsletterId, userEmails, userIds } = event.data;
+    const { newsletterId, userEmails, userIds, tier = "pro" } = event.data;
     logger.info("newsletter-worker started", {
       newsletterId,
       userEmails,
@@ -155,6 +155,7 @@ export const newsletterWorker = inngest.createFunction(
           frequency: newsletter.frequency,
           keywords: newsletter.keywords,
           sources,
+          tier,
         });
         logger.info(
           `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount}, tokens in/out: ${result.usage.inputTokens}/${result.usage.outputTokens}, tools: ${JSON.stringify(result.toolCallCounts)}`,

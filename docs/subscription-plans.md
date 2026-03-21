@@ -98,7 +98,7 @@
 | gpt-5.4-mini | $0.75 | $0.075 | $4.50 | - | - | - |
 | gpt-5.4-nano | $0.20 | $0.02 | $1.25 | - | - | - |
 
-**Likely usage:** gpt-5.4-mini for standard digests, gpt-5.4 for deep research.
+**Usage:** gpt-5.4-mini for Plus custom newsletters, gpt-5.4 for Pro custom newsletters and all curated/system newsletters (always generated at pro tier).
 
 ### Perplexity Sonar (prices per 1M tokens)
 
@@ -164,11 +164,16 @@ Assuming gpt-5.4-mini for standard, gpt-5.4 for deep research:
 
 ## Cost Model Summary
 
+### Generation tier strategy
+
+- **Curated/system newsletters** — always generated at **pro** tier (full model, deep research, social consensus). Content gating at display time controls what each plan sees. No incremental LLM cost per free user.
+- **Custom newsletters** — generated at the **creator's plan tier** (Plus or Pro). Free users cannot create custom newsletters.
+
 ### Where the money goes
 
 | Resource | Cost driver | Notes |
 |----------|-------------|-------|
-| LLM (OpenAI) | Writing each digest | Per newsletter run, NOT per user. Curated = shared. Custom = dedicated per user. |
+| LLM (OpenAI) | Writing each digest | Per newsletter run, NOT per user. Curated = shared (pro tier). Custom = dedicated per creator's tier. |
 | Perplexity Sonar | Research / sourcing | Could replace RSS scraping for better results. Per run. |
 | Twitter API | Social consensus section | Pro only. ~$0.05 per run. |
 | Resend | Email delivery | Per user per digest. ~$0.0009/email. |
@@ -185,8 +190,9 @@ Assuming gpt-5.4-mini for standard, gpt-5.4 for deep research:
 
 ### What doesn't save money (but drives conversion)
 
-- Locking AI analysis on Free — the generation happened regardless (shared run). Purely conversion.
+- Locking AI analysis on Free — the generation happened regardless (shared pro-tier run). Purely conversion.
 - Source links are free to serve — locking them would feel punishing.
+- Free users cannot create custom newsletters — no generation cost from free tier at all.
 
 ---
 

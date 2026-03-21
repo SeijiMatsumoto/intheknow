@@ -1,10 +1,9 @@
 "use server";
 
 import { inngest } from "@/inngest/client";
+import type { Plan } from "@/lib/user";
 
-export type DigestTier = "free" | "plus" | "pro";
-
-export async function triggerDigest(newsletterId: string, tier: DigestTier = "pro") {
+export async function triggerDigest(newsletterId: string, tier: Plan = "free") {
   await inngest.send({
     name: "newsletter/run",
     data: { newsletterId, tier, userEmails: ["seijim27@gmail.com"] },

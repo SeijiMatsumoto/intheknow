@@ -80,7 +80,7 @@ export const DigestSchema = z.object({
             .string()
             .nullable()
             .describe(
-              "Engagement summary if notable. E.g. '12K likes'. Null if unknown.",
+              "Engagement summary if notable. E.g. '12K likes'. MUST be null (not a string like 'Not available') if engagement data is unknown or unavailable.",
             ),
         }),
       ),
@@ -156,6 +156,9 @@ export async function runNewsletterAgent(
   const twitterInstruction = config.socialConsensus
     ? "\n2. Use searchTwitter to find social/community discussion and public reaction to key stories. Include notable takes, sentiment, and consensus."
     : "";
+  const socialConsensusInstruction = config.socialConsensus
+    ? ""
+    : "\n- socialConsensus MUST be set to null. Do not fabricate social media reactions.";
   const depthInstruction = config.deepResearch
     ? "\n- Provide extended analysis with more specifics, numbers, and context in each item's detail field."
     : "";
@@ -172,7 +175,7 @@ export async function runNewsletterAgent(
 - Use "you" to address the reader. Occasional light humor welcome.
 - Only include stories that are genuinely newsworthy — never pad with fluff. A shorter, high-quality digest is always better than a longer one stuffed with filler.
 - URLs must be real URLs from your research — never invent them.
-- Only include a quote if it's genuinely interesting, otherwise set it to null.${depthInstruction}
+- Only include a quote if it's genuinely interesting, otherwise set it to null.${socialConsensusInstruction}${depthInstruction}
 </guidelines>
 
 <workflow>
@@ -196,6 +199,12 @@ Start by searching for the most important recent stories.`,
     throw new Error("Newsletter agent did not call submitAnswer");
   }
 
+  // Hard gate: strip socialConsensus when tier doesn't support it
+  if (!config.socialConsensus) {
+    (output as DigestContent).socialConsensus = null;
+  }
+  const digest = output as DigestContent;
+
   const toolCallCounts: Record<string, number> = {};
   for (const s of steps) {
     for (const tc of s.toolCalls ?? []) {
@@ -204,7 +213,7 @@ Start by searching for the most important recent stories.`,
   }
 
   return {
-    digest: output,
+    digest,
     model: config.model,
     stepCount: steps.length,
     usage: {

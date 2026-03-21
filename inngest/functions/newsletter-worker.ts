@@ -1,8 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { startOfDay, startOfWeek } from "date-fns";
 import { inngest } from "@/inngest/client";
-import type { Frequency } from "@/lib/frequency";
 import { renderEmail } from "@/inngest/lib/render-email";
+import type { Frequency } from "@/lib/frequency";
+import { digestCostBreakdown, formatCostLog } from "@/lib/token-pricing";
 import { runNewsletterAgent } from "./newsletter-agent";
 import {
   createDigestRun,
@@ -156,7 +157,7 @@ export const newsletterWorker = inngest.createFunction(
       .slice(0, 6);
 
     // 3. Run agent — research + write newsletter
-    const { digest, stepCount, usage, toolCallCounts } = await step.run(
+    const { digest, model, stepCount, usage, toolCallCounts } = await step.run(
       "run-agent",
       async () => {
         logger.info("Starting newsletter agent");
@@ -168,8 +169,14 @@ export const newsletterWorker = inngest.createFunction(
           domainHints,
           tier,
         });
+        const cost = digestCostBreakdown(
+          result.model,
+          result.usage.inputTokens,
+          result.usage.outputTokens,
+          result.toolCallCounts,
+        );
         logger.info(
-          `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount}, tokens in/out: ${result.usage.inputTokens}/${result.usage.outputTokens}, tools: ${JSON.stringify(result.toolCallCounts)}`,
+          `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount} | ${formatCostLog(cost)}`,
         );
         return result;
       },
@@ -246,8 +253,14 @@ export const newsletterWorker = inngest.createFunction(
     });
 
     const recipientCount = recipientEmails.length || subscriptions.length;
+    const cost = digestCostBreakdown(
+      model,
+      usage.inputTokens,
+      usage.outputTokens,
+      toolCallCounts,
+    );
     logger.info(
-      `newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}`,
+      `newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}, ${formatCostLog(cost)}`,
     );
     return {
       digestRunId: digestRun.id,
@@ -255,6 +268,7 @@ export const newsletterWorker = inngest.createFunction(
       stepCount,
       usage,
       toolCallCounts,
+      cost,
       agentSummary: digest.agentSummary,
     };
   },

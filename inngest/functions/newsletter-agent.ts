@@ -118,6 +118,7 @@ export type NewsletterInput = {
 
 export type AgentResult = {
   digest: DigestContent;
+  model: string;
   stepCount: number;
   usage: { inputTokens: number; outputTokens: number };
   toolCallCounts: Record<string, number>;
@@ -204,6 +205,7 @@ Start by searching for the most important recent stories.`,
 
   return {
     digest: output,
+    model: config.model,
     stepCount: steps.length,
     usage: {
       inputTokens: usage.inputTokens ?? 0,

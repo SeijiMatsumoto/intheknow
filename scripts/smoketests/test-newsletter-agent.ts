@@ -1,8 +1,14 @@
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { runNewsletterAgent } from "@/inngest/functions/newsletter-agent";
+import { Laminar, observe } from "@lmnr-ai/lmnr";
+import {
+  runNewsletterAgent,
+  type ToolCallLog,
+} from "@/inngest/functions/newsletter-agent";
 import { renderEmail } from "@/inngest/lib/render-email";
 import type { Frequency } from "@/lib/frequency";
+
+// ── Config ───────────────────────────────────────────────────────────────────
 
 const newsletter = {
   title: "AI & LLMs Weekly",
@@ -17,54 +23,156 @@ const newsletter = {
     "RAG",
     "function calling",
   ],
-  sources: {
-    rss: [],
-    sites: ["techcrunch.com", "theverge.com", "huggingface.co/blog"],
-    twitter_queries: ["from:OpenAI OR #LLM"],
-  },
 };
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const DIVIDER = "─".repeat(72);
+const SECTION = (label: string) =>
+  `\n${"═".repeat(72)}\n  ${label}\n${"═".repeat(72)}`;
+
+function truncate(text: string, max = 300): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max)}… [+${text.length - max} chars]`;
+}
+
+function formatToolCall(tc: ToolCallLog): string {
+  const lines: string[] = [];
+  lines.push(`  [step ${tc.stepNumber}] ${tc.toolName}()`);
+
+  // Args
+  const args =
+    typeof tc.args === "object"
+      ? JSON.stringify(tc.args, null, 2)
+      : String(tc.args);
+  lines.push(`    args: ${truncate(args, 200)}`);
+
+  // Result
+  const result =
+    typeof tc.result === "string"
+      ? tc.result
+      : JSON.stringify(tc.result, null, 2);
+  lines.push(`    result: ${truncate(result, 400)}`);
+
+  return lines.join("\n");
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+
+function traceUrl(): string | null {
+  const projectId = process.env.LMNR_PROJECT_ID;
+  const traceId = Laminar.getTraceId();
+  if (!projectId || !traceId) return null;
+  return `https://laminar.sh/project/${projectId}/traces/${traceId}`;
+}
+
 async function main() {
-  console.log("Running newsletter agent smoke test...");
-  console.log(`Newsletter: ${newsletter.title}`);
-  console.log(`Keywords:   ${newsletter.keywords.join(", ")}`);
-  console.log("---\n");
+  Laminar.initialize({ projectApiKey: process.env.LMNR_PROJECT_API_KEY });
 
-  const result = await runNewsletterAgent(newsletter);
+  const start = Date.now();
 
-  console.log("=== AGENT SUMMARY ===");
-  console.log(result.digest.agentSummary);
+  const result = await observe(
+    { name: "smoketest/newsletter-agent" },
+    async () => {
+      // Print trace link as soon as we have a span context
+      const link = traceUrl();
+      if (link) {
+        console.log(`\n  🔗 Trace: ${link}\n`);
+      }
 
-  console.log("\n=== METADATA ===");
-  console.log(`Steps:      ${result.stepCount}`);
-  console.log(`Tokens in:  ${result.usage.inputTokens}`);
-  console.log(`Tokens out: ${result.usage.outputTokens}`);
-  console.log(`Tool calls: ${JSON.stringify(result.toolCallCounts)}`);
+      console.log(SECTION("NEWSLETTER AGENT SMOKE TEST"));
+      console.log(`  Newsletter:  ${newsletter.title}`);
+      console.log(`  Frequency:   ${newsletter.frequency}`);
+      console.log(`  Keywords:    ${newsletter.keywords.join(", ")}`);
+      console.log(`  Started:     ${new Date().toISOString()}`);
+      console.log(DIVIDER);
 
-  console.log("\n=== DIGEST ===");
-  console.log(`Title:       ${result.digest.editionTitle}`);
-  console.log(`Summary:     ${result.digest.summary}`);
-  console.log(`Takeaways:   ${result.digest.keyTakeaways.length}`);
-  for (const t of result.digest.keyTakeaways) {
-    console.log(`  • ${t}`);
+      return runNewsletterAgent(newsletter);
+    },
+  );
+
+  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+  // ── Tool call trace ──────────────────────────────────────────────────────
+
+  console.log(SECTION("TOOL CALL TRACE"));
+  for (const tc of result.toolCallLog) {
+    console.log(formatToolCall(tc));
+    console.log(DIVIDER);
   }
+
+  // ── Metadata ─────────────────────────────────────────────────────────────
+
+  console.log(SECTION("METADATA"));
+  console.log(`  Model:       ${result.model}`);
+  console.log(`  Steps:       ${result.stepCount}`);
+  console.log(`  Tokens in:   ${result.usage.inputTokens.toLocaleString()}`);
+  console.log(`  Tokens out:  ${result.usage.outputTokens.toLocaleString()}`);
+  console.log(`  Tool calls:  ${JSON.stringify(result.toolCallCounts)}`);
+  console.log(`  Duration:    ${elapsed}s`);
+
+  // ── Digest output ────────────────────────────────────────────────────────
+
+  console.log(SECTION("DIGEST OUTPUT"));
+  console.log(`  Title:       ${result.digest.editionTitle}`);
+  console.log(`  Summary:     ${result.digest.summary}`);
+  console.log(`\n  Key takeaways:`);
+  for (const t of result.digest.keyTakeaways) {
+    console.log(`    • ${t}`);
+  }
+
   for (const section of result.digest.sections) {
-    console.log(`\n  [${section.heading}]`);
+    console.log(`\n  ┌─ ${section.heading} (${section.items.length} items)`);
     for (const item of section.items) {
-      console.log(`    • ${item.title} — ${item.source} (${item.publishedAt})`);
-      console.log(`      ${item.url}`);
+      console.log(`  │`);
+      console.log(`  ├─ ${item.title}`);
+      console.log(`  │  detail: ${truncate(item.detail, 200)}`);
+      if (item.quote) console.log(`  │  quote: "${truncate(item.quote, 150)}"`);
+      for (const src of item.sources) {
+        console.log(`  │  src: ${src.name} (${src.publishedAt}) → ${src.url}`);
+      }
+    }
+    console.log(`  └─`);
+  }
+
+  if (result.digest.socialConsensus) {
+    console.log(`\n  Social consensus:`);
+    console.log(`    ${result.digest.socialConsensus.overview}`);
+    for (const h of result.digest.socialConsensus.highlights) {
+      console.log(
+        `    • ${h.authorName} (${h.author}): "${truncate(h.text, 120)}"`,
+      );
     }
   }
-  console.log(`\nBottom line: ${result.digest.bottomLine}`);
 
+  console.log(`\n  Bottom line: ${result.digest.bottomLine}`);
+  console.log(`\n  Agent summary: ${result.digest.agentSummary}`);
+
+  // ── Write outputs ────────────────────────────────────────────────────────
+
+  const outDir = resolve("scripts/smoketests/output");
+  mkdirSync(outDir, { recursive: true });
+
+  // HTML email
   const html = renderEmail(
     result.digest,
     newsletter.title,
     newsletter.frequency,
   );
-  const outPath = resolve("scripts/smoketests/output/newsletter-agent.html");
-  writeFileSync(outPath, html, "utf-8");
-  console.log(`\nHTML written to: ${outPath}`);
+  const htmlPath = resolve(outDir, "newsletter-agent.html");
+  writeFileSync(htmlPath, html, "utf-8");
+
+  // Full JSON dump for offline analysis
+  const jsonPath = resolve(outDir, "newsletter-agent.json");
+  writeFileSync(jsonPath, JSON.stringify(result, null, 2), "utf-8");
+
+  console.log(SECTION("OUTPUT FILES"));
+  console.log(`  HTML:  ${htmlPath}`);
+  console.log(`  JSON:  ${jsonPath}`);
+
+  // Flush telemetry before exit
+  await Laminar.shutdown();
+  console.log("");
 }
 
 main().catch((err) => {

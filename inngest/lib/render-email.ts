@@ -16,6 +16,23 @@ function periodLabel(frequency: Frequency): string {
   return `${freq} · ${date}`;
 }
 
+type ItemSource = { url: string; name: string; publishedAt?: string };
+
+/** Extract sources from a digest item, handling both old and new schema. */
+function itemSources(item: Record<string, unknown>): ItemSource[] {
+  if (Array.isArray(item.sources) && item.sources.length > 0)
+    return item.sources as ItemSource[];
+  if (typeof item.url === "string")
+    return [
+      {
+        url: item.url,
+        name: (item.source as string) ?? "Source",
+        publishedAt: item.publishedAt as string | undefined,
+      },
+    ];
+  return [];
+}
+
 /** Placeholder replaced per-recipient in email-sender. */
 export const UNSUBSCRIBE_PLACEHOLDER = "{{unsubscribe_url}}";
 
@@ -49,8 +66,14 @@ export function renderEmail(
             <p style="font-size:15px;font-weight:600;color:#111;margin:0 0 10px;line-height:1.35;">${item.title}</p>
             <p style="font-size:13px;color:#555;line-height:1.65;margin:0 0 10px;">${item.detail}</p>
             ${item.quote ? `<blockquote style="margin:0 0 10px;padding:8px 14px;border-left:3px solid #ddd;color:#666;font-style:italic;font-size:13px;line-height:1.55;">"${item.quote}"</blockquote>` : ""}
-            <a href="${item.url}" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;border-bottom:1px solid #ddd;">Read more →</a>
-            <span style="font-size:11px;color:#bbb;margin-left:8px;">${formatDate(item.publishedAt)} · ${item.source}</span>
+            ${(() => {
+              const sources = itemSources(item as unknown as Record<string, unknown>);
+              if (sources.length === 0) return "";
+              const primary = sources[0];
+              const extra = sources.slice(1);
+              return `<a href="${primary.url}" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;border-bottom:1px solid #ddd;">Read more →</a>
+            <span style="font-size:11px;color:#bbb;margin-left:8px;">${primary.publishedAt ? formatDate(primary.publishedAt) + " · " : ""}${primary.name}</span>${extra.map((s) => `<a href="${s.url}" style="font-size:11px;color:#bbb;margin-left:6px;text-decoration:none;border-bottom:1px solid #eee;">· ${s.name}</a>`).join("")}`;
+            })()}
           </div>`,
             )
             .join("")}

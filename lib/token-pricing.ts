@@ -28,6 +28,11 @@ const MODEL_PRICING: Record<string, ModelPricing> = {
     cachedInput: 0.02,
     output: 1.25,
   },
+  "gpt-4o-mini": {
+    input: 0.15,
+    cachedInput: 0.0075,
+    output: 0.6,
+  },
 };
 
 /** Price per request for non-token-based APIs. */

@@ -33,14 +33,14 @@ const DIGEST_CONFIG: Record<DigestTier, DigestTierConfig> = {
   },
   pro: {
     model: "gpt-5.4",
-    maxSteps: 6,
+    maxSteps: 4,
     storyTarget: "8-15",
     socialConsensus: true,
     deepResearch: true,
   },
   admin: {
     model: "gpt-5.4",
-    maxSteps: 6,
+    maxSteps: 4,
     storyTarget: "8-15",
     socialConsensus: true,
     deepResearch: true,

@@ -35,21 +35,32 @@ export const DigestSchema = z.object({
             .describe(
               "Editorial, opinionated headline with an emoji prefix. Not a restated article title — a punchy take. E.g. '🔥 OpenAI Just Made GPT-5 Free — Here's the Catch', '📉 The Fed Blinked, and Markets Noticed'",
             ),
-          url: z.string().describe("Real URL from research — never invented."),
-          publishedAt: z
-            .string()
+          sources: z
+            .array(
+              z.object({
+                url: z
+                  .string()
+                  .describe("Real URL from research — never invented."),
+                name: z
+                  .string()
+                  .describe(
+                    "Publication or domain name. E.g. 'The Verge', 'techcrunch.com'",
+                  ),
+                publishedAt: z
+                  .string()
+                  .describe(
+                    "ISO date string or human-readable date of the source article.",
+                  ),
+              }),
+            )
+            .min(1)
             .describe(
-              "ISO date string or human-readable date of the source article.",
-            ),
-          source: z
-            .string()
-            .describe(
-              "Publication or domain name. E.g. 'The Verge', 'techcrunch.com'",
+              "One or more source articles. Lead with the primary source. Combine sources when multiple articles cover the same story.",
             ),
           detail: z
             .string()
             .describe(
-              "2-3 sentences focusing on what readers actually care about — the impact, the why, the 'so what'. Skip background filler.",
+              "1-2 concise sentences on the impact or 'so what'. Readers can click through for the full story.",
             ),
           quote: z
             .string()
@@ -118,12 +129,20 @@ export type NewsletterInput = {
 
 // ── Main agent ────────────────────────────────────────────────────────────────
 
+export type ToolCallLog = {
+  stepNumber: number;
+  toolName: string;
+  args: unknown;
+  result: unknown;
+};
+
 export type AgentResult = {
   digest: DigestContent;
   model: string;
   stepCount: number;
   usage: { inputTokens: number; outputTokens: number };
   toolCallCounts: Record<string, number>;
+  toolCallLog: ToolCallLog[];
 };
 
 export async function runNewsletterAgent(
@@ -142,10 +161,14 @@ export async function runNewsletterAgent(
 
   const config = getDigestConfig(tier);
 
+  const seenUrls = new Set<string>();
+
   const toolCtx = {
     frequency,
     newsletterTitle: title,
     newsletterDescription: description,
+    keywords,
+    seenUrls,
   };
 
   const tools: Record<string, Tool> = {
@@ -170,7 +193,7 @@ export async function runNewsletterAgent(
   const depthInstruction = config.deepResearch
     ? "\n- Provide extended analysis with more specifics, numbers, and context in each item's detail field."
     : "";
-  const submitStep = config.socialConsensus ? "3" : "2";
+  const submitStep = config.socialConsensus ? "4" : "3";
 
   const { steps, usage } = await generateText({
     model: openai(config.model),
@@ -188,15 +211,29 @@ export async function runNewsletterAgent(
 - Use "you" to address the reader. Occasional light humor welcome.
 - Only include stories that are genuinely newsworthy — never pad with fluff. A shorter, high-quality digest is always better than a longer one stuffed with filler.
 - Each item title must be an editorial, opinionated headline with an emoji prefix — not a restated article title. Make it punchy and attention-grabbing.
-- The detail field should focus on what readers actually care about — the impact, the why, the "so what". Skip background filler.
+- The detail field should be 1-2 concise sentences on the impact or "so what" — readers can click through for the full story. Do NOT write lengthy paragraphs.
 - keyTakeaways should be short teaser bullets — hook the reader without giving away the full story.
-- URLs must be real URLs from your research — never invent them.
+- All URLs in sources must be real URLs from your research — never invent them.
+- When multiple articles cover the same story, combine them into a single item with multiple sources rather than creating separate items.
 - Only include a quote if it's genuinely interesting, otherwise set it to null.${socialConsensusInstruction}${depthInstruction}
 </guidelines>
 
+<search-queries>
+- Your first-round queries are for DISCOVERY — you don't know what happened yet. Use broad topic queries that cast a wide net.
+  GOOD first-round: "AI model announcements", "tech layoffs", "federal reserve policy", "crypto regulation"
+  BAD first-round: "OpenAI GPT-5 release" (you don't know GPT-5 was released — that's what you're trying to find out)
+- Follow-up queries (if needed) can be specific to drill into a story you discovered: "GPT-5 pricing details", "NVIDIA earnings breakdown"
+- Keep queries short: 2-5 words, core nouns only. No filler, no full sentences.
+- NEVER include dates, time references ("past 24 hours", "March 2026"), or site: operators. Date filtering is automatic.
+- Each query must target a distinctly different topic. No rephrasing the same query.
+- If a search returns results you've already seen, move on — do not retry.
+- Stop searching once you have enough material. More searches ≠ better newsletter.
+</search-queries>
+
 <workflow>
-1. Use searchWeb to research recent developments. Search with multiple focused queries — different angles, subtopics, and follow-up questions — until you have rich, varied coverage.${twitterInstruction}
-${submitStep}. Once you have enough material, call submitAnswer with the fully written newsletter.
+1. In your FIRST response, call searchWeb multiple times in parallel with diverse queries covering different angles of the newsletter topics. Aim for 3-5 parallel searches to get broad coverage upfront.
+2. Review the results. Only search again if there is a clear gap in coverage for a specific topic — not to get more results on topics you already have. The search tool automatically deduplicates, so repeated queries waste time.${twitterInstruction}
+${submitStep}. Call submitAnswer with the fully written newsletter. Do not keep searching if you already have strong coverage.
 </workflow>`,
     prompt: `Research and write the ${frequency} edition of "${title}".
 
@@ -222,9 +259,25 @@ Start by searching for the most important recent stories.`,
   const digest = output as DigestContent;
 
   const toolCallCounts: Record<string, number> = {};
+  const toolCallLog: ToolCallLog[] = [];
+
   for (const s of steps) {
     for (const tc of s.toolCalls ?? []) {
       toolCallCounts[tc.toolName] = (toolCallCounts[tc.toolName] ?? 0) + 1;
+    }
+
+    // Build detailed log by matching tool calls with their results
+    const resultsByCallId = new Map(
+      (s.toolResults ?? []).map((tr) => [tr.toolCallId, tr]),
+    );
+    for (const tc of s.toolCalls ?? []) {
+      const tr = resultsByCallId.get(tc.toolCallId);
+      toolCallLog.push({
+        stepNumber: s.stepNumber,
+        toolName: tc.toolName,
+        args: tc.input,
+        result: tr?.output,
+      });
     }
   }
 
@@ -237,5 +290,6 @@ Start by searching for the most important recent stories.`,
       outputTokens: usage.outputTokens ?? 0,
     },
     toolCallCounts,
+    toolCallLog,
   };
 }

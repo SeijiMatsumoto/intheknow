@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { type Frequency, twitterDateRange } from "@/lib/frequency";
-import { checkRelevancyAndSummarize } from "./check-relevancy";
+import { checkRelevancy } from "./check-relevancy";
 
 type TweetAuthor = {
   userName: string;
@@ -46,7 +46,7 @@ function buildTwitterQuery(query: string, frequency: Frequency): string {
   return `${query} since:${since} until:${until} -filter:replies`;
 }
 
-type TwitterToolContext = {
+export type TwitterToolContext = {
   frequency: Frequency;
   newsletterTitle: string;
   newsletterDescription?: string | null;
@@ -118,9 +118,9 @@ async function twitterSearch(
     )
     .slice(0, 20);
 
-  // Filter for relevancy and summarize
+  // Relevancy filter + summarize via cheap model
   const combinedQuery = queries.join(", ");
-  const relevancy = await checkRelevancyAndSummarize(
+  const relevancy = await checkRelevancy(
     combinedQuery,
     sorted.map((t) => ({
       title: `@${t.author.userName} (${t.author.name})`,
@@ -133,8 +133,8 @@ async function twitterSearch(
   );
 
   const relevant = sorted
-    .map((t, i) => ({ tweet: t, ...relevancy[i] }))
-    .filter((r) => r.relevant);
+    .map((t, i) => ({ tweet: t, summary: relevancy[i].summary }))
+    .filter((_, i) => relevancy[i].relevant);
 
   console.log(
     `[searchTwitter] after dedup=${unique.length}, relevant=${relevant.length}, filtered=${sorted.length - relevant.length}`,

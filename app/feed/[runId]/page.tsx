@@ -6,7 +6,12 @@ import { notFound, redirect } from "next/navigation";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { canUsePlan } from "@/lib/gates";
 import { getUserPlan, isAdmin } from "@/lib/user";
-import { type DigestContent, getFeedDigest } from "../data";
+import {
+  type DigestContent,
+  type DigestItem,
+  type DigestSource,
+  getFeedDigest,
+} from "../data";
 
 function formatDate(iso: string): string {
   try {
@@ -14,6 +19,20 @@ function formatDate(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+/** Extract sources from a digest item, handling both old and new schema. */
+function getItemSources(item: DigestItem): DigestSource[] {
+  if (item.sources && item.sources.length > 0) return item.sources;
+  if (item.url)
+    return [
+      {
+        url: item.url,
+        name: item.source ?? "Source",
+        publishedAt: item.publishedAt,
+      },
+    ];
+  return [];
 }
 
 export default async function FeedDetailPage({
@@ -108,8 +127,11 @@ export default async function FeedDetailPage({
                       </h2>
                     </div>
                     <div className="divide-y divide-border px-6 sm:px-10">
-                      {section.items.map((item) => (
-                        <div key={item.url} className="py-6">
+                      {section.items.map((item, idx) => {
+                        const sources = getItemSources(item);
+                        const primary = sources[0];
+                        return (
+                        <div key={primary?.url ?? idx} className="py-6">
                           <p className="mb-2.5 text-[15px] font-semibold leading-snug text-foreground">
                             {item.title}
                           </p>
@@ -123,21 +145,38 @@ export default async function FeedDetailPage({
                               &ldquo;{item.quote}&rdquo;
                             </blockquote>
                           )}
-                          <div className="flex items-center gap-2">
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
-                            >
-                              Read more →
-                            </a>
-                            <span className="text-xs text-muted-foreground/40">
-                              {formatDate(item.publishedAt)} · {item.source}
-                            </span>
-                          </div>
+                          {primary && (
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <a
+                                href={primary.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
+                              >
+                                Read more →
+                              </a>
+                              <span className="text-xs text-muted-foreground/40">
+                                {primary.publishedAt
+                                  ? `${formatDate(primary.publishedAt)} · `
+                                  : ""}
+                                {primary.name}
+                              </span>
+                              {sources.slice(1).map((s) => (
+                                <a
+                                  key={s.url}
+                                  href={s.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-muted-foreground/40 underline decoration-border hover:text-muted-foreground transition-colors"
+                                >
+                                  · {s.name}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -209,26 +248,43 @@ export default async function FeedDetailPage({
                       </h2>
                     </div>
                     <div className="divide-y divide-border px-6 sm:px-10">
-                      {section.items.map((item) => (
-                        <div key={item.url} className="py-4">
+                      {section.items.map((item, idx) => {
+                        const sources = getItemSources(item);
+                        const primary = sources[0];
+                        return (
+                        <div key={primary?.url ?? idx} className="py-4">
                           <p className="text-[15px] font-semibold leading-snug text-foreground">
                             {item.title}
                           </p>
-                          <div className="mt-1.5 flex items-center gap-2">
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
-                            >
-                              Read source →
-                            </a>
-                            <span className="text-xs text-muted-foreground/40">
-                              {item.source}
-                            </span>
-                          </div>
+                          {primary && (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <a
+                                href={primary.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs font-semibold text-muted-foreground underline decoration-border hover:text-foreground transition-colors"
+                              >
+                                Read source →
+                              </a>
+                              <span className="text-xs text-muted-foreground/40">
+                                {primary.name}
+                              </span>
+                              {sources.slice(1).map((s) => (
+                                <a
+                                  key={s.url}
+                                  href={s.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-muted-foreground/40 underline decoration-border hover:text-muted-foreground transition-colors"
+                                >
+                                  · {s.name}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

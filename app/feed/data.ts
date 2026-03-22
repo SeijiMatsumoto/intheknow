@@ -35,13 +35,21 @@ export async function getFeedDigest(
   });
 }
 
-export type DigestItem = {
+export type DigestSource = {
   url: string;
+  name: string;
+  publishedAt?: string;
+};
+
+export type DigestItem = {
   title: string;
-  source: string;
-  publishedAt: string;
   detail?: string;
   quote?: string;
+  sources?: DigestSource[];
+  // Backward compat for old digests stored in DB
+  url?: string;
+  source?: string;
+  publishedAt?: string;
 };
 
 export type DigestSection = {

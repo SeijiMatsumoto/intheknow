@@ -20,10 +20,14 @@ export type DigestTierConfig = {
   deepResearch: boolean;
 };
 
-/** Plans that can trigger digest generation (free users cannot). */
-export type DigestTier = Exclude<Plan, "free">;
-
-const DIGEST_CONFIG: Record<DigestTier, DigestTierConfig> = {
+const DIGEST_CONFIG: Record<Plan, DigestTierConfig> = {
+  free: {
+    model: "gpt-5-mini",
+    maxSteps: 2,
+    storyTarget: "4-6",
+    socialConsensus: false,
+    deepResearch: false,
+  },
   plus: {
     model: "gpt-5.4-mini",
     maxSteps: 3,
@@ -47,8 +51,7 @@ const DIGEST_CONFIG: Record<DigestTier, DigestTierConfig> = {
   },
 };
 
-/** Get digest generation config for a plan tier. Falls back to plus if free is passed. */
+/** Get digest generation config for a plan tier. */
 export function getDigestConfig(tier: Plan): DigestTierConfig {
-  if (tier === "free") return DIGEST_CONFIG.plus;
   return DIGEST_CONFIG[tier];
 }

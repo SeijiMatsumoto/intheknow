@@ -59,6 +59,22 @@ export async function highestTierAmong(userIds: string[]): Promise<Plan> {
   return best;
 }
 
+/** Return a map of userId → Plan for a set of userIds. Missing users default to "free". */
+export async function getUserPlans(
+  userIds: string[],
+): Promise<Map<string, Plan>> {
+  if (userIds.length === 0) return new Map();
+  const rows = await prisma.userPlan.findMany({
+    where: { userId: { in: userIds } },
+    select: { userId: true, plan: true },
+  });
+  const map = new Map<string, Plan>();
+  for (const row of rows) {
+    map.set(row.userId, row.plan as Plan);
+  }
+  return map;
+}
+
 // ── Newsletter ────────────────────────────────────────────────────────────────
 
 export function getNewsletterById(id: string) {

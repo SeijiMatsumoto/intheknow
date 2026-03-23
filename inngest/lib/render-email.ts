@@ -36,11 +36,18 @@ function itemSources(item: Record<string, unknown>): ItemSource[] {
 /** Placeholder replaced per-recipient in email-sender. */
 export const UNSUBSCRIBE_PLACEHOLDER = "{{unsubscribe_url}}";
 
+type RenderOptions = {
+  /** When true, render a teaser email with headlines only + upgrade CTA. */
+  teaser?: boolean;
+};
+
 export function renderEmail(
   digest: DigestContent,
   newsletterTitle: string,
   frequency: Frequency,
+  options: RenderOptions = {},
 ): string {
+  const { teaser = false } = options;
   // In this edition (key takeaways)
   const takeawaysHtml = digest.keyTakeaways
     .map(
@@ -64,7 +71,10 @@ export function renderEmail(
               (item) => `
           <div style="padding:20px 0;border-bottom:1px solid #f0f0f0;">
             <p style="font-size:15px;font-weight:600;color:#111;margin:0 0 10px;line-height:1.35;">${item.title}</p>
-            <p style="font-size:13px;color:#555;line-height:1.65;margin:0 0 10px;">${item.detail}</p>
+            ${
+              teaser
+                ? ""
+                : `<p style="font-size:13px;color:#555;line-height:1.65;margin:0 0 10px;">${item.detail}</p>
             ${item.quote ? `<blockquote style="margin:0 0 10px;padding:8px 14px;border-left:3px solid #ddd;color:#666;font-style:italic;font-size:13px;line-height:1.55;">"${item.quote}"</blockquote>` : ""}
             ${(() => {
               const sources = itemSources(item as unknown as Record<string, unknown>);
@@ -72,8 +82,9 @@ export function renderEmail(
               const primary = sources[0];
               const extra = sources.slice(1);
               return `<a href="${primary.url}" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;border-bottom:1px solid #ddd;">Read more →</a>
-            <span style="font-size:11px;color:#bbb;margin-left:8px;">${primary.publishedAt ? formatDate(primary.publishedAt) + " · " : ""}${primary.name}</span>${extra.map((s) => `<a href="${s.url}" style="font-size:11px;color:#bbb;margin-left:6px;text-decoration:none;border-bottom:1px solid #eee;">· ${s.name}</a>`).join("")}`;
-            })()}
+            <span style="font-size:11px;color:#bbb;margin-left:8px;">${primary.publishedAt ? `${formatDate(primary.publishedAt)} · ` : ""}${primary.name}</span>${extra.map((s) => `<a href="${s.url}" style="font-size:11px;color:#bbb;margin-left:6px;text-decoration:none;border-bottom:1px solid #eee;">· ${s.name}</a>`).join("")}`;
+            })()}`
+            }
           </div>`,
             )
             .join("")}
@@ -113,6 +124,15 @@ export function renderEmail(
       <table width="100%" cellpadding="0" cellspacing="0">${sectionsHtml}</table>
     </td></tr>
 
+    ${
+      teaser
+        ? `
+    <!-- Upgrade CTA (free tier) -->
+    <tr><td style="padding:32px 24px;background:#f7f7f7;border-top:1px solid #f0f0f0;text-align:center;">
+      <p style="font-size:14px;color:#555;line-height:1.65;margin:0 0 16px;">Want the full analysis, source links, and expert takes?</p>
+      <a href="https://thelatest.io/pricing" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;">Upgrade to read more →</a>
+    </td></tr>`
+        : `
     <!-- Social consensus (Pro only) -->
     ${
       digest.socialConsensus
@@ -141,7 +161,8 @@ export function renderEmail(
     <tr><td style="padding:24px 24px;background:#f7f7f7;border-top:1px solid #f0f0f0;">
       <p style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#aaa;margin:0 0 10px;">The bottom line</p>
       <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${digest.bottomLine}</p>
-    </td></tr>
+    </td></tr>`
+    }
 
     <!-- Footer -->
     <tr><td style="padding:20px 24px;border-top:1px solid #f0f0f0;text-align:center;">

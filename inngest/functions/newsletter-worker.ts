@@ -12,6 +12,7 @@ import {
   findRecentDigestRun,
   getNewsletterById,
   getNewsletterSubscriptions,
+  getUserPlans,
   markDigestRunSent,
   saveDigestContent,
 } from "./queries";
@@ -218,24 +219,24 @@ export const newsletterWorker = inngest.createFunction(
       };
     }
 
-    // 4. Render email
-    const emailHtml = await step.run("render-email", async () => {
-      const html = renderEmail(
-        digest,
-        newsletter.title,
-        newsletter.frequency as Frequency,
+    // 4. Render emails (full + teaser for free users)
+    const { fullHtml, teaserHtml } = await step.run("render-email", async () => {
+      const freq = newsletter.frequency as Frequency;
+      const full = renderEmail(digest, newsletter.title, freq);
+      const teaser = renderEmail(digest, newsletter.title, freq, { teaser: true });
+      logger.info(
+        `Email rendered — full: ${full.length} chars, teaser: ${teaser.length} chars`,
       );
-      logger.info(`Email rendered (${html.length} chars)`);
-      return html;
+      return { fullHtml: full, teaserHtml: teaser };
     });
 
-    // 5. Persist content
+    // 5. Persist content (save full version)
     await step.run("save-digest-content", async () => {
-      await saveDigestContent(digestRun.id, digest, emailHtml);
+      await saveDigestContent(digestRun.id, digest, fullHtml);
       logger.info("Digest content saved");
     });
 
-    // 6. Fan out emails
+    // 6. Fan out emails (free users get teaser, paid users get full)
     await step.run("fan-out-emails", async () => {
       let emails: { userId: string; userEmail: string }[];
 
@@ -257,20 +258,34 @@ export const newsletterWorker = inngest.createFunction(
         return;
       }
 
-      await inngest.send(
-        emails.map((e) => ({
-          name: "newsletter/email.generated" as const,
-          data: {
-            digestRunId: digestRun.id,
-            newsletterId,
-            newsletterTitle: digest.editionTitle,
-            userId: e.userId,
-            userEmail: e.userEmail,
-            emailHtml,
-          },
-        })),
+      // Look up plans to decide full vs teaser email
+      const plans = await getUserPlans(
+        emails.map((e) => e.userId).filter((id) => id !== "manual"),
       );
-      logger.info(`Fired ${emails.length} newsletter/email.generated event(s)`);
+
+      await inngest.send(
+        emails.map((e) => {
+          const plan = e.userId === "manual" ? "admin" : (plans.get(e.userId) ?? "free");
+          return {
+            name: "newsletter/email.generated" as const,
+            data: {
+              digestRunId: digestRun.id,
+              newsletterId,
+              newsletterTitle: digest.editionTitle,
+              userId: e.userId,
+              userEmail: e.userEmail,
+              emailHtml: plan === "free" ? teaserHtml : fullHtml,
+            },
+          };
+        }),
+      );
+
+      const freeCount = emails.filter(
+        (e) => e.userId !== "manual" && (plans.get(e.userId) ?? "free") === "free",
+      ).length;
+      logger.info(
+        `Fired ${emails.length} email(s) — ${emails.length - freeCount} full, ${freeCount} teaser`,
+      );
     });
 
     // 7. Mark as sent

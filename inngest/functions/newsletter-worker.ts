@@ -48,9 +48,24 @@ export const newsletterWorker = inngest.createFunction(
     id: "newsletter-worker",
     retries: 2,
     triggers: [{ event: "newsletter/run" }],
+    onFailure: async ({ event, logger }) => {
+      const { digestRunId } = event.data.event.data;
+      const errorMessage =
+        event.data.error?.message ?? "Function failed or timed out";
+      if (digestRunId) {
+        logger.error(
+          `newsletter-worker failed — marking digest run ${digestRunId} as failed: ${errorMessage}`,
+        );
+        await failDigestRun(digestRunId, errorMessage);
+      } else {
+        logger.error(
+          `newsletter-worker failed before digest run was created: ${errorMessage}`,
+        );
+      }
+    },
   },
   async ({ event, step, logger }) => {
-    const { newsletterId, userEmails, userIds, tier = "pro" } = event.data;
+    const { newsletterId, digestRunId, userEmails, userIds, tier = "pro" } = event.data;
     const digestConfig = getDigestConfig(tier);
     logger.info("newsletter-worker started", {
       newsletterId,
@@ -146,7 +161,7 @@ export const newsletterWorker = inngest.createFunction(
 
     // 2. Create digest run
     const digestRun = await step.run("create-digest-run", async () => {
-      const run = await createDigestRun(newsletterId);
+      const run = await createDigestRun(newsletterId, digestRunId);
       logger.info(`Created digest run: ${run.id}`);
       return run;
     });

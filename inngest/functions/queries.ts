@@ -74,9 +74,9 @@ export function findRecentDigestRun(newsletterId: string, since: Date) {
   });
 }
 
-export function createDigestRun(newsletterId: string) {
+export function createDigestRun(newsletterId: string, id?: string) {
   return prisma.digestRun.create({
-    data: { newsletterId, runAt: new Date(), status: "running" },
+    data: { ...(id ? { id } : {}), newsletterId, runAt: new Date(), status: "running" },
   });
 }
 
@@ -97,6 +97,7 @@ export function failDigestRun(id: string, error: string) {
     data: { status: "failed", error },
   });
 }
+
 
 export function markDigestRunSent(id: string) {
   return prisma.digestRun.update({

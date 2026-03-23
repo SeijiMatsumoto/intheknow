@@ -5,6 +5,7 @@ type Events = {
   "newsletter/run": {
     data: {
       newsletterId: string;
+      digestRunId: string; // pre-generated UUID so onFailure can mark it failed
       userEmails?: string[]; // manual override — send only to these emails (internal trigger)
       userIds?: string[]; // orchestrator-resolved subset of subscribers due this run
     };

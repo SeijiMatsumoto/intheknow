@@ -68,7 +68,12 @@ export const hourlyOrchestrator = inngest.createFunction(
       "fan-out-newsletter-workers",
       [...byNewsletter.entries()].map(([newsletterId, { userIds }]) => ({
         name: "newsletter/run" as const,
-        data: { newsletterId, userIds, tier: tiers[newsletterId] },
+        data: {
+          newsletterId,
+          digestRunId: crypto.randomUUID(),
+          userIds,
+          tier: tiers[newsletterId],
+        },
       })),
     );
 

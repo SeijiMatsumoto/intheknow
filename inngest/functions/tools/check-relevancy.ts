@@ -3,27 +3,19 @@ import { getTracer } from "@lmnr-ai/lmnr";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-// ── Schemas ──────────────────────────────────────────────────────────────────
+// ── Schema ───────────────────────────────────────────────────────────────────
 
-const FilterSchema = z.object({
+const RelevancySchema = z.object({
   results: z.array(
     z.object({
       index: z.number().describe("0-based index of the original item."),
       relevant: z
         .boolean()
         .describe("true if the content is relevant to the search query."),
-    }),
-  ),
-});
-
-const SummarySchema = z.object({
-  results: z.array(
-    z.object({
-      index: z.number().describe("0-based index of the original item."),
       summary: z
         .string()
         .describe(
-          "1-2 sentence summary extracting key facts, names, and numbers.",
+          "If relevant: 1-2 sentence summary with key facts, names, and numbers. If not relevant: empty string.",
         ),
     }),
   ),
@@ -75,91 +67,11 @@ function buildPrompt(
   return parts.join("\n");
 }
 
-// ── Pass 1: Boolean relevancy filter ─────────────────────────────────────────
-
-async function filterRelevant(
-  query: string,
-  items: RelevancyInput[],
-  context?: RelevancyContext,
-): Promise<boolean[]> {
-  const { output, usage } = await generateText({
-    model: openai("gpt-4o-mini"),
-    output: Output.object({ schema: FilterSchema }),
-    experimental_telemetry: {
-      isEnabled: true,
-      tracer: getTracer(),
-      metadata: { task: "check-relevancy-filter", query, itemCount: items.length },
-    },
-    system: [
-      "You are a strict relevance filter. Return ONLY relevance judgments, no summaries.",
-      "",
-      "For each numbered item, decide if it is SPECIFICALLY relevant to the search query and newsletter context.",
-      "Default to NOT relevant. Only mark relevant if the item clearly adds newsworthy information.",
-      "",
-      "Mark as NOT relevant if ANY of these apply:",
-      "- Generic template, boilerplate, or placeholder content",
-      "- Lacks specific, actionable information (no concrete names, numbers, dates, or events)",
-      "- Homepage, index page, or navigation page without substantive article content",
-      "- Tangentially related through shared keywords but actually about a different topic",
-      "- Duplicate or near-duplicate of another item in the list (keep the more detailed one)",
-      "- Opinion piece or listicle with no original reporting or new information",
-      "- Press release or promotional content without newsworthy substance",
-    ].join("\n"),
-    prompt: buildPrompt(query, items, context),
-  });
-
-  const results = output?.results ?? [];
-
-  console.log(
-    `[checkRelevancy:filter] query="${query}" relevant=${results.filter((r) => r.relevant).length}/${items.length} tokens=${usage.inputTokens}in/${usage.outputTokens}out`,
-  );
-
-  const indexed = new Map(results.map((r) => [r.index, r.relevant]));
-  return items.map((_, i) => indexed.get(i) ?? false);
-}
-
-// ── Pass 2: Summarize only relevant items ────────────────────────────────────
-
-async function summarizeRelevant(
-  query: string,
-  items: RelevancyInput[],
-  context?: RelevancyContext,
-): Promise<string[]> {
-  const { output, usage } = await generateText({
-    model: openai("gpt-4o-mini"),
-    output: Output.object({ schema: SummarySchema }),
-    experimental_telemetry: {
-      isEnabled: true,
-      tracer: getTracer(),
-      metadata: {
-        task: "check-relevancy-summarize",
-        query,
-        itemCount: items.length,
-      },
-    },
-    system: [
-      "You are a concise summarizer. For each numbered item, write a 1-2 sentence summary extracting only the key facts, names, and numbers.",
-      "These summaries replace the raw text — make them tight and information-dense.",
-    ].join("\n"),
-    prompt: buildPrompt(query, items, context),
-  });
-
-  const results = output?.results ?? [];
-
-  console.log(
-    `[checkRelevancy:summarize] query="${query}" items=${items.length} tokens=${usage.inputTokens}in/${usage.outputTokens}out`,
-  );
-
-  const indexed = new Map(results.map((r) => [r.index, r.summary]));
-  return items.map((_, i) => indexed.get(i) ?? "");
-}
-
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Two-pass relevancy check:
- * 1. Fast boolean filter (skip irrelevant items)
- * 2. Summarize only the relevant ones (so the main agent never reads raw text)
+ * Single-pass relevancy filter + summarizer.
+ * Judges relevance and summarizes relevant items in one LLM call.
  */
 export async function checkRelevancy(
   query: string,
@@ -170,37 +82,44 @@ export async function checkRelevancy(
 
   console.log(`[checkRelevancy] query="${query}" items=${items.length}`);
 
-  // Pass 1: boolean filter
-  const relevant = await filterRelevant(query, items, context);
+  const { output, usage } = await generateText({
+    model: openai("gpt-4o-mini"),
+    output: Output.object({ schema: RelevancySchema }),
+    experimental_telemetry: {
+      isEnabled: true,
+      tracer: getTracer(),
+      metadata: { task: "check-relevancy", query, itemCount: items.length },
+    },
+    system: `You are an editorial filter for a curated newsletter. Your job is to decide what a subscriber would actually want to read.
 
-  const relevantItems = items
-    .map((item, i) => ({ item, originalIndex: i }))
-    .filter((_, i) => relevant[i]);
+Think like a subscriber: they signed up for "${context?.newsletterTitle ?? "this newsletter"}" because they want to stay informed on what matters in this space. They want real news — things that happened, decisions that were made, products that launched, numbers that moved. They do NOT want filler, fluff, or content that wastes their time.
 
-  if (relevantItems.length === 0) {
-    console.log(`[checkRelevancy] query="${query}" — nothing relevant, skipping summarize`);
-    return items.map(() => ({ relevant: false, summary: "" }));
-  }
+For each numbered item, decide: would a subscriber be glad this was in their newsletter, or would they skip it?
 
-  // Pass 2: summarize only relevant items
-  const summaries = await summarizeRelevant(
-    query,
-    relevantItems.map((r) => r.item),
-    context,
+If relevant: write a 1-2 sentence summary extracting the key facts, names, and numbers.
+If not relevant: set summary to an empty string.
+
+Mark as NOT relevant if ANY of these apply:
+- Not something a subscriber would care about or act on
+- Generic template, boilerplate, or placeholder content
+- No concrete facts — no names, numbers, dates, or specific events
+- Homepage, index page, or navigation page with no article content
+- Tangentially related through shared keywords but actually about a different topic
+- Duplicate or near-duplicate of another item (keep the more detailed one)
+- Promotional content or press release without genuine news value`,
+    prompt: buildPrompt(query, items, context),
+  });
+
+  const results = output?.results ?? [];
+  const relevantCount = results.filter((r) => r.relevant).length;
+
+  console.log(
+    `[checkRelevancy] query="${query}" relevant=${relevantCount}/${items.length} tokens=${usage.inputTokens}in/${usage.outputTokens}out`,
   );
 
-  // Merge back into original order
-  const results: RelevancyResult[] = items.map(() => ({
-    relevant: false,
-    summary: "",
-  }));
+  const indexed = new Map(
+    results.map((r) => [r.index, { relevant: r.relevant, summary: r.summary }]),
+  );
 
-  for (let i = 0; i < relevantItems.length; i++) {
-    results[relevantItems[i].originalIndex] = {
-      relevant: true,
-      summary: summaries[i],
-    };
-  }
-
-  return results;
+  return items.map((_, i) => indexed.get(i) ?? { relevant: false, summary: "" });
 }

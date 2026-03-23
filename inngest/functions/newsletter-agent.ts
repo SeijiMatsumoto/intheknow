@@ -232,8 +232,9 @@ export async function runNewsletterAgent(
 
 <workflow>
 1. In your FIRST response, call searchWeb multiple times in parallel with diverse queries covering different angles of the newsletter topics. Aim for 3-5 parallel searches to get broad coverage upfront.
-2. Review the results. Only search again if there is a clear gap in coverage for a specific topic — not to get more results on topics you already have. The search tool automatically deduplicates, so repeated queries waste time.${twitterInstruction}
-${submitStep}. Call submitAnswer with the fully written newsletter. Do not keep searching if you already have strong coverage.
+2. Review the results. Each search result includes a coverage count — if you have 6+ unique sources, you almost certainly have enough material. Proceed to submitAnswer.${twitterInstruction}
+   Only do a follow-up search if a MAJOR topic area from the keywords has ZERO coverage. A second search round should be rare. NEVER search for a topic you already have results for.
+${submitStep}. Call submitAnswer with the fully written newsletter.
 </workflow>`,
     prompt: `Research and write the ${frequency} edition of "${title}".
 

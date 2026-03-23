@@ -6,6 +6,26 @@ import { checkRelevancy } from "./check-relevancy";
 
 const perplexity = new Perplexity();
 
+/** Domains that consistently return low-quality, scraped, or SEO-farm content. */
+const BLOCKED_DOMAINS = [
+  "medium.com",
+  "hubspot.com",
+  "about.com",
+  "ehow.com",
+  "wikihow.com",
+  "quora.com",
+  "pinterest.com",
+  "slideshare.net",
+  "scribd.com",
+  "issuu.com",
+  "buzzfeed.com",
+  "screenrant.com",
+  "cbr.com",
+  "gamerant.com",
+  "makeuseof.com",
+  "x.com",
+];
+
 export type SearchToolContext = {
   frequency: Frequency;
   newsletterTitle: string;
@@ -33,6 +53,8 @@ async function webSearch(
       max_results: 5,
       search_after_date_filter: after,
       search_before_date_filter: before,
+      search_domain_filter: BLOCKED_DOMAINS.map((d) => `-${d}`),
+      search_language_filter: ["en"],
     });
 
     const raw = search.results ?? [];
@@ -43,32 +65,61 @@ async function webSearch(
 
     if (raw.length === 0) return "No results found.";
 
-    // Pre-filter obvious junk and already-seen URLs before LLM call
+    // Pre-filter obvious junk before LLM call
     const viable = raw.filter((r) => {
-      if (!r.snippet?.trim()) return false;
+      // Empty or too-short snippets are useless
+      if (!r.snippet?.trim() || r.snippet.trim().length < 80) return false;
+
+      // Already seen this URL
+      if (ctx.seenUrls.has(r.url)) return false;
+
+      let url: URL;
       try {
-        const path = new URL(r.url).pathname;
-        if (path === "/" || path === "") return false;
+        url = new URL(r.url);
       } catch {
         return false;
       }
-      if (ctx.seenUrls.has(r.url)) return false;
+
+      // Bare homepages
+      if (url.pathname === "/" || url.pathname === "") return false;
+
+      // Index/taxonomy pages — not real articles
+      if (
+        /^\/(tag|tags|category|categories|author|authors|topic|topics|archive|search)\b/i.test(
+          url.pathname,
+        )
+      )
+        return false;
+
       return true;
     });
 
-    if (viable.length === 0)
-      return `No relevant results found for: ${query}`;
+    // Deduplicate near-identical titles (keep first occurrence)
+    const seenTitles = new Set<string>();
+    const deduped = viable.filter((r) => {
+      const normalized = r.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (seenTitles.has(normalized)) return false;
+      seenTitles.add(normalized);
+      return true;
+    });
+
+    // Track ALL viable URLs immediately — prevents re-filtering in later searches
+    for (const r of deduped) {
+      ctx.seenUrls.add(r.url);
+    }
+
+    if (deduped.length === 0) return `No relevant results found for: ${query}`;
 
     const relevancy = await checkRelevancy(
       query,
-      viable.map((r) => ({ title: r.title, content: r.snippet })),
+      deduped.map((r) => ({ title: r.title, content: r.snippet })),
       {
         newsletterTitle: ctx.newsletterTitle,
         newsletterDescription: ctx.newsletterDescription,
       },
     );
 
-    const results = viable
+    const results = deduped
       .map((r, i) => ({
         title: r.title,
         url: r.url,
@@ -78,23 +129,22 @@ async function webSearch(
       }))
       .filter((r) => r.relevant);
 
-    // Track seen URLs to prevent duplicates across calls
-    for (const r of results) {
-      ctx.seenUrls.add(r.url);
-    }
-
     console.log(
-      `[searchWeb] query="${query}" raw=${raw.length} viable=${viable.length} relevant=${results.length}`,
+      `[searchWeb] query="${query}" raw=${raw.length} viable=${deduped.length} relevant=${results.length}`,
     );
 
     if (results.length === 0) return `No relevant results found for: ${query}`;
 
-    return results
-      .map(
-        (r, i) =>
-          `${i + 1}. ${r.title}\n   URL: ${r.url}\n   Date: ${r.date}\n   ${r.summary}`,
-      )
-      .join("\n\n");
+    const lines = results.map(
+      (r, i) =>
+        `${i + 1}. ${r.title}\n   URL: ${r.url}\n   Date: ${r.date}\n   ${r.summary}`,
+    );
+
+    lines.push(
+      `\n---\nSearch coverage: ${ctx.seenUrls.size} unique sources found across all searches so far.`,
+    );
+
+    return lines.join("\n\n");
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[searchWeb] FAILED query="${query}" error=${msg}`);

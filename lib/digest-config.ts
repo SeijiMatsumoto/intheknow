@@ -26,21 +26,21 @@ export type DigestTier = Exclude<Plan, "free">;
 const DIGEST_CONFIG: Record<DigestTier, DigestTierConfig> = {
   plus: {
     model: "gpt-5.4-mini",
-    maxSteps: 4,
+    maxSteps: 3,
     storyTarget: "6-12",
     socialConsensus: false,
     deepResearch: false,
   },
   pro: {
     model: "gpt-5.4",
-    maxSteps: 4,
+    maxSteps: 3,
     storyTarget: "8-15",
     socialConsensus: true,
     deepResearch: true,
   },
   admin: {
     model: "gpt-5.4",
-    maxSteps: 4,
+    maxSteps: 3,
     storyTarget: "8-15",
     socialConsensus: true,
     deepResearch: true,

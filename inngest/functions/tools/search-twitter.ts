@@ -40,10 +40,10 @@ function formatEngagement(tweet: Tweet): string {
   return parts.join(", ") || "no engagement data";
 }
 
-/** Build a Twitter advanced search query string with a date window. */
+/** Build a Twitter advanced search query string with a date window and quality filters. */
 function buildTwitterQuery(query: string, frequency: Frequency): string {
   const { since, until } = twitterDateRange(frequency);
-  return `${query} since:${since} until:${until} -filter:replies`;
+  return `${query} since:${since} until:${until} min_faves:100 lang:en -filter:replies`;
 }
 
 export type TwitterToolContext = {
@@ -69,21 +69,21 @@ async function twitterSearch(
 
   const allTweets: Tweet[] = [];
 
-  for (const q of queries) {
+  const fetches = queries.map(async (q) => {
     const fullQuery = buildTwitterQuery(q, frequency);
-    const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&queryType=Top&count=10`;
+    const fetchUrl = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&queryType=Top&count=5`;
 
     console.log(
       `[searchTwitter] fetching query="${q}" fullQuery="${fullQuery}"`,
     );
 
-    const res = await fetch(url, {
+    const res = await fetch(fetchUrl, {
       headers: { "x-api-key": apiKey },
     });
 
     if (!res.ok) {
       console.warn(`[searchTwitter] FAILED query="${q}" status=${res.status}`);
-      continue;
+      return;
     }
 
     const data: TwitterSearchResponse = await res.json();
@@ -93,7 +93,9 @@ async function twitterSearch(
     console.log(
       `[searchTwitter] query="${q}" tweets=${count}${count > 0 ? ` | top: @${data.tweets[0].author.userName} (${data.tweets[0].likeCount} likes)` : ""}`,
     );
-  }
+  });
+
+  await Promise.all(fetches);
 
   console.log(
     `[searchTwitter] total raw=${allTweets.length} across ${queries.length} queries`,
@@ -104,19 +106,40 @@ async function twitterSearch(
   }
 
   // Deduplicate by tweet ID
-  const seen = new Set<string>();
+  const seenIds = new Set<string>();
   const unique = allTweets.filter((t) => {
-    if (seen.has(t.id)) return false;
-    seen.add(t.id);
+    if (seenIds.has(t.id)) return false;
+    seenIds.add(t.id);
     return true;
   });
 
+  // Deterministic pre-filters before LLM call
+  // (min_faves and lang:en are already enforced at the API query level)
+  const viable = unique.filter((t) => {
+    // Skip authors with tiny followings (random accounts)
+    if (t.author.followers < 500) return false;
+    // Skip tweets that are too short to have substance
+    if (t.text.trim().length < 30) return false;
+    // Skip spam: mostly hashtags or @mentions
+    const stripped = t.text.replace(/[@#]\S+/g, "").trim();
+    if (stripped.length < 20) return false;
+    return true;
+  });
+
+  console.log(
+    `[searchTwitter] unique=${unique.length} viable=${viable.length} (filtered ${unique.length - viable.length} low-quality)`,
+  );
+
+  if (viable.length === 0) {
+    return `No notable tweets found for: ${queries.join(", ")}`;
+  }
+
   // Sort by engagement (likes + RTs) and take top results
-  const sorted = unique
+  const sorted = viable
     .sort(
       (a, b) => b.likeCount + b.retweetCount - (a.likeCount + a.retweetCount),
     )
-    .slice(0, 20);
+    .slice(0, 10);
 
   // Relevancy filter + summarize via cheap model
   const combinedQuery = queries.join(", ");

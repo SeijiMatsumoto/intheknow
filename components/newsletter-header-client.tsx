@@ -31,16 +31,16 @@ export function NewsletterHeaderClient({ userId, admin, hideProfile }: Props) {
               <>
                 {/* Desktop-only nav links */}
                 <Link
-                  href="/newsletters"
-                  className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Browse
-                </Link>
-                <Link
                   href="/feed"
                   className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   My Feed
+                </Link>
+                <Link
+                  href="/newsletters"
+                  className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Browse
                 </Link>
                 {admin && (
                   <Link

@@ -193,9 +193,9 @@ export function NewslettersClient({
       {customItems.length > 0 && (
         <div className="mb-10">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            My newsletters
+            Custom newsletters
           </h2>
-          <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {customItems.map(({ newsletter, subscriptionId, nextRunIso }) => (
               <NewsletterCard
                 key={newsletter.id}
@@ -214,7 +214,7 @@ export function NewslettersClient({
           Curated
         </h2>
       )}
-      <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredItems.map(({ newsletter, subscriptionId, nextRunIso }) => (
           <NewsletterCard
             key={newsletter.id}

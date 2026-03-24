@@ -11,7 +11,7 @@ const FEATURES = [
   {
     icon: Search,
     title: "Web + social research",
-    desc: "Searches news sites, blogs, and Twitter/X for the most relevant stories on your topic.",
+    desc: "Searches news sites, blogs, and Bluesky for the most relevant stories on your topic.",
   },
   {
     icon: Sparkles,
@@ -26,7 +26,7 @@ const FEATURES = [
   {
     icon: MessageCircle,
     title: "Social consensus",
-    desc: "See what experts and the public are saying on Twitter about each story.",
+    desc: "See what experts and the public are saying on Bluesky about each story.",
   },
   {
     icon: BookOpen,

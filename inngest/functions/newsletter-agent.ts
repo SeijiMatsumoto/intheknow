@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getDigestConfig } from "@/lib/digest-config";
 import { type Frequency, windowLabel } from "@/lib/frequency";
 import type { Plan } from "@/lib/user";
-import { makeSearchTwitterTool } from "./tools/search-twitter";
+import { makeSearchBlueskyTool } from "./tools/search-bluesky";
 import { makeSearchWebTool } from "./tools/search-web";
 import { makeSubmitAnswerTool } from "./tools/submit-answer";
 
@@ -84,11 +84,13 @@ export const DigestSchema = z.object({
           text: z
             .string()
             .describe("The take — paraphrased or directly quoted."),
-          author: z.string().describe("Twitter/X handle. E.g. '@karpathy'"),
+          author: z
+            .string()
+            .describe("Bluesky handle. E.g. '@karpathy.bsky.social'"),
           authorName: z
             .string()
             .describe("Display name. E.g. 'Andrej Karpathy'"),
-          url: z.string().describe("Direct link to the tweet."),
+          url: z.string().describe("Direct link to the post."),
           engagement: z
             .string()
             .nullable()
@@ -100,7 +102,7 @@ export const DigestSchema = z.object({
     })
     .nullable()
     .describe(
-      "Public reaction and discourse from Twitter/X. Null when not available.",
+      "Public reaction and discourse from Bluesky. Null when not available.",
     ),
   bottomLine: z
     .string()
@@ -178,14 +180,14 @@ export async function runNewsletterAgent(
     }),
   };
 
-  // Only include Twitter search when tier supports it
+  // Only include Bluesky search when tier supports it
   if (config.socialConsensus) {
-    tools.searchTwitter = makeSearchTwitterTool(toolCtx);
+    tools.searchBluesky = makeSearchBlueskyTool(toolCtx);
   }
 
   // Tier-specific instructions
-  const twitterInstruction = config.socialConsensus
-    ? "\n2. Use searchTwitter to find social/community discussion and public reaction to key stories. Include notable takes, sentiment, and consensus."
+  const blueskyInstruction = config.socialConsensus
+    ? "\n2. Use searchBluesky to find social/community discussion and public reaction to key stories. Include notable takes, sentiment, and consensus."
     : "";
   const socialConsensusInstruction = config.socialConsensus
     ? ""
@@ -232,7 +234,7 @@ export async function runNewsletterAgent(
 
 <workflow>
 1. In your FIRST response, call searchWeb multiple times in parallel with diverse queries covering different angles of the newsletter topics. Aim for 3-5 parallel searches to get broad coverage upfront.
-2. Review the results. Each search result includes a coverage count — if you have 6+ unique sources, you almost certainly have enough material. Proceed to submitAnswer.${twitterInstruction}
+2. Review the results. Each search result includes a coverage count — if you have 6+ unique sources, you almost certainly have enough material. Proceed to submitAnswer.${blueskyInstruction}
    Only do a follow-up search if a MAJOR topic area from the keywords has ZERO coverage. A second search round should be rare. NEVER search for a topic you already have results for.
 ${submitStep}. Call submitAnswer with the fully written newsletter.
 </workflow>`,

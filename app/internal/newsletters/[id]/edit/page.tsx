@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteNewsletter, updateNewsletter } from "@/app/actions/newsletters";
 import { NewsletterForm } from "@/components/internal/newsletter-form";
-import type { Frequency } from "@/lib/frequency";
 import { NewsletterHeader } from "@/components/newsletter-header";
+import type { Frequency } from "@/lib/frequency";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ id: string }> };
@@ -15,7 +15,7 @@ export default async function EditNewsletterPage({ params }: Props) {
 
   const sources = newsletter.sources as {
     rss?: string[];
-    twitter_queries?: string[];
+    bluesky_queries?: string[];
     sites?: string[];
   };
 

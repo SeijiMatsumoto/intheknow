@@ -44,8 +44,6 @@ const MODEL_PRICING: Record<string, ModelPricing> = {
 const API_PRICING = {
   /** Perplexity Search API — price per search query. */
   perplexitySearch: 0.005,
-  /** twitterapi.io — price per 1K tweets fetched. */
-  twitterPer1K: 0.15,
   /** Resend — price per email (overage rate). */
   resendPerEmail: 0.0009,
 } as const;
@@ -58,8 +56,7 @@ export type CostBreakdown = {
   searchCosts: {
     webSearches: number;
     webSearchCost: number;
-    twitterSearches: number;
-    twitterCost: number;
+    blueskySearches: number;
   };
   totalCost: number;
 };
@@ -90,9 +87,7 @@ export function digestCostBreakdown(
   const webSearches = toolCallCounts.searchWeb ?? 0;
   const webSearchCost = webSearches * API_PRICING.perplexitySearch;
 
-  const twitterSearches = toolCallCounts.searchTwitter ?? 0;
-  // Estimate ~30 tweets per search (up to 3 queries × 10 tweets each)
-  const twitterCost = twitterSearches * 30 * (API_PRICING.twitterPer1K / 1000);
+  const blueskySearches = toolCallCounts.searchBluesky ?? 0;
 
   return {
     model,
@@ -102,10 +97,9 @@ export function digestCostBreakdown(
     searchCosts: {
       webSearches,
       webSearchCost,
-      twitterSearches,
-      twitterCost,
+      blueskySearches,
     },
-    totalCost: llm + webSearchCost + twitterCost,
+    totalCost: llm + webSearchCost,
   };
 }
 
@@ -123,10 +117,8 @@ export function formatCostLog(cost: CostBreakdown): string {
     );
   }
 
-  if (cost.searchCosts.twitterSearches > 0) {
-    parts.push(
-      `twitter=${cost.searchCosts.twitterSearches}×$${cost.searchCosts.twitterCost.toFixed(4)}`,
-    );
+  if (cost.searchCosts.blueskySearches > 0) {
+    parts.push(`bluesky=${cost.searchCosts.blueskySearches} (free)`);
   }
 
   parts.push(`total=$${cost.totalCost.toFixed(4)}`);

@@ -14,7 +14,7 @@ export type DigestTierConfig = {
   maxSteps: number;
   /** Target story count range (e.g. "6-12"). */
   storyTarget: string;
-  /** Include Twitter/social search tool. */
+  /** Include Bluesky social search tool. */
   socialConsensus: boolean;
   /** Extended analysis with more specifics in each item. */
   deepResearch: boolean;

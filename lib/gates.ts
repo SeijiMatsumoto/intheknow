@@ -25,7 +25,7 @@
  *   3. Use getLimit() / getLimitForPlan() in your code
  */
 
-import { type Plan, getUserPlan } from "./user";
+import { getUserPlan, type Plan } from "./user";
 
 // ─── Feature registry ────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ export type Feature =
   | "digest_length" // choose brief / standard / deep dive
   | "custom_newsletter" // create custom newsletters
   | "multiple_subscriptions" // subscribe to more than free limit
-  | "social_consensus" // "what people are saying" from Twitter/social
+  | "social_consensus" // "what people are saying" from Bluesky/social
   | "deep_research" // deeper sourcing, more articles, extended analysis
   | "daily_custom"; // allow daily cadence on custom newsletters
 

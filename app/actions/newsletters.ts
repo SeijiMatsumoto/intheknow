@@ -43,7 +43,7 @@ export async function createNewsletter(formData: FormData) {
   const frequency = formData.get("frequency") as string;
   const keywords = parseCommas(formData.get("keywords") as string);
   const rss = parseLines(formData.get("rss") as string);
-  const twitter_queries = parseLines(formData.get("twitter_queries") as string);
+  const bluesky_queries = parseLines(formData.get("bluesky_queries") as string);
   const sites = parseLines(formData.get("sites") as string);
   const { scheduleDays, scheduleHour } = parseSchedule(formData);
 
@@ -56,7 +56,7 @@ export async function createNewsletter(formData: FormData) {
       scheduleDays,
       scheduleHour,
       keywords,
-      sources: { rss, twitter_queries, sites },
+      sources: { rss, bluesky_queries, sites },
     },
   });
 
@@ -71,7 +71,7 @@ export async function updateNewsletter(id: string, formData: FormData) {
   const frequency = formData.get("frequency") as string;
   const keywords = parseCommas(formData.get("keywords") as string);
   const rss = parseLines(formData.get("rss") as string);
-  const twitter_queries = parseLines(formData.get("twitter_queries") as string);
+  const bluesky_queries = parseLines(formData.get("bluesky_queries") as string);
   const sites = parseLines(formData.get("sites") as string);
   const { scheduleDays, scheduleHour } = parseSchedule(formData);
 
@@ -85,7 +85,7 @@ export async function updateNewsletter(id: string, formData: FormData) {
       scheduleDays,
       scheduleHour,
       keywords,
-      sources: { rss, twitter_queries, sites },
+      sources: { rss, bluesky_queries, sites },
     },
   });
 
@@ -179,7 +179,7 @@ export async function createUserNewsletter(data: {
         scheduleDays: data.scheduleDays,
         scheduleHour: data.scheduleHour,
         keywords: data.keywords,
-        sources: { rss: [], twitter_queries: [], sites: [] },
+        sources: { rss: [], bluesky_queries: [], sites: [] },
         createdBy: userId,
       },
     });

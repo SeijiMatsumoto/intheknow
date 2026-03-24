@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import type { Frequency } from "@/lib/frequency";
 import { Button } from "@/components/ui/button";
+import type { Frequency } from "@/lib/frequency";
 
 const DAYS = [
   "monday",
@@ -17,7 +17,7 @@ const DAYS = [
 
 type Sources = {
   rss?: string[];
-  twitter_queries?: string[];
+  bluesky_queries?: string[];
   sites?: string[];
 };
 
@@ -114,12 +114,12 @@ export function NewsletterForm({
         placeholder="https://techcrunch.com"
       />
       <Field
-        label="Twitter / X search queries (one per line)"
-        name="twitter_queries"
-        defaultValue={sources.twitter_queries?.join("\n") ?? ""}
+        label="Bluesky search queries (one per line)"
+        name="bluesky_queries"
+        defaultValue={sources.bluesky_queries?.join("\n") ?? ""}
         multiline
         rows={3}
-        placeholder="from:OpenAI OR #AI"
+        placeholder="AI agents OR #AI"
       />
 
       <div>

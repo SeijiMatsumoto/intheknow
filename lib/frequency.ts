@@ -25,14 +25,14 @@ export function perplexityDateRange(frequency: Frequency): {
   };
 }
 
-/** Date range for Twitter advanced search (yyyy-MM-dd format). */
-export function twitterDateRange(frequency: Frequency): {
+/** Date range for Bluesky search (ISO 8601 datetime format). */
+export function blueskyDateRange(frequency: Frequency): {
   since: string;
   until: string;
 } {
   const now = new Date();
   return {
-    since: format(subDays(now, WINDOW_DAYS[frequency]), "yyyy-MM-dd"),
-    until: format(now, "yyyy-MM-dd"),
+    since: subDays(now, WINDOW_DAYS[frequency]).toISOString(),
+    until: now.toISOString(),
   };
 }

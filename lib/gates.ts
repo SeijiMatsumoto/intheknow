@@ -4,7 +4,7 @@
  * ┌─────────────────────────┬──────────┬──────────┬──────────┐
  * │ Feature                 │ Free     │ Plus     │ Pro      │
  * ├─────────────────────────┼──────────┼──────────┼──────────┤
- * │ Curated subscriptions   │ 1        │ 10       │ ∞        │
+ * │ Curated subscriptions   │ 3        │ 10       │ ∞        │
  * │ Full digest (analysis)  │ ✗        │ ✓        │ ✓        │
  * │ Custom schedule         │ ✗        │ ✓        │ ✓        │
  * │ Digest length pref      │ ✗        │ ✓        │ ✓        │
@@ -93,7 +93,7 @@ export type LimitKey = "max_subscriptions" | "max_custom_newsletters";
 
 const LIMITS: Record<Plan, Record<LimitKey, number>> = {
   free: {
-    max_subscriptions: 1,
+    max_subscriptions: 3,
     max_custom_newsletters: 0,
   },
   plus: {

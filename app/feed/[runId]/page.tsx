@@ -71,7 +71,7 @@ export default async function FeedDetailPage({
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <div className="mx-auto max-w-[600px] px-4 py-8 pb-24 sm:pb-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 pb-24 sm:px-6 sm:pb-8">
         <Link
           href="/feed"
           className="mb-6 inline-block text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"

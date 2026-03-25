@@ -33,7 +33,30 @@ export const DigestSchema = z.object({
           title: z
             .string()
             .describe(
-              "Editorial, opinionated headline with an emoji prefix. Not a restated article title — a punchy take. E.g. '🔥 OpenAI Just Made GPT-5 Free — Here's the Catch', '📉 The Fed Blinked, and Markets Noticed'",
+              "Editorial, opinionated headline. Not a restated article title — a punchy take. No emojis. E.g. 'OpenAI Just Made GPT-5 Free — Here's the Catch', 'The Fed Blinked, and Markets Noticed'",
+            ),
+          icon: z
+            .enum([
+              "flame",
+              "trending-up",
+              "trending-down",
+              "rocket",
+              "alert-triangle",
+              "lightbulb",
+              "shield",
+              "globe",
+              "cpu",
+              "zap",
+              "megaphone",
+              "scale",
+              "landmark",
+              "heart-pulse",
+              "flask-conical",
+              "gamepad-2",
+              "coins",
+            ])
+            .describe(
+              "Icon that best represents the story's tone or topic. E.g. 'flame' for hot/breaking, 'trending-up' for growth/gains, 'alert-triangle' for warnings/risks, 'lightbulb' for ideas/innovation.",
             ),
           sources: z
             .array(
@@ -212,7 +235,7 @@ export async function runNewsletterAgent(
 - Write in a friendly, conversational, warm tone — like a smart friend catching you up over coffee.
 - Use "you" to address the reader. Occasional light humor welcome.
 - Only include stories that are genuinely newsworthy — never pad with fluff. A shorter, high-quality digest is always better than a longer one stuffed with filler.
-- Each item title must be an editorial, opinionated headline with an emoji prefix — not a restated article title. Make it punchy and attention-grabbing.
+- Each item title must be an editorial, opinionated headline — not a restated article title. Make it punchy and attention-grabbing. No emojis.
 - The detail field should be 1-2 concise sentences on the impact or "so what" — readers can click through for the full story. Do NOT write lengthy paragraphs.
 - keyTakeaways should be short teaser bullets — hook the reader without giving away the full story.
 - All URLs in sources must be real URLs from your research — never invent them.

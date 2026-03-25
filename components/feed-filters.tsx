@@ -61,7 +61,7 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
   const dateRangeValue = filters.dateRange ?? "all";
 
   return (
-    <div className="flex flex-wrap justify-end gap-3">
+    <div className="mb-6 flex flex-wrap justify-start gap-3">
       <Select
         value={newsletterValue}
         onValueChange={(v) => updateParam("newsletter", v ?? "all")}

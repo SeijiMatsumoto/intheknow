@@ -60,7 +60,7 @@ export default async function FeedPage({ searchParams }: Props) {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-4 py-6 pb-24 sm:px-6 sm:py-12 sm:pb-12">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-24 sm:pb-12 md:py-6">
         <PageHeader
           title="My Feed"
           description="Your digest history across all subscriptions."

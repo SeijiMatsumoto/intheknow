@@ -3,9 +3,8 @@ import { Clock } from "lucide-react";
 import Link from "next/link";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
-import type { Frequency } from "@/lib/frequency";
 import { getCategory } from "@/lib/categories";
-import { cn } from "@/lib/utils";
+import type { Frequency } from "@/lib/frequency";
 
 type NewsletterCardProps = {
   newsletter: {
@@ -31,98 +30,77 @@ export function NewsletterCard({
   const Icon = cat.icon;
   const nextDate = new Date(nextRunIso);
   const nextDateLabel = format(nextDate, "EEE, MMM d");
+  const isSubscribed = subscriptionId !== null;
 
   return (
-    <div className="group relative flex flex-col border border-border bg-card p-5 transition-all duration-300 hover:border-foreground/30">
+    <div
+      className={`group relative flex flex-col border transition-all duration-200 hover:shadow-md hover:border-foreground/25 ${
+        isSubscribed ? "border-border bg-secondary/40" : "border-border bg-card"
+      }`}
+    >
       <Link
         href={`/newsletters/${newsletter.slug}`}
         className="absolute inset-0"
       />
 
-      {/* Header: icon + title */}
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110",
-            cat.bg,
-          )}
-        >
-          <Icon className={cn("h-4 w-4", cat.color)} />
+      {/* Header: icon + title + badges */}
+      <div className="flex items-start gap-3 p-5 pb-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60">
+          <Icon className="h-4 w-4 text-foreground/70" />
         </div>
-        <p className="font-serif text-sm font-semibold leading-snug text-foreground">
-          {newsletter.title}
-        </p>
-      </div>
-
-      {/* Pills */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-        <span
-          className={cn(
-            "rounded-full border px-2 py-0.5 text-xs font-medium",
-            cat.pill,
-          )}
-        >
-          {cat.label}
-        </span>
-        <span
-          className={cn(
-            "rounded-full border px-2 py-0.5 text-xs font-medium",
-            newsletter.frequency === "daily"
-              ? "border-foreground/30 text-foreground"
-              : "border-muted-foreground/30 text-muted-foreground",
-          )}
-        >
-          {newsletter.frequency}
-        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-foreground">
+            {newsletter.title}
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full border border-foreground/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {cat.label}
+            </span>
+            <span className="rounded-full border border-foreground/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {newsletter.frequency}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Description */}
       {newsletter.description && (
-        <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {newsletter.description}
-        </p>
+        <div className="border-t border-border/40 mx-5 pt-4 pb-3">
+          <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+            {newsletter.description}
+          </p>
+        </div>
       )}
 
-      {/* Keywords */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-        {newsletter.keywords.slice(0, 3).map((kw) => (
-          <span
-            key={kw}
-            className="rounded-md bg-secondary px-2 py-0.5 text-xs text-secondary-foreground"
-          >
-            {kw}
-          </span>
-        ))}
-        {newsletter.keywords.length > 3 && (
-          <span className="text-xs text-muted-foreground">
-            +{newsletter.keywords.length - 3} more
-          </span>
-        )}
-      </div>
+      {/* Keywords — comma separated */}
+      {newsletter.keywords.length > 0 && (
+        <div className="px-5 pb-4 pt-1">
+          <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+            <span>topics: </span>
+            <span className="uppercase tracking-wider text-muted-foreground/80">
+              {newsletter.keywords.slice(0, 3).join(", ")}
+              {newsletter.keywords.length > 3 &&
+                `, +${newsletter.keywords.length - 3} more`}
+            </span>
+          </p>
+        </div>
+      )}
 
-      {/* Next run */}
-      <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Clock className="h-3 w-3" />
-        Next: {nextDateLabel}
-      </div>
-
-      {/* Spacer to push button to bottom */}
+      {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Actions */}
-      <div className="relative z-10 mt-4 space-y-2">
-        <SubscribeButton
-          newsletterId={newsletter.id}
-          subscriptionId={subscriptionId}
-          className="w-full justify-center"
-        />
-        {newsletter.isCustom && (
-          <DeleteNewsletterButton
+      {/* Footer: next date + actions */}
+      <div className="relative z-10 border-t border-border/40 px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            Next: {nextDateLabel}
+          </div>
+          <SubscribeButton
             newsletterId={newsletter.id}
-            newsletterTitle={newsletter.title}
-            className="w-full justify-center"
+            subscriptionId={subscriptionId}
           />
-        )}
+        </div>
       </div>
     </div>
   );

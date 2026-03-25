@@ -67,7 +67,7 @@ export default async function NewslettersPage() {
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-0 md:py-6">
         {/* Hero */}
         <PageHeader
-          title="Browse"
+          title="Explore"
           description="Newsletters across everything that matters — AI, finance, politics, sports, and more."
         />
 

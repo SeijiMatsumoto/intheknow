@@ -14,16 +14,6 @@ import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 import { nextRunDate } from "@/lib/schedule";
 
-const DAY_LABELS: Record<string, string> = {
-  monday: "Mon",
-  tuesday: "Tue",
-  wednesday: "Wed",
-  thursday: "Thu",
-  friday: "Fri",
-  saturday: "Sat",
-  sunday: "Sun",
-};
-
 export default async function NewsletterDetailPage({
   params,
 }: {
@@ -77,13 +67,23 @@ export default async function NewsletterDetailPage({
             <span className="hidden sm:inline">All newsletters</span>
           </Link>
 
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+          <Link
+            href="/newsletters"
+            className="absolute left-1/2 -translate-x-1/2"
+          >
             <span className="font-serif text-sm font-bold text-foreground">
               ITK Dispatch
             </span>
           </Link>
 
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-3">
+            {newsletter.createdBy !== null && (
+              <DeleteNewsletterButton
+                newsletterId={newsletter.id}
+                newsletterTitle={newsletter.title}
+                className="border-none px-2 py-1.5 text-xs text-muted-foreground/50 hover:text-destructive hover:bg-transparent"
+              />
+            )}
             <SubscribeButton
               newsletterId={newsletter.id}
               subscriptionId={subscription?.id ?? null}
@@ -92,9 +92,9 @@ export default async function NewsletterDetailPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-8 pb-24 sm:py-16 sm:pb-16">
+      <main className="mx-auto max-w-5xl px-6 py-8 pb-12 sm:py-16 sm:pb-16">
         {/* Masthead */}
-        <div className="mx-auto max-w-5xl text-center mb-8 sm:mb-10">
+        <div className="mx-auto max-w-5xl text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
             {cat.label} · {newsletter.frequency}
           </p>
@@ -128,33 +128,8 @@ export default async function NewsletterDetailPage({
             </div>
           )}
 
-          <div className="mt-6 border-t border-border pt-4 flex flex-col items-center gap-3">
-            <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
-              {!subscription && (
-                <span>
-                  Next delivery:{" "}
-                  <span className="font-medium text-foreground">
-                    {format(nextRun, "EEE, MMM d")}
-                  </span>
-                </span>
-              )}
-              <span>
-                Schedule:{" "}
-                <span className="font-medium text-foreground">
-                  <LocalTime utcHour={newsletter.scheduleHour} />
-                </span>
-              </span>
-              {newsletter.scheduleDays.length > 0 && (
-                <span className="hidden sm:inline">
-                  Days:{" "}
-                  <span className="font-medium text-foreground">
-                    {newsletter.scheduleDays.map((d) => DAY_LABELS[d]).join(", ")}
-                  </span>
-                </span>
-              )}
-            </div>
-
-            {subscription && (
+          <div className="mt-6 border-t border-border py-4 flex justify-center">
+            {subscription ? (
               <SubscriptionRow
                 subscriptionId={subscription.id}
                 frequency={newsletter.frequency as Frequency}
@@ -165,11 +140,22 @@ export default async function NewsletterDetailPage({
                 nextRunIso={nextRun.toISOString()}
                 canCustomize={canCustomize}
               />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {newsletter.frequency === "daily" ? "Daily" : "Weekly"} at{" "}
+                <span className="font-medium text-foreground">
+                  <LocalTime utcHour={newsletter.scheduleHour} />
+                </span>
+                {" · "}Next:{" "}
+                <span className="font-medium text-foreground">
+                  {format(nextRun, "EEE, MMM d")}
+                </span>
+              </p>
             )}
           </div>
 
           {/* Mobile subscribe */}
-          <div className="mt-6 sm:hidden space-y-2">
+          <div className="mt-0 sm:mt-6 sm:hidden space-y-2">
             <SubscribeButton
               newsletterId={newsletter.id}
               subscriptionId={subscription?.id ?? null}
@@ -186,11 +172,10 @@ export default async function NewsletterDetailPage({
         </div>
 
         {/* Thin decorative rule */}
-        <div className="mx-auto max-w-5xl border-t border-foreground/20 my-8 sm:my-10" />
+        <div className="mx-auto max-w-5xl border-t border-foreground/20 mb-6 sm:mb-8" />
 
         {/* Content */}
         <div className="mx-auto max-w-5xl">
-
           {/* Past editions */}
           <section>
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6">
@@ -244,15 +229,6 @@ export default async function NewsletterDetailPage({
             )}
           </section>
 
-          {/* Delete (custom newsletters only, desktop) */}
-          {newsletter.createdBy !== null && (
-            <div className="hidden sm:block mt-12 pt-8 border-t border-border">
-              <DeleteNewsletterButton
-                newsletterId={newsletter.id}
-                newsletterTitle={newsletter.title}
-              />
-            </div>
-          )}
         </div>
       </main>
 

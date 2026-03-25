@@ -1,12 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { getCategory } from "@/lib/categories";
-import { cn } from "@/lib/utils";
 
 type FeedSend = {
   id: string;
@@ -123,55 +122,77 @@ export function FeedList({
                 const content = run.content;
                 const cat = getCategory(run.newsletter.categoryId);
                 const CatIcon = cat.icon;
+                const editionTitle =
+                  content?.editionTitle ??
+                  content?.title ??
+                  run.newsletter.title;
+                const sentLabel = send.sentAt
+                  ? format(new Date(send.sentAt), "h:mma").toLowerCase()
+                  : null;
 
                 return (
-                  <Link
+                  <div
                     key={send.id}
-                    href={`/feed/${run.id}`}
-                    className="group block border border-border bg-card p-4 transition-all hover:border-foreground/30 sm:p-6"
+                    className="group relative flex flex-col border border-border bg-card transition-all duration-200 hover:shadow-md hover:border-foreground/25"
                   >
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div
-                        className={cn(
-                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10",
-                          cat.bg,
-                        )}
-                      >
-                        <CatIcon
-                          className={cn(
-                            "h-4 w-4 sm:h-5 sm:w-5",
-                            cat.color,
-                          )}
-                        />
+                    <Link
+                      href={`/feed/${run.id}`}
+                      className="absolute inset-0"
+                    />
+
+                    {/* Header: icon + newsletter title + badges */}
+                    <div className="flex items-start gap-3 p-5 pb-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border/60">
+                        <CatIcon className="h-4 w-4 text-foreground/70" />
                       </div>
-
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-medium text-muted-foreground">
+                        <p className="text-xs font-bold uppercase tracking-widest text-foreground">
                           {run.newsletter.title}
-                        </span>
-
-                        <p className="mt-0.5 font-serif text-sm font-semibold text-foreground sm:mt-1 sm:text-base">
-                          {content?.editionTitle ??
-                            content?.title ??
-                            run.newsletter.title}
                         </p>
-
-                        {content?.summary && (
-                          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
-                            {content.summary}
-                          </p>
-                        )}
-
-                        {content?.keyTakeaways &&
-                          content.keyTakeaways.length > 0 && (
-                            <p className="mt-2 text-xs text-muted-foreground/70 sm:mt-3">
-                              {content.keyTakeaways.length} key takeaways ·{" "}
-                              {content.sections?.length ?? 0} sections
-                            </p>
-                          )}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-full border border-foreground/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                            {cat.label}
+                          </span>
+                          <span className="rounded-full border border-foreground/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                            {run.newsletter.frequency}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </Link>
+
+                    {/* Edition title + summary */}
+                    <div className="border-t border-border/40 mx-5 pt-4 pb-3">
+                      <p className="font-serif text-sm font-semibold text-foreground sm:text-base">
+                        {editionTitle}
+                      </p>
+                      {content?.summary && (
+                        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                          {content.summary}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Footer: sent time + read link */}
+                    <div className="relative z-10 border-t border-border/40 px-5 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {sentLabel && <span>Sent {sentLabel}</span>}
+                          {content?.sections && content.sections.length > 0 && (
+                            <span className="text-muted-foreground/40">
+                              · {content.sections.length} sections
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+                          Read →
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -185,7 +206,7 @@ export function FeedList({
           <button
             type="button"
             onClick={handleSeeMore}
-            className="rounded-md border border-input bg-background px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            className="border border-border bg-background px-6 py-2 text-xs font-medium uppercase tracking-wider text-foreground transition-colors hover:bg-secondary"
           >
             See more
           </button>

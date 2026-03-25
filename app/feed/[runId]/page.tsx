@@ -3,6 +3,7 @@ import { format, parseISO } from "date-fns";
 import { Lock, MessageCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getDigestIcon, stripEmoji } from "@/lib/digest-icons";
 import { NewsletterHeader } from "@/components/newsletter-header";
 import { canUsePlan } from "@/lib/gates";
 import { getUserPlan, isAdmin } from "@/lib/user";
@@ -130,10 +131,12 @@ export default async function FeedDetailPage({
                       {section.items.map((item, idx) => {
                         const sources = getItemSources(item);
                         const primary = sources[0];
+                        const ItemIcon = getDigestIcon(item.icon);
                         return (
                         <div key={primary?.url ?? idx} className="py-6">
-                          <p className="mb-2.5 text-[15px] font-semibold leading-snug text-foreground">
-                            {item.title}
+                          <p className="mb-2.5 flex items-start gap-2 text-[15px] font-semibold leading-snug text-foreground">
+                            {ItemIcon && <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />}
+                            {stripEmoji(item.title)}
                           </p>
                           {item.detail && (
                             <p className="mb-2.5 text-[13px] leading-relaxed text-muted-foreground">
@@ -251,10 +254,12 @@ export default async function FeedDetailPage({
                       {section.items.map((item, idx) => {
                         const sources = getItemSources(item);
                         const primary = sources[0];
+                        const ItemIcon = getDigestIcon(item.icon);
                         return (
                         <div key={primary?.url ?? idx} className="py-4">
-                          <p className="text-[15px] font-semibold leading-snug text-foreground">
-                            {item.title}
+                          <p className="flex items-start gap-2 text-[15px] font-semibold leading-snug text-foreground">
+                            {ItemIcon && <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />}
+                            {stripEmoji(item.title)}
                           </p>
                           {primary && (
                             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">

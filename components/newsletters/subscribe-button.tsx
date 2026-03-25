@@ -44,8 +44,8 @@ export function SubscribeButton({
         disabled={isPending}
         className={
           isSubscribed
-            ? `bg-secondary text-foreground hover:bg-secondary/80 border border-border min-w-[110px] ${className ?? ""}`
-            : `min-w-[110px] ${className ?? ""}`
+            ? `rounded-full bg-secondary text-foreground hover:bg-secondary/60 border border-border text-xs uppercase tracking-wider min-w-[110px] transition-colors ${className ?? ""}`
+            : `rounded-full text-xs uppercase tracking-wider min-w-[110px] hover:opacity-80 transition-opacity ${className ?? ""}`
         }
       >
         {isPending ? (

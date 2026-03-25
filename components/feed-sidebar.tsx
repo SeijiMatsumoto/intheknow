@@ -1,9 +1,8 @@
 import { formatDistanceToNow, nextDay } from "date-fns";
-import { CalendarDays, Inbox, Newspaper } from "lucide-react";
+import { CalendarDays, Inbox } from "lucide-react";
 import Link from "next/link";
 import type { FeedStats } from "@/app/feed/data";
 import { getCategory } from "@/lib/categories";
-import { cn } from "@/lib/utils";
 
 const DAY_MAP: Record<string, 0 | 1 | 2 | 3 | 4 | 5 | 6> = {
   sunday: 0,
@@ -96,7 +95,7 @@ export function FeedSidebar({ stats }: FeedSidebarProps) {
             href="/newsletters"
             className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            Browse
+            Explore
           </Link>
         </div>
 
@@ -115,20 +114,16 @@ export function FeedSidebar({ stats }: FeedSidebarProps) {
               );
 
               return (
-                <div
+                <Link
                   key={sub.newsletterSlug}
-                  className="flex items-start gap-3"
+                  href={`/newsletters/${sub.newsletterSlug}`}
+                  className="flex items-start gap-3 group"
                 >
-                  <div
-                    className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                      cat.bg,
-                    )}
-                  >
-                    <CatIcon className={cn("h-3.5 w-3.5", cat.color)} />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
+                    <CatIcon className="h-3.5 w-3.5 text-foreground/70" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-sm font-medium text-foreground truncate group-hover:underline underline-offset-2 decoration-foreground/30">
                       {sub.newsletterTitle}
                     </p>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
@@ -154,7 +149,7 @@ export function FeedSidebar({ stats }: FeedSidebarProps) {
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

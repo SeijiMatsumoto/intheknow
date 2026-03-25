@@ -37,7 +37,7 @@ export function NewsletterHeaderClient({ userId, admin, hideProfile }: Props) {
                   href="/newsletters"
                   className="hidden sm:block text-xs font-medium uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Browse
+                  Explore
                 </Link>
                 {admin && (
                   <Link

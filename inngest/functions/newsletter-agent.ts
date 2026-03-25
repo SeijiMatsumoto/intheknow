@@ -263,6 +263,8 @@ export async function runNewsletterAgent(
 2. Review the results. Each search result includes a coverage count — if you have 6+ unique sources, you almost certainly have enough material. Proceed to submitAnswer.${blueskyInstruction}
    Only do a follow-up search if a MAJOR topic area from the keywords has ZERO coverage. A second search round should be rare. NEVER search for a topic you already have results for.
 ${submitStep}. Call submitAnswer with the fully written newsletter.
+
+IMPORTANT: You MUST always call submitAnswer as the final step. Every response path must end with submitAnswer — never stop without it. If you are running low on steps, skip additional searches and submit with what you have.
 </workflow>`,
     prompt: `Research and write the ${frequency} edition of "${title}".
 

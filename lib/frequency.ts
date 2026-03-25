@@ -25,6 +25,11 @@ export function perplexityDateRange(frequency: Frequency): {
   };
 }
 
+/** Google tbs param for Serper date filtering. */
+export function serperDateRange(frequency: Frequency): string {
+  return frequency === "daily" ? "qdr:d" : "qdr:w";
+}
+
 /** Date range for Bluesky search (ISO 8601 datetime format). */
 export function blueskyDateRange(frequency: Frequency): {
   since: string;

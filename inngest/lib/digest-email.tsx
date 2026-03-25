@@ -25,26 +25,18 @@ const C = {
   mutedLight: "#b5afa5",
   border: "#d9d3c7",
   borderLight: "#e8e3da",
-  accent: "#f7f3ec",
-  socialBg: "#f5f2ec",
 };
 
 const font =
   "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 const serif = "Georgia, 'Times New Roman', serif";
 
-function formatDate(iso: string): string {
+function fmtDate(iso: string): string {
   try {
     return format(parseISO(iso), "MMMM d, yyyy");
   } catch {
     return iso;
   }
-}
-
-function periodLabel(frequency: Frequency): string {
-  const date = format(new Date(), "MMMM d, yyyy");
-  const freq = frequency === "daily" ? "Daily" : "Weekly";
-  return `${freq} · ${date}`;
 }
 
 type ItemSource = { url: string; name: string; publishedAt?: string };
@@ -65,51 +57,15 @@ function itemSources(item: Record<string, unknown>): ItemSource[] {
 
 // ── Shared styles ────────────────────────────────────────────────────────────
 
-const s = {
-  label: {
-    fontFamily: font,
-    fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "0.1em",
-    textTransform: "uppercase" as const,
-    color: C.mutedLight,
-    margin: "0 0 10px",
-  },
-  body: {
-    fontFamily: font,
-    fontSize: "14px",
-    color: C.muted,
-    lineHeight: "1.65",
-    margin: "0" as const,
-  },
-  serifTitle: {
-    fontFamily: serif,
-    fontSize: "16px",
-    fontWeight: 600,
-    color: C.foreground,
-    margin: "0 0 8px",
-    lineHeight: "1.35",
-  },
-  detail: {
-    fontFamily: font,
-    fontSize: "13px",
-    color: C.muted,
-    lineHeight: "1.65",
-    margin: "0 0 10px",
-  },
-  sourceLink: {
-    fontFamily: font,
-    fontSize: "12px",
-    fontWeight: 600,
-    color: C.muted,
-    textDecoration: "none" as const,
-    borderBottom: `1px solid ${C.border}`,
-  },
-  sourceMeta: {
-    fontSize: "11px",
-    color: C.mutedLight,
-    marginLeft: "8px",
-  },
+const sLabel: React.CSSProperties = {
+  fontFamily: font,
+  fontSize: "10px",
+  fontWeight: 700,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: C.mutedLight,
+  margin: 0,
+  textAlign: "center",
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -127,87 +83,82 @@ export function DigestEmail({
   frequency,
   teaser = false,
 }: DigestEmailProps) {
+  const dateLabel = format(new Date(), "EEEE, MMMM d, yyyy").toUpperCase();
+  const title = digest.editionTitle;
+
+  // Flatten all items as generic records for email rendering
+  type EmailItem = Record<string, unknown> & { _section: string };
+  const allItems: EmailItem[] = (digest.sections ?? []).flatMap((section) =>
+    section.items.map((item) => ({
+      ...item,
+      _section: section.heading,
+    } as EmailItem)),
+  );
+  const leadItem = allItems[0];
+  const restItems = allItems.slice(1);
+
   return (
     <Html lang="en">
       <Head />
-      <Preview>{digest.editionTitle}</Preview>
-      <Body
-        style={{
-          margin: 0,
-          padding: 0,
-          background: C.bg,
-          fontFamily: font,
-        }}
-      >
-        <Container
-          style={{
-            maxWidth: "620px",
-            margin: "32px auto",
-            padding: "0 16px",
-          }}
-        >
-          {/* Card wrapper */}
-          <Section
+      <Preview>{title}</Preview>
+      <Body style={{ margin: 0, padding: 0, background: C.bg, fontFamily: font }}>
+        <Container style={{ maxWidth: "620px", margin: "32px auto", padding: "0 16px" }}>
+
+          {/* ── Nameplate ─────────────────────────────────── */}
+          <Hr style={{ borderTop: `2px solid ${C.foreground}`, margin: "0 0 12px" }} />
+          <Text
             style={{
-              background: C.card,
-              border: `1px solid ${C.border}`,
-              overflow: "hidden",
+              fontFamily: serif,
+              fontSize: "28px",
+              fontWeight: 700,
+              color: C.foreground,
+              textAlign: "center",
+              margin: "0 0 8px",
+              letterSpacing: "-0.01em",
             }}
           >
-            {/* Masthead */}
-            <Section
+            ITK Dispatch
+          </Text>
+          <Hr style={{ borderTop: `1px solid ${C.border}`, margin: "0 0 6px" }} />
+          <Text style={{ ...sLabel, margin: "0 0 4px" }}>
+            {newsletterTitle} · {dateLabel}
+          </Text>
+          <Hr style={{ borderTop: `1px solid ${C.border}`, margin: "6px 0 0" }} />
+
+          {/* ── Headline ──────────────────────────────────── */}
+          <Section style={{ padding: "24px 0", textAlign: "center" }}>
+            <Heading
+              as="h1"
               style={{
-                padding: "28px 32px 12px",
-                textAlign: "center" as const,
-                borderBottom: `1px solid ${C.borderLight}`,
+                fontFamily: serif,
+                fontSize: "26px",
+                fontWeight: 700,
+                color: C.foreground,
+                margin: "0 0 12px",
+                lineHeight: "1.2",
               }}
             >
-              <Text
-                style={{
-                  fontFamily: serif,
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: C.foreground,
-                  margin: 0,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                ITK Dispatch
-              </Text>
-            </Section>
+              {title}
+            </Heading>
+            <Text
+              style={{
+                fontFamily: font,
+                fontSize: "14px",
+                color: C.muted,
+                lineHeight: "1.65",
+                margin: 0,
+              }}
+            >
+              {digest.summary}
+            </Text>
+          </Section>
 
-            {/* Header */}
-            <Section style={{ padding: "28px 32px 24px" }}>
-              <Text style={{ ...s.label, margin: "0 0 12px" }}>
-                {newsletterTitle} · {periodLabel(frequency)}
-              </Text>
-              <Heading
-                as="h1"
-                style={{
-                  fontFamily: serif,
-                  fontSize: "26px",
-                  fontWeight: 700,
-                  color: C.foreground,
-                  margin: "0 0 12px",
-                  lineHeight: "1.2",
-                }}
-              >
-                {digest.editionTitle}
-              </Heading>
-              <Text style={s.body}>{digest.summary}</Text>
-            </Section>
-
-            {/* In this edition */}
-            {digest.keyTakeaways?.length > 0 && (
-              <Section
-                style={{
-                  padding: "20px 32px",
-                  background: C.accent,
-                  borderTop: `1px solid ${C.borderLight}`,
-                  borderBottom: `1px solid ${C.borderLight}`,
-                }}
-              >
-                <Text style={s.label}>In this edition</Text>
+          {/* ── In this edition ────────────────────────────── */}
+          {digest.keyTakeaways?.length > 0 && (
+            <>
+              <Hr style={{ borderTop: `1px solid ${C.border}`, margin: 0 }} />
+              <Section style={{ padding: "16px 0" }}>
+                <Text style={{ ...sLabel, margin: "0 0 10px" }}>In this edition</Text>
                 {digest.keyTakeaways.map((t) => (
                   <Text
                     key={t}
@@ -215,7 +166,7 @@ export function DigestEmail({
                       fontFamily: font,
                       fontSize: "13px",
                       color: C.foreground,
-                      lineHeight: "1.6",
+                      lineHeight: "1.55",
                       margin: "0 0 4px",
                       paddingLeft: "12px",
                     }}
@@ -224,188 +175,195 @@ export function DigestEmail({
                   </Text>
                 ))}
               </Section>
-            )}
+              <Hr style={{ borderTop: `1px solid ${C.border}`, margin: 0 }} />
+            </>
+          )}
 
-            {/* Sections */}
-            {digest.sections?.map((section) => (
-              <Section key={section.heading}>
-                {/* Section heading */}
-                <Section
-                  style={{
-                    padding: "8px 32px",
-                    background: C.accent,
-                    borderTop: `1px solid ${C.border}`,
-                    borderBottom: `1px solid ${C.border}`,
-                  }}
-                >
-                  <Text style={{ ...s.label, margin: 0 }}>
-                    {section.heading}
-                  </Text>
-                </Section>
-
-                {/* Items */}
-                <Section style={{ padding: "0 32px" }}>
-                  {section.items.map((item, idx) => {
-                    const sources = itemSources(
-                      item as unknown as Record<string, unknown>,
-                    );
-                    const primary = sources[0];
-                    const extra = sources.slice(1);
-
-                    return (
-                      <Section
-                        key={primary?.url ?? idx}
-                        style={{
-                          padding: "20px 0",
-                          borderBottom: `1px solid ${C.borderLight}`,
-                        }}
-                      >
-                        <Text style={s.serifTitle}>{item.title}</Text>
-
-                        {!teaser && (
-                          <>
-                            {item.detail && (
-                              <Text style={s.detail}>{item.detail}</Text>
-                            )}
-
-                            {item.quote && (
-                              <Text
-                                style={{
-                                  margin: "0 0 10px",
-                                  padding: "8px 14px",
-                                  borderLeft: `2px solid ${C.border}`,
-                                  color: C.muted,
-                                  fontStyle: "italic",
-                                  fontFamily: serif,
-                                  fontSize: "13px",
-                                  lineHeight: "1.55",
-                                }}
-                              >
-                                &ldquo;{item.quote}&rdquo;
-                              </Text>
-                            )}
-
-                            {primary && (
-                              <Text style={{ margin: 0 }}>
-                                <Link
-                                  href={primary.url}
-                                  style={s.sourceLink}
-                                >
-                                  Read more →
-                                </Link>
-                                <span style={s.sourceMeta}>
-                                  {primary.publishedAt
-                                    ? `${formatDate(primary.publishedAt)} · `
-                                    : ""}
-                                  {primary.name}
-                                </span>
-                                {extra.map((ex) => (
-                                  <Link
-                                    key={ex.url}
-                                    href={ex.url}
-                                    style={{
-                                      fontSize: "11px",
-                                      color: C.mutedLight,
-                                      marginLeft: "6px",
-                                      textDecoration: "none",
-                                      borderBottom: `1px solid ${C.borderLight}`,
-                                    }}
-                                  >
-                                    · {ex.name}
-                                  </Link>
-                                ))}
-                              </Text>
-                            )}
-                          </>
-                        )}
-                      </Section>
-                    );
-                  })}
-                </Section>
-              </Section>
-            ))}
-
-            {teaser ? (
-              /* Upgrade CTA for free tier */
-              <Section
+          {/* ── Lead story ────────────────────────────────── */}
+          {leadItem && (
+            <Section style={{ padding: "20px 0", borderBottom: `1px solid ${C.border}` }}>
+              <Text
                 style={{
-                  padding: "32px",
-                  background: C.accent,
-                  borderTop: `1px solid ${C.border}`,
-                  textAlign: "center" as const,
+                  fontFamily: serif,
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: C.foreground,
+                  margin: "0 0 10px",
+                  lineHeight: "1.3",
                 }}
               >
-                <Text style={{ ...s.body, margin: "0 0 16px" }}>
-                  Want the full analysis, source links, and expert takes?
-                </Text>
-                <Link
-                  href="https://thelatest.io/pricing"
+                {leadItem.title as string}
+              </Text>
+              {!teaser && (
+                <>
+                  {leadItem.detail && (
+                    <Text
+                      style={{
+                        fontFamily: font,
+                        fontSize: "13px",
+                        color: C.muted,
+                        lineHeight: "1.65",
+                        margin: "0 0 10px",
+                      }}
+                    >
+                      {leadItem.detail as string}
+                    </Text>
+                  )}
+                  {leadItem.quote && (
+                    <Text
+                      style={{
+                        margin: "0 0 10px",
+                        padding: "8px 14px",
+                        borderLeft: `2px solid ${C.border}`,
+                        fontFamily: serif,
+                        fontStyle: "italic",
+                        fontSize: "13px",
+                        color: C.muted,
+                        lineHeight: "1.55",
+                      }}
+                    >
+                      &ldquo;{leadItem.quote as string}&rdquo;
+                    </Text>
+                  )}
+                  {(() => {
+                    const sources = itemSources(leadItem);
+                    if (sources.length === 0) return null;
+                    return (
+                      <Text style={{ margin: 0, fontSize: "11px", color: C.mutedLight }}>
+                        <span style={{ fontFamily: font, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.mutedLight, marginRight: "6px" }}>Sources</span>
+                        {sources.map((s, i) => (
+                          <span key={s.url}>
+                            {i > 0 && <span style={{ margin: "0 4px" }}>·</span>}
+                            <Link href={s.url} style={{ color: C.mutedLight, textDecoration: "underline", textUnderlineOffset: "2px" }}>
+                              {s.name}
+                            </Link>
+                          </span>
+                        ))}
+                      </Text>
+                    );
+                  })()}
+                </>
+              )}
+            </Section>
+          )}
+
+          {/* ── Remaining stories ─────────────────────────── */}
+          {restItems.map((item, idx) => {
+            const sources = itemSources(item);
+            const primary = sources[0];
+            return (
+              <Section
+                key={primary?.url ?? idx}
+                style={{
+                  padding: "16px 0",
+                  borderBottom: `1px solid ${C.borderLight}`,
+                }}
+              >
+                <Text
                   style={{
-                    display: "inline-block",
-                    padding: "12px 28px",
-                    background: C.foreground,
-                    color: C.card,
-                    fontFamily: font,
-                    fontSize: "13px",
+                    fontFamily: serif,
+                    fontSize: "16px",
                     fontWeight: 600,
-                    textDecoration: "none",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
+                    color: C.foreground,
+                    margin: "0 0 8px",
+                    lineHeight: "1.35",
                   }}
                 >
-                  Upgrade to read more →
-                </Link>
+                  {item.title as string}
+                </Text>
+                {!teaser && (
+                  <>
+                    {item.detail && (
+                      <Text
+                        style={{
+                          fontFamily: font,
+                          fontSize: "13px",
+                          color: C.muted,
+                          lineHeight: "1.65",
+                          margin: "0 0 8px",
+                        }}
+                      >
+                        {item.detail as string}
+                      </Text>
+                    )}
+                    {item.quote && (
+                      <Text
+                        style={{
+                          margin: "0 0 8px",
+                          padding: "6px 12px",
+                          borderLeft: `2px solid ${C.border}`,
+                          fontFamily: serif,
+                          fontStyle: "italic",
+                          fontSize: "13px",
+                          color: C.muted,
+                          lineHeight: "1.55",
+                        }}
+                      >
+                        &ldquo;{item.quote as string}&rdquo;
+                      </Text>
+                    )}
+                    {sources.length > 0 && (
+                      <Text style={{ margin: 0, fontSize: "11px", color: C.mutedLight }}>
+                        <span style={{ fontFamily: font, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.mutedLight, marginRight: "6px" }}>Sources</span>
+                        {sources.map((src, i) => (
+                          <span key={src.url}>
+                            {i > 0 && <span style={{ margin: "0 4px" }}>·</span>}
+                            <Link href={src.url} style={{ color: C.mutedLight, textDecoration: "underline", textUnderlineOffset: "2px" }}>
+                              {src.name}
+                            </Link>
+                          </span>
+                        ))}
+                      </Text>
+                    )}
+                  </>
+                )}
               </Section>
-            ) : (
-              <>
-                {/* Social consensus */}
-                {digest.socialConsensus && (
-                  <Section
-                    style={{
-                      padding: "24px 32px",
-                      background: C.socialBg,
-                      borderTop: `1px solid ${C.border}`,
-                    }}
-                  >
-                    <Text style={s.label}>The discourse</Text>
-                    <Text style={{ ...s.body, margin: "0 0 16px" }}>
+            );
+          })}
+
+          {teaser ? (
+            /* ── Upgrade CTA ──────────────────────────────── */
+            <Section style={{ padding: "32px 0", textAlign: "center" }}>
+              <Text style={{ fontFamily: font, fontSize: "14px", color: C.muted, lineHeight: "1.65", margin: "0 0 16px" }}>
+                Want the full analysis, source links, and expert takes?
+              </Text>
+              <Link
+                href="https://thelatest.io/pricing"
+                style={{
+                  display: "inline-block",
+                  padding: "12px 28px",
+                  background: C.foreground,
+                  color: C.bg,
+                  fontFamily: font,
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                Upgrade to read more →
+              </Link>
+            </Section>
+          ) : (
+            <>
+              {/* ── The Public Square ──────────────────────── */}
+              {digest.socialConsensus && (
+                <>
+                  <Hr style={{ borderTop: `1px solid ${C.border}`, margin: "16px 0 0" }} />
+                  <Section style={{ padding: "16px 0" }}>
+                    <Text style={{ ...sLabel, margin: "0 0 12px" }}>The Public Square</Text>
+                    <Text style={{ fontFamily: font, fontSize: "14px", color: C.muted, lineHeight: "1.65", margin: "0 0 16px" }}>
                       {digest.socialConsensus.overview}
                     </Text>
                     {digest.socialConsensus.highlights.map((h) => (
-                      <Section
-                        key={h.url}
-                        style={{
-                          padding: "12px 0",
-                          borderTop: `1px solid ${C.border}`,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: serif,
-                            fontSize: "13px",
-                            color: C.foreground,
-                            lineHeight: "1.55",
-                            margin: "0 0 4px",
-                          }}
-                        >
+                      <Section key={h.url} style={{ padding: "10px 0" }}>
+                        <Text style={{ fontFamily: serif, fontSize: "13px", fontStyle: "italic", color: C.foreground, lineHeight: "1.55", margin: "0 0 4px" }}>
                           &ldquo;{h.text}&rdquo;
                         </Text>
-                        <Text
-                          style={{
-                            fontFamily: font,
-                            fontSize: "11px",
-                            color: C.mutedLight,
-                            margin: 0,
-                          }}
-                        >
-                          <Link
-                            href={h.url}
-                            style={{
-                              color: C.foreground,
-                              textDecoration: "none",
-                              fontWeight: 600,
-                            }}
-                          >
+                        <Text style={{ fontFamily: font, fontSize: "11px", color: C.mutedLight, margin: 0 }}>
+                          —{" "}
+                          <Link href={h.url} style={{ color: C.foreground, textDecoration: "none", fontWeight: 600 }}>
                             {h.authorName}
                           </Link>{" "}
                           {h.author}
@@ -414,70 +372,61 @@ export function DigestEmail({
                       </Section>
                     ))}
                   </Section>
-                )}
+                </>
+              )}
 
-                {/* Bottom line */}
-                {digest.bottomLine && (
-                  <Section
-                    style={{
-                      padding: "24px 32px",
-                      background: C.accent,
-                      borderTop: `1px solid ${C.border}`,
-                    }}
-                  >
-                    <Text style={s.label}>The bottom line</Text>
-                    <Text style={s.body}>{digest.bottomLine}</Text>
-                  </Section>
-                )}
-              </>
-            )}
+              {/* ── Editor's Note ──────────────────────────── */}
+              {digest.bottomLine && (
+                <Section
+                  style={{
+                    margin: "16px 0 0",
+                    padding: "20px 24px",
+                    border: `1px solid ${C.border}`,
+                  }}
+                >
+                  <Text style={{ ...sLabel, margin: "0 0 8px", textAlign: "left" }}>
+                    Editor&apos;s Note
+                  </Text>
+                  <Text style={{ fontFamily: font, fontSize: "14px", color: C.muted, lineHeight: "1.65", margin: 0 }}>
+                    {digest.bottomLine}
+                  </Text>
+                </Section>
+              )}
+            </>
+          )}
 
-            {/* Footer */}
-            <Section
-              style={{
-                padding: "24px 32px",
-                borderTop: `1px solid ${C.border}`,
-                textAlign: "center" as const,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: font,
-                  fontSize: "11px",
-                  color: C.mutedLight,
-                  margin: "0 0 8px",
-                }}
-              >
-                You're receiving this because you subscribed to{" "}
-                <strong style={{ color: C.muted }}>{newsletterTitle}</strong> on
-                ITK Dispatch.
-              </Text>
-              <Link
-                href={UNSUBSCRIBE_PLACEHOLDER}
-                style={{
-                  fontFamily: font,
-                  fontSize: "11px",
-                  color: C.mutedLight,
-                  textDecoration: "underline",
-                }}
-              >
-                Unsubscribe
-              </Link>
-            </Section>
-          </Section>
-
-          {/* Brand footer */}
+          {/* ── Footer ────────────────────────────────────── */}
+          <Hr style={{ borderTop: `2px solid ${C.foreground}`, margin: "24px 0 12px" }} />
           <Text
             style={{
               fontFamily: serif,
-              fontSize: "12px",
-              color: C.mutedLight,
-              textAlign: "center" as const,
-              margin: "20px 0 0",
-              letterSpacing: "-0.01em",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: C.foreground,
+              textAlign: "center",
+              margin: "0 0 8px",
             }}
           >
             ITK Dispatch
+          </Text>
+          <Text
+            style={{
+              fontFamily: font,
+              fontSize: "11px",
+              color: C.mutedLight,
+              textAlign: "center",
+              margin: "0 0 4px",
+            }}
+          >
+            You subscribed to <strong style={{ color: C.muted }}>{newsletterTitle}</strong> on ITK Dispatch.
+          </Text>
+          <Text style={{ textAlign: "center", margin: 0 }}>
+            <Link
+              href={UNSUBSCRIBE_PLACEHOLDER}
+              style={{ fontFamily: font, fontSize: "11px", color: C.mutedLight, textDecoration: "underline" }}
+            >
+              Unsubscribe
+            </Link>
           </Text>
         </Container>
       </Body>

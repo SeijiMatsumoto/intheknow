@@ -150,6 +150,7 @@ export type NewsletterInput = {
   keywords: string[];
   domainHints?: string[];
   tier?: Plan;
+  priorTitles?: string[];
 };
 
 // ── Main agent ────────────────────────────────────────────────────────────────
@@ -180,6 +181,7 @@ export async function runNewsletterAgent(
     keywords,
     domainHints = [],
     tier = "pro",
+    priorTitles = [],
   } = newsletter;
 
   let output: DigestContent | null = null;
@@ -240,6 +242,7 @@ export async function runNewsletterAgent(
 - keyTakeaways should be short teaser bullets — hook the reader without giving away the full story.
 - All URLs in sources must be real URLs from your research — never invent them.
 - When multiple articles cover the same story, combine them into a single item with multiple sources rather than creating separate items.
+- DEDUP: If prior edition titles are provided, do NOT repeat those stories. Skip any story that covers the same event or announcement. Only include a previously covered topic if there is a genuinely new, material development.
 - Only include a quote if it's genuinely interesting, otherwise set it to null.${socialConsensusInstruction}${depthInstruction}
 </guidelines>
 
@@ -270,7 +273,7 @@ ${domainHints.length > 0 ? `<preferred-sources>${domainHints.join(", ")}</prefer
 <time-window>${windowLabel(frequency)}</time-window>
 <story-target>up to ${config.storyTarget}</story-target>
 </context>
-
+${priorTitles.length > 0 ? `\n<prior-edition-stories>\nThe following stories were covered in the last edition. Do NOT repeat them unless there is a major new development:\n${priorTitles.map((t) => `- ${t}`).join("\n")}\n</prior-edition-stories>` : ""}
 Start by searching for the most important recent stories.`,
   });
 

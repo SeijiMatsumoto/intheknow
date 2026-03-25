@@ -90,6 +90,24 @@ export function findRecentDigestRun(newsletterId: string, since: Date) {
   });
 }
 
+/** Fetch item titles from the most recent sent digest for dedup. */
+export async function getPriorDigestTitles(
+  newsletterId: string,
+): Promise<string[]> {
+  const run = await prisma.digestRun.findFirst({
+    where: { newsletterId, status: "sent" },
+    orderBy: { runAt: "desc" },
+    select: { content: true },
+  });
+  if (!run?.content) return [];
+  const content = run.content as {
+    sections?: { items?: { title: string }[] }[];
+  };
+  return (
+    content.sections?.flatMap((s) => s.items?.map((i) => i.title) ?? []) ?? []
+  );
+}
+
 export function createDigestRun(newsletterId: string, id?: string) {
   return prisma.digestRun.create({
     data: { ...(id ? { id } : {}), newsletterId, runAt: new Date(), status: "running" },

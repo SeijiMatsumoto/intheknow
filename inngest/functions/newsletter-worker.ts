@@ -12,6 +12,7 @@ import {
   findRecentDigestRun,
   getNewsletterById,
   getNewsletterSubscriptions,
+  getPriorDigestTitles,
   getUserPlans,
   markDigestRunSent,
   saveDigestContent,
@@ -183,6 +184,17 @@ export const newsletterWorker = inngest.createFunction(
       .filter(Boolean)
       .slice(0, 6);
 
+    // 2b. Fetch prior digest titles for dedup
+    const priorTitles = await step.run("fetch-prior-titles", async () => {
+      const titles = await getPriorDigestTitles(newsletterId);
+      if (titles.length > 0) {
+        logger.info(
+          `Found ${titles.length} prior story title(s) for dedup`,
+        );
+      }
+      return titles;
+    });
+
     // 3. Run agent — research + write newsletter
     const { digest, model, stepCount, usage, toolCallCounts } = await step.run(
       "run-agent",
@@ -195,6 +207,7 @@ export const newsletterWorker = inngest.createFunction(
           keywords: newsletter.keywords,
           domainHints,
           tier,
+          priorTitles,
         });
         const cost = digestCostBreakdown(
           result.model,

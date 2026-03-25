@@ -92,21 +92,21 @@ export async function checkRelevancy(
     },
     system: `You are an editorial filter for a curated newsletter. Your job is to decide what a subscriber would actually want to read.
 
-Think like a subscriber: they signed up for "${context?.newsletterTitle ?? "this newsletter"}" because they want to stay informed on what matters in this space. They want real news — things that happened, decisions that were made, products that launched, numbers that moved. They do NOT want filler, fluff, or content that wastes their time.
+Think like a subscriber: they signed up for "${context?.newsletterTitle ?? "this newsletter"}" because they want to stay informed on what matters in this space. They want real news — things that happened, decisions that were made, products that launched, numbers that moved.
 
-For each numbered item, decide: would a subscriber be glad this was in their newsletter, or would they skip it?
+IMPORTANT: When in doubt, mark as relevant. It is much worse to filter out a major story than to let a borderline one through. The newsletter editor (a later step) will make final inclusion decisions — your job is to avoid losing important stories, not to be maximally selective.
+
+For each numbered item, decide: could this plausibly belong in the newsletter?
 
 If relevant: write a 1-2 sentence summary extracting the key facts, names, and numbers.
 If not relevant: set summary to an empty string.
 
-Mark as NOT relevant if ANY of these apply:
-- Not something a subscriber would care about or act on
-- Generic template, boilerplate, or placeholder content
-- No concrete facts — no names, numbers, dates, or specific events
+Mark as NOT relevant ONLY if it clearly falls into one of these categories:
+- Generic template, boilerplate, or placeholder content with no real information
 - Homepage, index page, or navigation page with no article content
-- Tangentially related through shared keywords but actually about a different topic
+- Completely unrelated topic (not just tangential — genuinely about a different field)
 - Duplicate or near-duplicate of another item (keep the more detailed one)
-- Promotional content or press release without genuine news value`,
+- Pure promotional content with zero news value`,
     prompt: buildPrompt(query, items, context),
   });
 

@@ -271,16 +271,17 @@ Always anchor your writing in the newsletter's description and keywords. A reade
 - NEVER include dates, time references ("past 24 hours", "March 2026"), or site: operators. Date filtering is automatic.
 - Each query must target a distinctly different topic. No rephrasing the same query.
 - If a search returns results you've already seen, move on — do not retry.
-- Stop searching once you have enough material. More searches ≠ better newsletter.
+- Prioritize COMPLETENESS over brevity. Missing a major story that your readers will hear about elsewhere is the worst outcome. Always do at least two rounds of searches.
 </search-queries>
 
 <workflow>
-1. In your FIRST response, call searchWeb multiple times in parallel with diverse queries covering different angles of the newsletter topics. Aim for 3-5 parallel searches to get broad coverage upfront.
-2. Review the results. Each search result includes a coverage count — if you have 6+ unique sources, you almost certainly have enough material. Proceed to submitAnswer.${blueskyInstruction}
-   Only do a follow-up search if a MAJOR topic area from the keywords has ZERO coverage. A second search round should be rare. NEVER search for a topic you already have results for.
+1. In your FIRST response, call searchWeb multiple times in parallel with diverse queries covering different angles of the newsletter topics. Aim for 5-7 parallel searches to cast a WIDE net. It's better to search too broadly than to miss a major story.
+2. Review the results. Do a SECOND round of 2-4 follow-up searches to fill gaps: any major topic area from the keywords with thin or zero coverage, and any breaking stories worth drilling into for more details.${blueskyInstruction}
+3. Review again. If any major topic area still has no coverage, do one more targeted round. Otherwise, proceed to submitAnswer.
 ${submitStep}. Call submitAnswer with the fully written newsletter.
 
 IMPORTANT: You MUST always call submitAnswer as the final step. Every response path must end with submitAnswer — never stop without it. If you are running low on steps, skip additional searches and submit with what you have.
+IMPORTANT: Thoroughness matters more than speed. Missing a major story is worse than doing an extra search. When in doubt, search more.
 </workflow>`,
     prompt: `Research and write the ${frequency} edition of "${title}".
 

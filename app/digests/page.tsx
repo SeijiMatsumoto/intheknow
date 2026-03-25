@@ -62,7 +62,7 @@ export default async function FeedPage({ searchParams }: Props) {
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-24 sm:pb-12 md:py-6">
         <PageHeader
-          title="My Feed"
+          title="My Digests"
           description="Your digest history across all subscriptions."
         />
 

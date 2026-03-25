@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/feed", label: "My Feed", icon: Rss },
+  { href: "/digests", label: "My Digests", icon: Rss },
   { href: "/newsletters", label: "Explore", icon: Bookmark },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

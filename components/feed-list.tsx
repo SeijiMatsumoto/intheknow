@@ -136,7 +136,7 @@ export function FeedList({
                     className="group relative flex flex-col border border-border bg-card transition-all duration-200 hover:shadow-md hover:border-foreground/25"
                   >
                     <Link
-                      href={`/feed/${run.id}`}
+                      href={`/digests/${run.id}`}
                       className="absolute inset-0"
                     />
 

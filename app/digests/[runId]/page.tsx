@@ -22,6 +22,30 @@ function formatDate(iso: string): string {
   }
 }
 
+/** Format a publishedAt value as "Mar 25, 2026". Returns null if not a parseable date. */
+function formatPublishedAt(value: string): string | null {
+  try {
+    const date = parseISO(value);
+    if (!isNaN(date.getTime())) {
+      return format(date, "MMM d, yyyy");
+    }
+  } catch {
+    // not a valid ISO date
+  }
+  return null;
+}
+
+/** Get the first parseable publishedAt from a story's sources. */
+function getStoryDate(sources: DigestSource[]): string | null {
+  for (const s of sources) {
+    if (s.publishedAt) {
+      const formatted = formatPublishedAt(s.publishedAt);
+      if (formatted) return formatted;
+    }
+  }
+  return null;
+}
+
 /** Extract sources from a digest item, handling both old and new schema. */
 function getItemSources(item: DigestItem): DigestSource[] {
   if (item.sources && item.sources.length > 0) return item.sources;
@@ -38,9 +62,15 @@ function getItemSources(item: DigestItem): DigestSource[] {
 
 function SourceRow({ sources }: { sources: DigestSource[] }) {
   if (sources.length === 0) return null;
+  const storyDate = getStoryDate(sources);
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground/50">
-      <span className="font-semibold uppercase tracking-wider text-muted-foreground/40 mr-0.5">Sources</span>
+      {storyDate && (
+        <>
+          <time className="text-muted-foreground/70 font-medium">{storyDate}</time>
+          <span className="text-muted-foreground/30">|</span>
+        </>
+      )}
       {sources.map((s, i) => (
         <span key={s.url}>
           {i > 0 && <span className="mr-1.5">·</span>}
@@ -161,10 +191,10 @@ export default async function FeedDetailPage({
 
       <div className="mx-auto max-w-5xl px-4 py-8 pb-24 sm:px-6 sm:pb-8">
         <Link
-          href="/feed"
+          href="/digests"
           className="mb-6 inline-block text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
         >
-          ← My Feed
+          ← My Digests
         </Link>
 
         {/* ── Nameplate ─────────────────────────────────────────── */}

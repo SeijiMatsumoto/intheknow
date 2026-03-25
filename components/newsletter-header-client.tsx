@@ -28,10 +28,10 @@ export function NewsletterHeaderClient({ userId, admin, hideProfile }: Props) {
             {userId ? (
               <>
                 <Link
-                  href="/feed"
+                  href="/digests"
                   className="hidden sm:block text-xs font-medium uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  My Feed
+                  My Digests
                 </Link>
                 <Link
                   href="/newsletters"

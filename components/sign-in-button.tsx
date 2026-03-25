@@ -9,8 +9,8 @@ export function SignInModalButton() {
 
   if (isSignedIn) {
     return (
-      <Link href="/feed">
-        <Button>Go to feed</Button>
+      <Link href="/digests">
+        <Button>Go to digests</Button>
       </Link>
     );
   }

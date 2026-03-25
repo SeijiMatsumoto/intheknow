@@ -1,7 +1,7 @@
 import { formatDistanceToNow, nextDay } from "date-fns";
 import { CalendarDays, Inbox } from "lucide-react";
 import Link from "next/link";
-import type { FeedStats } from "@/app/feed/data";
+import type { FeedStats } from "@/app/digests/data";
 import { getCategory } from "@/lib/categories";
 
 const DAY_MAP: Record<string, 0 | 1 | 2 | 3 | 4 | 5 | 6> = {

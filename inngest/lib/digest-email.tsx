@@ -41,6 +41,29 @@ function fmtDate(iso: string): string {
 
 type ItemSource = { url: string; name: string; publishedAt?: string };
 
+/** Format a publishedAt value as "Mar 25, 2026". Returns null if not parseable. */
+function fmtPublishedAt(value: string): string | null {
+  try {
+    const date = parseISO(value);
+    if (!isNaN(date.getTime())) {
+      return format(date, "MMM d, yyyy");
+    }
+  } catch {
+    // not a valid ISO date
+  }
+  return null;
+}
+
+function getItemDate(sources: ItemSource[]): string | null {
+  for (const s of sources) {
+    if (s.publishedAt) {
+      const formatted = fmtPublishedAt(s.publishedAt);
+      if (formatted) return formatted;
+    }
+  }
+  return null;
+}
+
 function itemSources(item: Record<string, unknown>): ItemSource[] {
   if (Array.isArray(item.sources) && item.sources.length > 0)
     return item.sources as ItemSource[];
@@ -228,9 +251,15 @@ export function DigestEmail({
                   {(() => {
                     const sources = itemSources(leadItem);
                     if (sources.length === 0) return null;
+                    const date = getItemDate(sources);
                     return (
                       <Text style={{ margin: 0, fontSize: "11px", color: C.mutedLight }}>
-                        <span style={{ fontFamily: font, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.mutedLight, marginRight: "6px" }}>Sources</span>
+                        {date && (
+                          <span style={{ fontFamily: font, fontSize: "11px", color: C.mutedLight, marginRight: "6px" }}>
+                            {date}
+                            <span style={{ margin: "0 6px", color: C.borderLight }}>|</span>
+                          </span>
+                        )}
                         {sources.map((s, i) => (
                           <span key={s.url}>
                             {i > 0 && <span style={{ margin: "0 4px" }}>·</span>}
@@ -302,9 +331,16 @@ export function DigestEmail({
                         &ldquo;{item.quote as string}&rdquo;
                       </Text>
                     )}
-                    {sources.length > 0 && (
+                    {sources.length > 0 && (() => {
+                      const date = getItemDate(sources);
+                      return (
                       <Text style={{ margin: 0, fontSize: "11px", color: C.mutedLight }}>
-                        <span style={{ fontFamily: font, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.mutedLight, marginRight: "6px" }}>Sources</span>
+                        {date && (
+                          <span style={{ fontFamily: font, fontSize: "11px", color: C.mutedLight, marginRight: "6px" }}>
+                            {date}
+                            <span style={{ margin: "0 6px", color: C.borderLight }}>|</span>
+                          </span>
+                        )}
                         {sources.map((src, i) => (
                           <span key={src.url}>
                             {i > 0 && <span style={{ margin: "0 4px" }}>·</span>}
@@ -314,7 +350,8 @@ export function DigestEmail({
                           </span>
                         ))}
                       </Text>
-                    )}
+                      );
+                    })()}
                   </>
                 )}
               </Section>

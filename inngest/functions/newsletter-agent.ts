@@ -72,7 +72,7 @@ export const DigestSchema = z.object({
                 publishedAt: z
                   .string()
                   .describe(
-                    "ISO date string or human-readable date of the source article.",
+                    "ISO 8601 date (YYYY-MM-DD) of the source article. Convert relative dates like '6 days ago' to absolute dates.",
                   ),
               }),
             )

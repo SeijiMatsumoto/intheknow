@@ -200,7 +200,7 @@ export default async function NewsletterDetailPage({
                   return (
                     <Link
                       key={run.id}
-                      href={`/feed/${run.id}`}
+                      href={`/digests/${run.id}`}
                       className="group flex items-start gap-4 py-5 transition-colors"
                     >
                       <p className="w-24 shrink-0 text-xs text-muted-foreground pt-0.5">

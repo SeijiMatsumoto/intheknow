@@ -105,6 +105,29 @@ const BLOCKED_DOMAIN_SUFFIXES = [
   "tumblr.com",
 ];
 
+/**
+ * Domains whose /blog paths are primary news sources (product announcements,
+ * research papers, etc.) and should NOT be filtered by blog-path rules.
+ */
+const BLOG_ALLOWLISTED_DOMAINS = new Set([
+  "openai.com",
+  "anthropic.com",
+  "deepmind.google",
+  "ai.meta.com",
+  "blog.google",
+  "microsoft.com",
+  "apple.com",
+  "nvidia.com",
+  "aws.amazon.com",
+  "ai.google",
+  "stability.ai",
+  "mistral.ai",
+  "x.ai",
+  "inflection.ai",
+  "cohere.com",
+  "huggingface.co",
+]);
+
 /** URL path patterns that indicate blog/roundup/listicle content. */
 const BLOG_PATH_PATTERNS = [
   /\/(blog|blogs|newsletter|newsletters|digest|roundup|recap|weekly|daily)\b/i,
@@ -169,8 +192,11 @@ function isViableUrl(r: RawResult, seenUrls: Set<string>): boolean {
   )
     return false;
 
-  // Blog posts, newsletters, roundups
-  if (BLOG_PATH_PATTERNS.some((p) => p.test(url.pathname))) return false;
+  const isAllowlistedBlog = BLOG_ALLOWLISTED_DOMAINS.has(hostname);
+
+  // Blog posts, newsletters, roundups (skip check for allowlisted primary-source domains)
+  if (!isAllowlistedBlog && BLOG_PATH_PATTERNS.some((p) => p.test(url.pathname)))
+    return false;
 
   // Guides, how-tos, advice content
   if (ADVICE_PATH_PATTERNS.some((p) => p.test(url.pathname))) return false;
@@ -198,8 +224,6 @@ async function searchSerper(
   if (!apiKey) throw new Error("SERPER_API_KEY not set");
 
   const tbs = serperDateRange(ctx.frequency);
-  const topicHint = ctx.keywords.slice(0, 3).join(" ");
-  const enrichedQuery = topicHint ? `${query} ${topicHint}` : query;
 
   const res = await fetch("https://google.serper.dev/news", {
     method: "POST",
@@ -208,8 +232,8 @@ async function searchSerper(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      q: enrichedQuery,
-      num: 10,
+      q: query,
+      num: 20,
       tbs,
       gl: "us",
       hl: "en",

@@ -75,7 +75,7 @@ function TimelineCard({ send }: { send: FeedSend }) {
     content?.keyTakeaways && content.keyTakeaways.length > 0;
   const sectionCount = content?.sections?.length ?? 0;
   const storyCount =
-    content?.sections?.reduce((sum, s) => sum + (s as { items?: unknown[] }).items?.length ?? 0, 0) ?? 0;
+    content?.sections?.reduce((sum, s) => sum + ((s as { items?: unknown[] }).items?.length ?? 0), 0) ?? 0;
 
   return (
     <div className="group relative">

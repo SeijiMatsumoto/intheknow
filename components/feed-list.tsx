@@ -1,10 +1,10 @@
 "use client";
 
 import { format } from "date-fns";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, ChevronDown, Clock } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { getCategory } from "@/lib/categories";
 
 type FeedSend = {
@@ -57,10 +57,11 @@ function formatDateHeader(dateKey: string): string {
 
   if (date.toDateString() === today.toDateString()) return "Today";
   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return format(date, "EEEE, MMMM d, yyyy");
+  return format(date, "EEEE, MMM d");
 }
 
-function LeadCard({ send }: { send: FeedSend }) {
+function TimelineCard({ send }: { send: FeedSend }) {
+  const [expanded, setExpanded] = useState(false);
   const { run } = send;
   const content = run.content;
   const cat = getCategory(run.newsletter.categoryId);
@@ -68,163 +69,133 @@ function LeadCard({ send }: { send: FeedSend }) {
   const editionTitle =
     content?.editionTitle ?? content?.title ?? run.newsletter.title;
   const sentLabel = send.sentAt
-    ? format(new Date(send.sentAt), "h:mma").toLowerCase()
+    ? format(new Date(send.sentAt), "h:mm a").toLowerCase()
     : null;
-
-  return (
-    <div className="group relative border-b-2 border-foreground/15 pb-6 sm:pb-8">
-      <Link href={`/digests/${run.id}`} className="absolute inset-0" />
-
-      <div className="flex items-center gap-2 mb-3">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
-          <CatIcon className="h-3.5 w-3.5 text-foreground/70" />
-        </div>
-        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
-          {run.newsletter.title}
-        </span>
-        <span className="text-muted-foreground/30">·</span>
-        <span className="text-xs uppercase tracking-wider text-muted-foreground/40">
-          {cat.label}
-        </span>
-      </div>
-
-      <h2 className="font-serif text-xl sm:text-2xl font-bold leading-tight text-foreground group-hover:underline decoration-foreground/20 underline-offset-4">
-        {editionTitle}
-      </h2>
-
-      {content?.summary && (
-        <p className="mt-2 sm:mt-3 text-sm leading-relaxed text-muted-foreground max-w-3xl">
-          {content.summary}
-        </p>
-      )}
-
-      {content?.keyTakeaways && content.keyTakeaways.length > 0 && (
-        <ul className="mt-3 space-y-1">
-          {content.keyTakeaways.slice(0, 3).map((t) => (
-            <li
-              key={t}
-              className="text-xs leading-snug text-muted-foreground/70 pl-3 border-l-2 border-foreground/10"
-            >
-              {t}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground/50">
-        {sentLabel && (
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            Sent {sentLabel}
-          </span>
-        )}
-        {content?.sections && content.sections.length > 0 && (
-          <span>
-            {content.sections.length} sections
-          </span>
-        )}
-        <span className="font-medium uppercase tracking-wider text-muted-foreground/60 group-hover:text-foreground transition-colors">
-          Read →
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function CompactCard({ send }: { send: FeedSend }) {
-  const { run } = send;
-  const content = run.content;
-  const cat = getCategory(run.newsletter.categoryId);
-  const CatIcon = cat.icon;
-  const editionTitle =
-    content?.editionTitle ?? content?.title ?? run.newsletter.title;
-  const sentLabel = send.sentAt
-    ? format(new Date(send.sentAt), "h:mma").toLowerCase()
-    : null;
+  const hasKeyTakeaways =
+    content?.keyTakeaways && content.keyTakeaways.length > 0;
+  const sectionCount = content?.sections?.length ?? 0;
+  const storyCount =
+    content?.sections?.reduce((sum, s) => sum + ((s as { items?: unknown[] }).items?.length ?? 0), 0) ?? 0;
 
   return (
     <div className="group relative">
-      <Link href={`/digests/${run.id}`} className="absolute inset-0" />
+      {/* Card body */}
+      <div className="rounded-lg border border-border/60 bg-background transition-colors hover:border-foreground/20">
+        {/* Main clickable area */}
+        <Link href={`/digests/${run.id}`} className="block px-4 py-4 sm:px-5">
+          {/* Top row: newsletter badge + time */}
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary">
+                <CatIcon className="h-3 w-3 text-foreground/70" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">
+                {run.newsletter.title}
+              </span>
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground/70">
+                {run.newsletter.frequency}
+              </span>
+            </div>
+            {sentLabel && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground/50">
+                <Clock className="h-3 w-3" />
+                {sentLabel}
+              </span>
+            )}
+          </div>
 
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <CatIcon className="h-3 w-3 text-muted-foreground/50" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-          {run.newsletter.title}
-        </span>
-      </div>
+          {/* Headline */}
+          <h3 className="text-[15px] sm:text-base font-semibold leading-snug text-foreground group-hover:text-foreground/80 transition-colors">
+            {editionTitle}
+          </h3>
 
-      <p className="font-serif text-[15px] font-semibold leading-snug text-foreground group-hover:underline decoration-foreground/20 underline-offset-2">
-        {editionTitle}
-      </p>
+          {/* Summary */}
+          {content?.summary && (
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground line-clamp-2">
+              {content.summary}
+            </p>
+          )}
 
-      {content?.summary && (
-        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {content.summary}
-        </p>
-      )}
+          {/* Footer meta */}
+          <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground/50">
+            {sectionCount > 0 && (
+              <span>{sectionCount} sections</span>
+            )}
+            {storyCount > 0 && (
+              <>
+                <span>·</span>
+                <span>{storyCount} stories</span>
+              </>
+            )}
+            <span className="ml-auto font-medium text-muted-foreground/60 group-hover:text-foreground transition-colors">
+              Read
+              <ArrowRight className="ml-1 inline h-3 w-3" />
+            </span>
+          </div>
+        </Link>
 
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground/40">
-        {sentLabel && <span>{sentLabel}</span>}
-        {content?.sections && content.sections.length > 0 && (
-          <>
-            <span>·</span>
-            <span>{content.sections.length} sections</span>
-          </>
+        {/* Expandable takeaways */}
+        {hasKeyTakeaways && (
+          <div className="border-t border-border/40">
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="flex w-full items-center justify-between px-4 py-2.5 sm:px-5 text-[11px] font-medium text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            >
+              <span>Key takeaways</span>
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
+              />
+            </button>
+            {expanded && (
+              <ul className="px-4 pb-4 sm:px-5 space-y-2">
+                {content!.keyTakeaways!.map((t) => (
+                  <li
+                    key={t}
+                    className="flex gap-2 text-xs leading-relaxed text-muted-foreground"
+                  >
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-foreground/30" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function DateSection({
+function DateGroup({
   dateKey,
   sends,
-  isFirst,
 }: {
   dateKey: string;
   sends: FeedSend[];
-  isFirst: boolean;
 }) {
-  const lead = isFirst ? sends[0] : null;
-  const rest = isFirst ? sends.slice(1) : sends;
-
   return (
-    <div>
-      {/* Date divider */}
-      <div className="flex items-center gap-4 py-1 mb-4">
-        <div className="h-px flex-1 bg-foreground/15" />
-        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/50 shrink-0">
-          {formatDateHeader(dateKey)}
-        </span>
-        <div className="h-px flex-1 bg-foreground/15" />
+    <div className="relative flex gap-4 sm:gap-6">
+      {/* Timeline rail */}
+      <div className="flex flex-col items-center pt-1">
+        <div className="h-2.5 w-2.5 rounded-full border-2 border-foreground/30 bg-background shrink-0" />
+        <div className="w-px flex-1 bg-border/60" />
       </div>
 
-      {/* Lead story for first group */}
-      {lead && <LeadCard send={lead} />}
+      {/* Content */}
+      <div className="flex-1 pb-8 min-w-0">
+        {/* Date label */}
+        <p className="text-xs font-semibold text-foreground mb-3 -mt-0.5">
+          {formatDateHeader(dateKey)}
+        </p>
 
-      {/* Grid of remaining cards */}
-      {rest.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2">
-          {rest.map((send, idx) => {
-            const isLast = idx === rest.length - 1;
-            const isOddLast = isLast && rest.length % 2 === 1;
-            return (
-              <div
-                key={send.id}
-                className={`py-4 sm:py-5 border-b border-foreground/10 ${
-                  isOddLast
-                    ? "sm:col-span-2"
-                    : idx % 2 === 0
-                      ? "sm:pr-5 sm:border-r sm:border-r-foreground/10"
-                      : "sm:pl-5"
-                }`}
-              >
-                <CompactCard send={send} />
-              </div>
-            );
-          })}
+        {/* Cards */}
+        <div className="space-y-3">
+          {sends.map((send) => (
+            <TimelineCard key={send.id} send={send} />
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -255,7 +226,7 @@ export function FeedList({
         </p>
         <Link
           href="/newsletters"
-          className="mt-6 inline-flex items-center gap-1.5 border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
+          className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
         >
           Browse newsletters
           <ArrowRight className="h-3.5 w-3.5" />
@@ -277,24 +248,19 @@ export function FeedList({
   const grouped = groupByDate(sends);
 
   return (
-    <div className="space-y-6">
-      {grouped.map(([dateKey, dateSends], i) => (
-        <DateSection
-          key={dateKey}
-          dateKey={dateKey}
-          sends={dateSends}
-          isFirst={i === 0}
-        />
+    <div>
+      {grouped.map(([dateKey, dateSends]) => (
+        <DateGroup key={dateKey} dateKey={dateKey} sends={dateSends} />
       ))}
 
       {hasMore && (
-        <div className="mt-8 text-center">
+        <div className="ml-7 sm:ml-9 pt-2 pb-8">
           <button
             type="button"
             onClick={handleSeeMore}
-            className="border border-border bg-background px-6 py-2 text-xs font-medium uppercase tracking-wider text-foreground transition-colors hover:bg-secondary"
+            className="rounded-lg border border-border bg-background px-6 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
           >
-            See more
+            Load more
           </button>
         </div>
       )}

@@ -80,13 +80,13 @@ export default async function FeedDetailPage({
           ← My Feed
         </Link>
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-hidden border border-border bg-card">
           {/* Header */}
           <div className="border-b border-border px-6 sm:px-10 pb-6 pt-8">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
               {send.run.newsletter.title}
             </p>
-            <h1 className="mb-2.5 text-2xl font-bold leading-tight text-foreground">
+            <h1 className="mb-2.5 font-serif text-2xl font-bold leading-tight text-foreground">
               {title}
             </h1>
             <p className="mb-4 text-xs text-muted-foreground/60">
@@ -99,9 +99,9 @@ export default async function FeedDetailPage({
 
           {/* In this edition */}
           {content.keyTakeaways?.length > 0 && (
-            <div className="border-b border-border bg-amber-50 px-6 sm:px-10 py-5 dark:bg-amber-950/20">
+            <div className="border-b border-border bg-secondary/50 px-6 sm:px-10 py-5">
               <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
-                ⚡ In this edition
+                In this edition
               </p>
               <ul className="ml-4 list-disc space-y-1.5">
                 {content.keyTakeaways.map((t) => (
@@ -134,7 +134,7 @@ export default async function FeedDetailPage({
                         const ItemIcon = getDigestIcon(item.icon);
                         return (
                         <div key={primary?.url ?? idx} className="py-6">
-                          <p className="mb-2.5 flex items-start gap-2 text-[15px] font-semibold leading-snug text-foreground">
+                          <p className="mb-2.5 flex items-start gap-2 font-serif text-[15px] font-semibold leading-snug text-foreground">
                             {ItemIcon && <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />}
                             {stripEmoji(item.title)}
                           </p>
@@ -144,7 +144,7 @@ export default async function FeedDetailPage({
                             </p>
                           )}
                           {item.quote && (
-                            <blockquote className="mb-2.5 border-l-[3px] border-border pl-3.5 text-[13px] italic leading-snug text-muted-foreground">
+                            <blockquote className="mb-2.5 border-l-2 border-border pl-3.5 text-[13px] italic leading-snug text-muted-foreground">
                               &ldquo;{item.quote}&rdquo;
                             </blockquote>
                           )}
@@ -187,20 +187,20 @@ export default async function FeedDetailPage({
 
               {/* Social consensus (Pro only) */}
               {content.socialConsensus && (
-                <div className="border-t border-border bg-blue-50 px-6 sm:px-10 py-6 dark:bg-blue-950/20">
+                <div className="border-t border-border bg-secondary/50 px-6 sm:px-10 py-6">
                   <div className="mb-4 flex items-center gap-2">
-                    <MessageCircle className="h-3.5 w-3.5 text-blue-400" />
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-blue-400">
+                    <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                       The discourse
                     </p>
                   </div>
                   <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
                     {content.socialConsensus.overview}
                   </p>
-                  <div className="divide-y divide-blue-100 dark:divide-blue-900/30">
+                  <div className="divide-y divide-border">
                     {content.socialConsensus.highlights.map((h) => (
                       <div key={h.url} className="py-3">
-                        <p className="text-[13px] leading-snug text-foreground/80">
+                        <p className="font-serif text-[13px] leading-snug text-foreground/80">
                           &ldquo;{h.text}&rdquo;
                         </p>
                         <div className="mt-1.5 flex items-center gap-1.5 text-xs">
@@ -208,7 +208,7 @@ export default async function FeedDetailPage({
                             href={h.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+                            className="font-semibold text-foreground hover:underline transition-colors"
                           >
                             {h.authorName}
                           </a>
@@ -229,7 +229,7 @@ export default async function FeedDetailPage({
 
               {/* Bottom line */}
               {content.bottomLine && (
-                <div className="border-t border-border bg-secondary px-6 py-6">
+                <div className="border-t border-border bg-secondary/50 px-6 sm:px-10 py-6">
                   <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground/60">
                     The bottom line
                   </p>
@@ -257,7 +257,7 @@ export default async function FeedDetailPage({
                         const ItemIcon = getDigestIcon(item.icon);
                         return (
                         <div key={primary?.url ?? idx} className="py-4">
-                          <p className="flex items-start gap-2 text-[15px] font-semibold leading-snug text-foreground">
+                          <p className="flex items-start gap-2 font-serif text-[15px] font-semibold leading-snug text-foreground">
                             {ItemIcon && <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />}
                             {stripEmoji(item.title)}
                           </p>
@@ -296,12 +296,12 @@ export default async function FeedDetailPage({
               </div>
 
               {/* Upgrade CTA */}
-              <div className="border-t border-border bg-accent/5 px-6 sm:px-10 py-8">
+              <div className="border-t border-border bg-secondary/50 px-6 sm:px-10 py-8">
                 <div className="flex flex-col items-center text-center">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
-                    <Lock className="h-4 w-4 text-accent" />
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-border">
+                    <Lock className="h-4 w-4 text-foreground/70" />
                   </div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="font-serif text-sm font-semibold text-foreground">
                     Unlock full analysis
                   </p>
                   <p className="mt-1.5 max-w-xs text-xs text-muted-foreground">
@@ -310,7 +310,7 @@ export default async function FeedDetailPage({
                   </p>
                   <Link
                     href="/settings"
-                    className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+                    className="mt-4 inline-flex items-center gap-1.5 bg-foreground px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-background transition-opacity hover:opacity-80"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Upgrade to Pro
@@ -324,7 +324,7 @@ export default async function FeedDetailPage({
           <div className="border-t border-border px-10 py-5 text-center">
             <p className="text-[11px] text-muted-foreground/40">
               You're receiving this because you subscribed to{" "}
-              <strong>{send.run.newsletter.title}</strong> on The Latest.
+              <strong>{send.run.newsletter.title}</strong> on ITK Dispatch.
             </p>
           </div>
         </div>

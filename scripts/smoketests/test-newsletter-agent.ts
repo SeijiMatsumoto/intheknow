@@ -154,7 +154,7 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
 
   // HTML email
-  const html = renderEmail(
+  const html = await renderEmail(
     result.digest,
     newsletter.title,
     newsletter.frequency,

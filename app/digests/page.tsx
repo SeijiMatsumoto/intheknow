@@ -62,10 +62,10 @@ export default async function FeedPage({ searchParams }: Props) {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-3xl px-4 sm:px-6 py-6 pb-24 sm:pb-12 md:py-8">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-24 sm:pb-12 md:py-8">
         {/* ── Page header ─────────────────────────────────── */}
         <div className="flex items-baseline justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             My Digests
           </h1>
           <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
@@ -84,9 +84,9 @@ export default async function FeedPage({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* ── Subscriptions pills ─────────────────────────── */}
+        {/* ── Subscriptions ───────────────────────────────── */}
         {stats.subscriptions.length > 0 && (
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
             {stats.subscriptions.map((sub) => {
               const cat = getCategory(sub.categoryId);
               const CatIcon = cat.icon;
@@ -94,15 +94,21 @@ export default async function FeedPage({ searchParams }: Props) {
                 <Link
                   key={sub.newsletterSlug}
                   href={`/newsletters/${sub.newsletterSlug}`}
-                  className="flex items-center gap-1.5 shrink-0 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-colors"
+                  className="flex items-center gap-2.5 border border-border/60 rounded-lg px-3 py-2.5 hover:border-foreground/20 transition-colors group"
                 >
-                  <CatIcon className="h-3 w-3" />
-                  {sub.newsletterTitle}
-                  {sub.lastSentAt && (
-                    <span className="text-[10px] text-muted-foreground/40">
-                      {formatDistanceToNow(new Date(sub.lastSentAt), { addSuffix: true })}
-                    </span>
-                  )}
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary">
+                    <CatIcon className="h-3.5 w-3.5 text-foreground/70" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate group-hover:text-foreground/80 transition-colors">
+                      {sub.newsletterTitle}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/50">
+                      {sub.lastSentAt
+                        ? formatDistanceToNow(new Date(sub.lastSentAt), { addSuffix: true })
+                        : sub.frequency}
+                    </p>
+                  </div>
                 </Link>
               );
             })}

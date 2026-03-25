@@ -1,4 +1,5 @@
 import type { InputJsonValue } from "@prisma/client/runtime/client";
+import { subHours } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import type { Plan } from "@/lib/user";
 
@@ -90,6 +91,19 @@ export function findRecentDigestRun(newsletterId: string, since: Date) {
   });
 }
 
+/**
+ * Check if a digest run was already skipped (no stories) recently.
+ * Uses a short window (2 hours) instead of the full period — if news breaks
+ * later in the day, a later scheduled run should re-try the agent.
+ */
+export function findSkippedDigestRun(newsletterId: string) {
+  const twoHoursAgo = subHours(new Date(), 2);
+  return prisma.digestRun.findFirst({
+    where: { newsletterId, status: "skipped", runAt: { gte: twoHoursAgo } },
+    orderBy: { runAt: "desc" },
+  });
+}
+
 /** Fetch item titles from the most recent sent digest for dedup. */
 export async function getPriorDigestTitles(
   newsletterId: string,
@@ -129,6 +143,13 @@ export function failDigestRun(id: string, error: string) {
   return prisma.digestRun.update({
     where: { id },
     data: { status: "failed", error },
+  });
+}
+
+export function skipDigestRun(id: string) {
+  return prisma.digestRun.update({
+    where: { id },
+    data: { status: "skipped", error: "No stories found — edition skipped" },
   });
 }
 

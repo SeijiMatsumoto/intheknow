@@ -10,12 +10,14 @@ import {
   createDigestRun,
   failDigestRun,
   findRecentDigestRun,
+  findSkippedDigestRun,
   getNewsletterById,
   getNewsletterSubscriptions,
   getPriorDigestTitles,
   getUserPlans,
   markDigestRunSent,
   saveDigestContent,
+  skipDigestRun,
 } from "./queries";
 
 function getReuseSince(frequency: Frequency): Date {
@@ -84,7 +86,7 @@ export const newsletterWorker = inngest.createFunction(
     });
 
     // 1. Load newsletter + subscriptions + check for reusable run
-    const { newsletter, subscriptions, recentRun } = await step.run(
+    const { newsletter, subscriptions, recentRun, skippedRun } = await step.run(
       "load-newsletter",
       async () => {
         const newsletter = await getNewsletterById(newsletterId);
@@ -102,21 +104,28 @@ export const newsletterWorker = inngest.createFunction(
           logger.info(`Found ${subscriptions.length} subscriber(s)`);
         }
 
-        // Check for reusable run (system newsletters only)
+        // Check for reusable or skipped run (system newsletters only)
         let recentRun = null;
+        let skippedRun = null;
         if (!newsletter.createdBy && !userEmails) {
-          recentRun = await findRecentDigestRun(
-            newsletterId,
-            getReuseSince(newsletter.frequency as Frequency),
-          );
+          const since = getReuseSince(newsletter.frequency as Frequency);
+          [recentRun, skippedRun] = await Promise.all([
+            findRecentDigestRun(newsletterId, since),
+            findSkippedDigestRun(newsletterId),
+          ]);
           if (recentRun) {
             logger.info(
               `Found reusable run ${recentRun.id} (${recentRun.runAt.toISOString()})`,
             );
           }
+          if (skippedRun) {
+            logger.info(
+              `Found skipped run ${skippedRun.id} (${skippedRun.runAt.toISOString()}) — no stories in this period`,
+            );
+          }
         }
 
-        return { newsletter, subscriptions, recentRun };
+        return { newsletter, subscriptions, recentRun, skippedRun };
       },
     );
 
@@ -125,6 +134,18 @@ export const newsletterWorker = inngest.createFunction(
     if (!userEmails && subscriptions.length === 0) {
       logger.info("No subscribers for this run, skipping");
       return { newsletterId, skipped: true, reason: "no subscribers" };
+    }
+
+    // 2a-pre. If a run was already skipped in this period, don't re-run the agent
+    if (skippedRun) {
+      logger.info(
+        `Edition already skipped in this period (run ${skippedRun.id}) — not re-running agent`,
+      );
+      return {
+        digestRunId: skippedRun.id,
+        skipped: true,
+        reason: "already skipped this period",
+      };
     }
 
     // 2a. Reuse recent run — skip generation, fan out emails directly
@@ -229,6 +250,18 @@ export const newsletterWorker = inngest.createFunction(
         digestRunId: digestRun.id,
         skipped: true,
         reason: "agent failed",
+      };
+    }
+
+    if (digest.skipEdition) {
+      logger.info(
+        `Agent flagged skipEdition — no usable stories found. Skipping email send.`,
+      );
+      await skipDigestRun(digestRun.id);
+      return {
+        digestRunId: digestRun.id,
+        skipped: true,
+        reason: "no stories found",
       };
     }
 

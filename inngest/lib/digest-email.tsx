@@ -123,7 +123,7 @@ export function DigestEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>{title}</Preview>
+      <Preview>{digest.summary}</Preview>
       <Body style={{ margin: 0, padding: 0, background: C.bg, fontFamily: font }}>
         <Container style={{ maxWidth: "620px", margin: "32px auto", padding: "0 16px" }}>
 

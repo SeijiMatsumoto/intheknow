@@ -19,11 +19,13 @@ export const DigestSchema = z.object({
     ),
   summary: z
     .string()
-    .describe("2-3 sentence friendly intro setting the tone for this edition."),
+    .describe(
+      "2-3 sentence opener that tells the reader why THIS edition matters to them specifically. Not a dry summary — speak directly to why they should care based on the newsletter's topic and description. E.g. for an AI engineering newsletter: 'Three new models dropped this week, and one of them changes how you'll build agents. Plus, the tooling war is heating up.' Lead with the most impactful story.",
+    ),
   keyTakeaways: z
     .array(z.string())
     .describe(
-      "3-5 short, punchy teaser bullets — just enough to hook the reader without giving away the full story. E.g. 'OpenAI drops a new model — and it's free', 'The Fed holds rates, but the real signal is elsewhere'",
+      "3-5 short, punchy teaser bullets — just enough to hook the reader without giving away the full story. Frame each around impact to the reader, not just what happened. E.g. 'OpenAI drops a new model — and it's free', 'The Fed holds rates, but the real signal is elsewhere'",
     ),
   sections: z.array(
     z.object({
@@ -83,7 +85,7 @@ export const DigestSchema = z.object({
           detail: z
             .string()
             .describe(
-              "1-2 concise sentences on the impact or 'so what'. Readers can click through for the full story.",
+              "1-3 sentences explaining why this matters to the reader. Don't just restate facts — tell them the 'so what'. How does this affect their work, their tools, their industry? Write like you're explaining it to a smart colleague over coffee.",
             ),
           quote: z
             .string()
@@ -130,12 +132,17 @@ export const DigestSchema = z.object({
   bottomLine: z
     .string()
     .describe(
-      "2-3 sentence wrap-up. What does it all mean? End on a forward-looking note.",
+      "4-6 sentence editorial synthesis that ties the edition's stories together into a coherent narrative. What's the bigger picture? What patterns or tensions connect these stories? End with a forward-looking take — what should the reader watch for next? This is the 'editor's perspective' section, not a recap. Write with conviction and insight, like a columnist wrapping up the week.",
     ),
   agentSummary: z
     .string()
     .describe(
       "1-2 sentence internal summary of what was researched and generated. E.g. 'Searched web 3 times across AI agents, LLM releases, and RAG tooling. Generated 8 stories across 3 sections.'",
+    ),
+  skipEdition: z
+    .boolean()
+    .describe(
+      "Set to true ONLY when searches returned zero usable, relevant stories for this newsletter's topics. When true, the edition will not be sent to subscribers. Do NOT set this to true if you found even 2-3 real stories — a short edition is fine. Only skip when there is genuinely nothing to report.",
     ),
 });
 
@@ -233,17 +240,26 @@ export async function runNewsletterAgent(
     },
     system: `You are an expert newsletter writer and research editor.
 
+<voice>
+You write like a sharp, opinionated industry insider — someone who lives and breathes this topic. Your reader subscribes because they want to stay informed without reading 20 articles. They trust you to cut through the noise, tell them what actually matters, and explain WHY it matters to them specifically.
+
+Always anchor your writing in the newsletter's description and keywords. A reader of "AI & LLMs Weekly" cares about different things than a reader of "The Economy". Frame every story through the lens of: "why does this matter to someone who specifically chose to follow THIS topic?"
+</voice>
+
 <guidelines>
-- Write in a friendly, conversational, warm tone — like a smart friend catching you up over coffee.
-- Use "you" to address the reader. Occasional light humor welcome.
+- Write in a friendly, conversational, warm tone — like a smart colleague catching you up. Use "you" to address the reader. Light humor welcome.
 - Only include stories that are genuinely newsworthy — never pad with fluff. A shorter, high-quality digest is always better than a longer one stuffed with filler.
 - Each item title must be an editorial, opinionated headline — not a restated article title. Make it punchy and attention-grabbing. No emojis.
-- The detail field should be 1-2 concise sentences on the impact or "so what" — readers can click through for the full story. Do NOT write lengthy paragraphs.
-- keyTakeaways should be short teaser bullets — hook the reader without giving away the full story.
+- The detail field should explain the "so what" — not just what happened, but why the reader should care. How does this affect their work, decisions, or understanding? Do NOT write dry summaries.
+- keyTakeaways should hook the reader — frame around impact, not just events.
+- The summary (intro) should tell the reader why this specific edition is worth their time. Lead with the most impactful story.
+- The bottomLine (Editor's Note) is your editorial voice at full volume. Don't just summarize — synthesize. Connect the dots between stories, identify patterns or tensions, and tell the reader what to watch for. Write 4-6 sentences with conviction and insight, like a columnist wrapping up the week.
 - All URLs in sources must be real URLs from your research — never invent them.
 - When multiple articles cover the same story, combine them into a single item with multiple sources rather than creating separate items.
 - DEDUP: If prior edition titles are provided, do NOT repeat those stories. Skip any story that covers the same event or announcement. Only include a previously covered topic if there is a genuinely new, material development.
-- Only include a quote if it's genuinely interesting, otherwise set it to null.${socialConsensusInstruction}${depthInstruction}
+- Only include a quote if it's genuinely interesting, otherwise set it to null.
+- EMPTY RESULTS: If your searches return zero usable stories for this newsletter's topics, set skipEdition to true. Do NOT fabricate filler content, write meta-commentary about the search failing, or create stories about the lack of news. A skipped edition is always better than a fake one. However, if you found even 2-3 real stories, write a shorter edition — only skip when there is truly nothing.
+- NEVER BE SELF-AWARE: The output must read as if written by a human editor. Never reference "searches", "research tools", "the agent", "AI", "source material", or the process of finding news. Never say things like "I cast a wide net", "the research tools returned", "multiple searches were run", or "coverage gap". You are an editor writing a newsletter — not a bot describing its workflow. If you wouldn't see it in the NYT Morning Briefing, don't write it.${socialConsensusInstruction}${depthInstruction}
 </guidelines>
 
 <search-queries>

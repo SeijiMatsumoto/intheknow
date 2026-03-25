@@ -6,7 +6,7 @@ export function CTA() {
   return (
     <section className="border-t border-border">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-20 sm:py-28 text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-4">
           Stop doomscrolling. Start knowing.
         </h2>
         <p className="text-muted-foreground mb-8 max-w-lg mx-auto">

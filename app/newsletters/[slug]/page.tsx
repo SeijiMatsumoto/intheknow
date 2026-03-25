@@ -1,18 +1,18 @@
 import { auth } from "@clerk/nextjs/server";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, Clock, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BottomNav } from "@/components/bottom-nav";
+import { LocalTime } from "@/components/local-time";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { SubscriptionRow } from "@/components/newsletters/subscription-row";
-import type { Frequency } from "@/lib/frequency";
 import { getCategory } from "@/lib/categories";
+import type { Frequency } from "@/lib/frequency";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 import { nextRunDate } from "@/lib/schedule";
-import { cn } from "@/lib/utils";
 
 const DAY_LABELS: Record<string, string> = {
   monday: "Mon",
@@ -23,11 +23,6 @@ const DAY_LABELS: Record<string, string> = {
   saturday: "Sat",
   sunday: "Sun",
 };
-
-function formatHour(hour: number) {
-  const h = hour % 12 || 12;
-  return `${h}:00${hour < 12 ? "am" : "pm"} UTC`;
-}
 
 export default async function NewsletterDetailPage({
   params,
@@ -41,7 +36,6 @@ export default async function NewsletterDetailPage({
     where: { slug },
   });
 
-  // 404 if not found, or if it's another user's custom newsletter
   if (!newsletter) notFound();
   if (newsletter.createdBy !== null && newsletter.createdBy !== userId)
     notFound();
@@ -61,6 +55,8 @@ export default async function NewsletterDetailPage({
     }),
   ]);
 
+  const cat = getCategory(newsletter.categoryId);
+
   const nextRun = nextRunDate(
     newsletter.scheduleDays,
     newsletter.scheduleHour,
@@ -71,341 +67,196 @@ export default async function NewsletterDetailPage({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-border bg-background">
         <div className="mx-auto flex h-14 sm:h-16 max-w-5xl items-center justify-between px-6">
           <Link
             href="/newsletters"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">All newsletters</span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2 sm:mr-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
-                <Zap className="h-3.5 w-3.5 text-accent-foreground" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">ITK</span>
-            </Link>
-            <div className="hidden sm:flex items-center gap-2">
-              {newsletter.createdBy !== null && (
-                <DeleteNewsletterButton
-                  newsletterId={newsletter.id}
-                  newsletterTitle={newsletter.title}
-                />
-              )}
-              <SubscribeButton
-                newsletterId={newsletter.id}
-                subscriptionId={subscription?.id ?? null}
-              />
-            </div>
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+            <span className="font-serif text-sm font-bold text-foreground">
+              ITK Dispatch
+            </span>
+          </Link>
+
+          <div className="hidden sm:flex items-center gap-2">
+            <SubscribeButton
+              newsletterId={newsletter.id}
+              subscriptionId={subscription?.id ?? null}
+            />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-6 pb-24 sm:py-12 sm:pb-12">
-        {/* Hero */}
-        <div className="mb-8 sm:mb-12">
-          {(() => {
-            const cat = getCategory(newsletter.categoryId);
-            const CatIcon = cat.icon;
-            return (
-              <>
-                {/* Mobile: icon inline with title */}
-                <div className="sm:hidden">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-                        cat.pill,
-                      )}
-                    >
-                      <CatIcon className="h-3 w-3" />
-                      {cat.label}
-                    </span>
-                    <span
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-                        newsletter.frequency === "daily"
-                          ? "border-accent/30 bg-accent/10 text-accent"
-                          : "border-muted-foreground/30 text-muted-foreground",
-                      )}
-                    >
-                      {newsletter.frequency === "daily" ? (
-                        <Sparkles className="h-3 w-3" />
-                      ) : (
-                        <Calendar className="h-3 w-3" />
-                      )}
-                      {newsletter.frequency === "daily" ? "Daily" : "Weekly"}
-                    </span>
-                  </div>
+      <main className="mx-auto max-w-5xl px-6 py-8 pb-24 sm:py-16 sm:pb-16">
+        {/* Masthead */}
+        <div className="mx-auto max-w-5xl text-center mb-8 sm:mb-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+            {cat.label} · {newsletter.frequency}
+          </p>
 
-                  <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                        cat.bg,
-                      )}
-                    >
-                      <CatIcon className={cn("h-5 w-5", cat.color)} />
-                    </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
-                      {newsletter.title}
-                    </h1>
-                  </div>
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground sm:text-5xl text-balance">
+            {newsletter.title}
+          </h1>
 
-                  {newsletter.description && (
-                    <p className="mt-2 text-sm text-muted-foreground text-pretty">
-                      {newsletter.description}
-                    </p>
-                  )}
-
-                  <div className="mt-4 space-y-2">
-                    <SubscribeButton
-                      newsletterId={newsletter.id}
-                      subscriptionId={subscription?.id ?? null}
-                      className="w-full"
-                    />
-                    {newsletter.createdBy !== null && (
-                      <DeleteNewsletterButton
-                        newsletterId={newsletter.id}
-                        newsletterTitle={newsletter.title}
-                        className="w-full justify-center"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Desktop: original layout */}
-                <div className="hidden sm:block">
-                  <div className="flex items-start gap-6">
-                    <div
-                      className={cn(
-                        "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl",
-                        cat.bg,
-                      )}
-                    >
-                      <CatIcon className={cn("h-10 w-10", cat.color)} />
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3 flex-wrap">
-                        <span
-                          className={cn(
-                            "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-                            cat.pill,
-                          )}
-                        >
-                          <CatIcon className="h-3 w-3" />
-                          {cat.label}
-                        </span>
-                        <span
-                          className={cn(
-                            "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-                            newsletter.frequency === "daily"
-                              ? "border-accent/30 bg-accent/10 text-accent"
-                              : "border-muted-foreground/30 text-muted-foreground",
-                          )}
-                        >
-                          {newsletter.frequency === "daily" ? (
-                            <Sparkles className="h-3 w-3" />
-                          ) : (
-                            <Calendar className="h-3 w-3" />
-                          )}
-                          {newsletter.frequency === "daily"
-                            ? "Daily"
-                            : "Weekly"}
-                        </span>
-                      </div>
-
-                      <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl text-balance">
-                        {newsletter.title}
-                      </h1>
-
-                      {newsletter.description && (
-                        <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
-                          {newsletter.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            );
-          })()}
+          {newsletter.description && (
+            <p className="mt-4 text-base sm:text-lg text-muted-foreground text-pretty leading-relaxed">
+              {newsletter.description}
+            </p>
+          )}
 
           {/* Keywords */}
           {newsletter.keywords.length > 0 && (
-            <div className="mt-4 sm:mt-8 flex flex-wrap gap-2">
-              {newsletter.keywords.map((kw) => (
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {newsletter.keywords.slice(0, 3).map((kw) => (
                 <span
                   key={kw}
-                  className="rounded-full bg-secondary px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-muted-foreground"
+                  className="border border-border px-2.5 py-1 text-xs text-muted-foreground"
                 >
                   {kw}
                 </span>
               ))}
+              {newsletter.keywords.length > 3 && (
+                <span className="border border-transparent px-2.5 py-1 text-xs text-muted-foreground">
+                  +{newsletter.keywords.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="mt-6 border-t border-border pt-4 flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
+              {!subscription && (
+                <span>
+                  Next delivery:{" "}
+                  <span className="font-medium text-foreground">
+                    {format(nextRun, "EEE, MMM d")}
+                  </span>
+                </span>
+              )}
+              <span>
+                Schedule:{" "}
+                <span className="font-medium text-foreground">
+                  <LocalTime utcHour={newsletter.scheduleHour} />
+                </span>
+              </span>
+              {newsletter.scheduleDays.length > 0 && (
+                <span className="hidden sm:inline">
+                  Days:{" "}
+                  <span className="font-medium text-foreground">
+                    {newsletter.scheduleDays.map((d) => DAY_LABELS[d]).join(", ")}
+                  </span>
+                </span>
+              )}
+            </div>
+
+            {subscription && (
+              <SubscriptionRow
+                subscriptionId={subscription.id}
+                frequency={newsletter.frequency as Frequency}
+                newsletterDays={newsletter.scheduleDays}
+                newsletterHour={newsletter.scheduleHour}
+                currentDays={subscription.scheduleDays}
+                currentHour={subscription.scheduleHour}
+                nextRunIso={nextRun.toISOString()}
+                canCustomize={canCustomize}
+              />
+            )}
+          </div>
+
+          {/* Mobile subscribe */}
+          <div className="mt-6 sm:hidden space-y-2">
+            <SubscribeButton
+              newsletterId={newsletter.id}
+              subscriptionId={subscription?.id ?? null}
+              className="w-full"
+            />
+            {newsletter.createdBy !== null && (
+              <DeleteNewsletterButton
+                newsletterId={newsletter.id}
+                newsletterTitle={newsletter.title}
+                className="w-full justify-center"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Thin decorative rule */}
+        <div className="mx-auto max-w-5xl border-t border-foreground/20 my-8 sm:my-10" />
+
+        {/* Content */}
+        <div className="mx-auto max-w-5xl">
+
+          {/* Past editions */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6">
+              Past editions
+            </h2>
+
+            {pastRuns.length > 0 ? (
+              <div className="divide-y divide-border">
+                {pastRuns.map((run) => {
+                  const content = run.content as {
+                    editionTitle?: string;
+                    title?: string;
+                    summary?: string;
+                  } | null;
+                  const title =
+                    content?.editionTitle ??
+                    content?.title ??
+                    "Untitled edition";
+                  const summary = content?.summary;
+                  const date = format(new Date(run.runAt), "MMM d, yyyy");
+
+                  return (
+                    <Link
+                      key={run.id}
+                      href={`/feed/${run.id}`}
+                      className="group flex items-start gap-4 py-5 transition-colors"
+                    >
+                      <p className="w-24 shrink-0 text-xs text-muted-foreground pt-0.5">
+                        {date}
+                      </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-serif font-semibold text-foreground group-hover:underline decoration-foreground/30 underline-offset-2">
+                          {title}
+                        </p>
+                        {summary && (
+                          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                            {summary}
+                          </p>
+                        )}
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/30 group-hover:text-foreground transition-colors mt-1" />
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No editions have been sent yet. Subscribe to get notified when
+                the first one goes out.
+              </p>
+            )}
+          </section>
+
+          {/* Delete (custom newsletters only, desktop) */}
+          {newsletter.createdBy !== null && (
+            <div className="hidden sm:block mt-12 pt-8 border-t border-border">
+              <DeleteNewsletterButton
+                newsletterId={newsletter.id}
+                newsletterTitle={newsletter.title}
+              />
             </div>
           )}
         </div>
-
-        {/* Content Grid */}
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
-            {/* Subscription schedule row (if subscribed) */}
-            {subscription && (
-              <section className="rounded-2xl border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-4">
-                  Your subscription
-                </h2>
-                <SubscriptionRow
-                  subscriptionId={subscription.id}
-                  frequency={newsletter.frequency as Frequency}
-                  newsletterDays={newsletter.scheduleDays}
-                  newsletterHour={newsletter.scheduleHour}
-                  currentDays={subscription.scheduleDays}
-                  currentHour={subscription.scheduleHour}
-                  nextRunIso={nextRun.toISOString()}
-                  canCustomize={canCustomize}
-                />
-              </section>
-            )}
-
-            {/* Past editions */}
-            {pastRuns.length > 0 ? (
-              <section>
-                <h2 className="mb-4 text-lg font-semibold text-foreground">
-                  Past editions
-                </h2>
-                <div className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
-                  {pastRuns.map((run) => {
-                    const content = run.content as {
-                      editionTitle?: string;
-                      title?: string;
-                      summary?: string;
-                    } | null;
-                    const title =
-                      content?.editionTitle ??
-                      content?.title ??
-                      "Untitled edition";
-                    const summary = content?.summary;
-                    const date = format(
-                      new Date(run.runAt),
-                      "EEE, MMM d, yyyy",
-                    );
-                    return (
-                      <Link
-                        key={run.id}
-                        href={`/feed/${run.id}`}
-                        className="flex items-start justify-between gap-4 px-6 py-4 hover:bg-secondary/50 transition-colors group"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {date}
-                          </p>
-                          <p className="font-medium text-foreground group-hover:text-accent transition-colors truncate">
-                            {title}
-                          </p>
-                          {summary && (
-                            <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
-                              {summary}
-                            </p>
-                          )}
-                        </div>
-                        <ArrowLeft className="h-4 w-4 shrink-0 rotate-180 text-muted-foreground/40 group-hover:text-accent transition-colors mt-1" />
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : (
-              <section className="rounded-2xl border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-2">
-                  Past editions
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  No editions have been sent yet. Subscribe to get notified when
-                  the first one goes out.
-                </p>
-              </section>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6 order-1 lg:order-2">
-            {/* Delivery schedule */}
-            <section className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">
-                Delivery schedule
-              </h2>
-
-              <div className="space-y-4">
-                <div className="rounded-xl bg-secondary/50 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                      <Clock className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {newsletter.frequency === "daily"
-                          ? "Every day"
-                          : "Once a week"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatHour(newsletter.scheduleHour)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {newsletter.scheduleDays.length > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Scheduled days
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {[
-                        "monday",
-                        "tuesday",
-                        "wednesday",
-                        "thursday",
-                        "friday",
-                        "saturday",
-                        "sunday",
-                      ].map((day) => (
-                        <span
-                          key={day}
-                          className={cn(
-                            "rounded-md px-2 py-1 text-xs font-medium",
-                            newsletter.scheduleDays.includes(day)
-                              ? "bg-accent/20 text-accent"
-                              : "bg-secondary text-muted-foreground",
-                          )}
-                        >
-                          {DAY_LABELS[day]}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-sm text-muted-foreground">
-                    Next delivery
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    {format(nextRun, "EEE, MMM d")}
-                  </span>
-                </div>
-              </div>
-            </section>
-          </div>
-        </div>
       </main>
 
-      <footer className="border-t border-border bg-card/50 mt-16 mb-16 sm:mb-0">
+      <footer className="border-t border-border mt-16 mb-16 sm:mb-0">
         <div className="mx-auto max-w-5xl px-6 py-8">
           <p className="text-center text-sm text-muted-foreground">
             Unsubscribe anytime. We respect your inbox.

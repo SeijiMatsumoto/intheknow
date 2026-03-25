@@ -9,7 +9,7 @@ const QUESTIONS = [
   },
   {
     q: "How often will I get emails?",
-    a: "You choose — daily or weekly. Plus and Pro users can customize exactly which days and what time (UTC) they receive each newsletter.",
+    a: "You choose — daily or weekly. Plus and Pro users can customize exactly which days and time they receive each newsletter.",
   },
   {
     q: "What's the difference between Free and paid plans?",
@@ -27,12 +27,12 @@ const QUESTIONS = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="border-t border-border bg-card/30">
+    <section id="faq" className="border-t border-border">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-20 sm:py-28">
-        <p className="text-xs font-bold tracking-widest text-accent uppercase mb-3">
+        <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-3">
           FAQ
         </p>
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-14">
+        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-14">
           Common questions
         </h2>
 

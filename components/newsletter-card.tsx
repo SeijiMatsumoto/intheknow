@@ -33,10 +33,10 @@ export function NewsletterCard({
   const nextDateLabel = format(nextDate, "EEE, MMM d");
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:border-muted-foreground/30 hover:bg-secondary/50">
+    <div className="group relative flex flex-col border border-border bg-card p-5 transition-all duration-300 hover:border-foreground/30">
       <Link
         href={`/newsletters/${newsletter.slug}`}
-        className="absolute inset-0 rounded-xl"
+        className="absolute inset-0"
       />
 
       {/* Header: icon + title */}
@@ -49,7 +49,7 @@ export function NewsletterCard({
         >
           <Icon className={cn("h-4 w-4", cat.color)} />
         </div>
-        <p className="text-sm font-semibold leading-snug text-foreground">
+        <p className="font-serif text-sm font-semibold leading-snug text-foreground">
           {newsletter.title}
         </p>
       </div>
@@ -68,7 +68,7 @@ export function NewsletterCard({
           className={cn(
             "rounded-full border px-2 py-0.5 text-xs font-medium",
             newsletter.frequency === "daily"
-              ? "border-accent/50 text-accent"
+              ? "border-foreground/30 text-foreground"
               : "border-muted-foreground/30 text-muted-foreground",
           )}
         >

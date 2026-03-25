@@ -87,7 +87,7 @@ export function FeedList({
         </p>
         <Link
           href="/newsletters"
-          className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
+          className="mt-6 inline-flex items-center gap-1.5 border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
         >
           Browse newsletters
           <ArrowRight className="h-3.5 w-3.5" />
@@ -128,7 +128,7 @@ export function FeedList({
                   <Link
                     key={send.id}
                     href={`/feed/${run.id}`}
-                    className="group block rounded-xl border border-border bg-card p-4 transition-all hover:border-muted-foreground/30 hover:bg-secondary/50 sm:p-6"
+                    className="group block border border-border bg-card p-4 transition-all hover:border-foreground/30 sm:p-6"
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div
@@ -150,7 +150,7 @@ export function FeedList({
                           {run.newsletter.title}
                         </span>
 
-                        <p className="mt-0.5 text-sm font-semibold text-foreground transition-colors group-hover:text-accent sm:mt-1 sm:text-base">
+                        <p className="mt-0.5 font-serif text-sm font-semibold text-foreground sm:mt-1 sm:text-base">
                           {content?.editionTitle ??
                             content?.title ??
                             run.newsletter.title}

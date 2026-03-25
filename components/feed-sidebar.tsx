@@ -60,7 +60,7 @@ export function FeedSidebar({ stats }: FeedSidebarProps) {
   return (
     <div className="space-y-6">
       {/* Activity stats */}
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="border border-border bg-card p-5">
         <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
           Activity
         </h3>
@@ -87,7 +87,7 @@ export function FeedSidebar({ stats }: FeedSidebarProps) {
       </div>
 
       {/* Subscriptions */}
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
             Active Subscriptions

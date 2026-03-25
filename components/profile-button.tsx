@@ -54,7 +54,7 @@ export function ProfileButton() {
             className="h-7 w-7 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/20 text-xs font-medium text-accent">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs font-medium text-foreground">
             {initials}
           </div>
         )}
@@ -70,7 +70,7 @@ export function ProfileButton() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-card shadow-lg">
+        <div className="absolute right-0 top-full mt-2 w-52 border border-border bg-card shadow-sm">
           {/* User info */}
           <div className="border-b border-border px-4 py-3">
             <p className="text-sm font-medium text-foreground truncate">

@@ -122,7 +122,7 @@ export function NewslettersClient({
               placeholder="Search newsletters..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-lg border border-border bg-secondary pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+              className="h-9 w-full border border-border bg-card pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
 
@@ -170,7 +170,7 @@ export function NewslettersClient({
         {/* Stats + Add custom */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-accent">{subscribedCount}</span>{" "}
+            <span className="font-medium text-foreground">{subscribedCount}</span>{" "}
             subscribed
             <span className="mx-2 inline-block h-1 w-1 rounded-full bg-muted-foreground/50 align-middle" />
             <span className="font-medium text-foreground">
@@ -181,7 +181,7 @@ export function NewslettersClient({
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+            className="flex h-9 shrink-0 items-center gap-1.5 border border-foreground bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-80"
           >
             <Plus className="h-4 w-4" />
             Add custom
@@ -192,7 +192,7 @@ export function NewslettersClient({
       {/* Custom newsletters */}
       {customItems.length > 0 && (
         <div className="mb-10">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Custom newsletters
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -210,7 +210,7 @@ export function NewslettersClient({
 
       {/* Curated newsletters */}
       {customItems.length > 0 && (
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Curated
         </h2>
       )}

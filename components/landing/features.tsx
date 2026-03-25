@@ -42,19 +42,19 @@ const FEATURES = [
 
 export function Features() {
   return (
-    <section className="border-t border-border bg-card/30">
+    <section className="border-t border-border">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-20 sm:py-28">
-        <p className="text-xs font-bold tracking-widest text-accent uppercase mb-3">
+        <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-3">
           Features
         </p>
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-14">
+        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-14">
           Everything you need, nothing you don&apos;t
         </h2>
 
         <div className="grid sm:grid-cols-2 gap-x-10 gap-y-8">
           {FEATURES.map((f) => (
             <div key={f.title} className="flex gap-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-border text-foreground">
                 <f.icon className="h-4 w-4" />
               </div>
               <div>

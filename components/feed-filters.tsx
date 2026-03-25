@@ -37,6 +37,9 @@ const FREQUENCY_LABELS: Record<string, string> = {
   weekly: "Weekly",
 };
 
+const triggerClass =
+  "rounded-none border-foreground/15 bg-transparent text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-colors h-8";
+
 export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -60,13 +63,19 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
   const frequencyValue = filters.frequency ?? "all";
   const dateRangeValue = filters.dateRange ?? "all";
 
+  const isActive = (value: string) =>
+    value !== "all" ? "border-foreground text-foreground" : "";
+
   return (
-    <div className="mb-6 flex flex-wrap justify-start gap-3">
+    <div className="mb-6 flex flex-wrap items-center gap-2">
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40 mr-1">
+        Filter
+      </span>
       <Select
         value={newsletterValue}
         onValueChange={(v) => updateParam("newsletter", v ?? "all")}
       >
-        <SelectTrigger>
+        <SelectTrigger className={`${triggerClass} min-w-[220px] ${isActive(newsletterValue)}`}>
           <SelectValue placeholder="All newsletters">
             {newsletterValue === "all"
               ? "All newsletters"
@@ -88,7 +97,7 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
         value={frequencyValue}
         onValueChange={(v) => updateParam("frequency", v ?? "all")}
       >
-        <SelectTrigger>
+        <SelectTrigger className={`${triggerClass} ${isActive(frequencyValue)}`}>
           <SelectValue placeholder="All frequencies">
             {FREQUENCY_LABELS[frequencyValue] ?? frequencyValue}
           </SelectValue>
@@ -104,7 +113,7 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
         value={dateRangeValue}
         onValueChange={(v) => updateParam("dateRange", v ?? "all")}
       >
-        <SelectTrigger>
+        <SelectTrigger className={`${triggerClass} ${isActive(dateRangeValue)}`}>
           <SelectValue placeholder="All time">
             {DATE_RANGE_LABELS[dateRangeValue] ?? dateRangeValue}
           </SelectValue>

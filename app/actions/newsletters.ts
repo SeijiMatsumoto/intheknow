@@ -7,6 +7,16 @@ import type { Frequency } from "@/lib/frequency";
 import { canUse, getLimit } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 
+const ALL_DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
+
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -168,6 +178,10 @@ export async function createUserNewsletter(data: {
     }
 
     const slug = `${slugify(data.title)}-${Math.random().toString(36).slice(2, 7)}`;
+    const scheduleDays =
+      data.frequency === "daily" && data.scheduleDays.length === 0
+        ? ALL_DAYS
+        : data.scheduleDays;
 
     await prisma.newsletter.create({
       data: {
@@ -176,7 +190,7 @@ export async function createUserNewsletter(data: {
         description: data.description || null,
         categoryId: data.categoryId,
         frequency: data.frequency,
-        scheduleDays: data.scheduleDays,
+        scheduleDays,
         scheduleHour: data.scheduleHour,
         keywords: data.keywords,
         sources: { rss: [], bluesky_queries: [], sites: [] },

@@ -316,7 +316,7 @@ export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
                               frequency: f,
                               scheduleDays:
                                 f === "daily"
-                                  ? []
+                                  ? [...ALL_DAYS]
                                   : s.scheduleDays.length > 0
                                     ? [s.scheduleDays[0]]
                                     : ["monday"],

@@ -25,6 +25,11 @@ import { useTheme } from "next-themes";
 import { useState, useTransition } from "react";
 import { unsubscribe } from "@/app/actions/subscriptions";
 import type { Frequency } from "@/lib/frequency";
+import {
+  formatNextRun,
+  formatScheduleLabel,
+  toLocalDays,
+} from "@/lib/format-schedule";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -68,6 +73,7 @@ type SubscriptionData = {
   frequency: Frequency;
   scheduleDays: string[];
   scheduleHour: number;
+  nextRunIso: string;
   createdAt: string;
 };
 
@@ -251,39 +257,51 @@ export function SettingsClient({
           </p>
         ) : (
           <ul className="divide-y divide-border">
-            {subscriptions.map((sub) => (
-              <li
-                key={sub.id}
-                className="flex items-center justify-between py-3 gap-4"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                    <CategoryIcon
-                      categoryId={sub.newsletterCategoryId}
-                      className="h-4 w-4"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {sub.newsletterTitle}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {sub.frequency}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={removingId === sub.id}
-                  onClick={() => handleUnsubscribe(sub.id)}
-                  className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            {subscriptions.map((sub) => {
+              const nextRun = new Date(sub.nextRunIso);
+              const localDays = toLocalDays(sub.scheduleDays, nextRun);
+              const scheduleLabel = formatScheduleLabel(localDays, nextRun);
+              const nextRunLabel = formatNextRun(nextRun);
+
+              return (
+                <li
+                  key={sub.id}
+                  className="flex items-center justify-between py-3 gap-4"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {removingId === sub.id ? "Removing…" : "Remove"}
-                </Button>
-              </li>
-            ))}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                      <CategoryIcon
+                        categoryId={sub.newsletterCategoryId}
+                        className="h-4 w-4"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <a
+                        href={`/newsletters/${sub.newsletterSlug}`}
+                        className="text-sm font-medium text-foreground truncate block hover:underline underline-offset-2"
+                      >
+                        {sub.newsletterTitle}
+                      </a>
+                      <p className="text-xs text-muted-foreground">
+                        {scheduleLabel}
+                        <span className="mx-1.5 inline-block h-0.5 w-0.5 rounded-full bg-muted-foreground/50 align-middle" />
+                        Next: {nextRunLabel}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={removingId === sub.id}
+                    onClick={() => handleUnsubscribe(sub.id)}
+                    className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {removingId === sub.id ? "Removing…" : "Remove"}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

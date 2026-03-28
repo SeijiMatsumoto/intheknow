@@ -3,24 +3,25 @@ import { MessageCircle } from "lucide-react";
 export function ExampleNewsletter() {
   return (
     <section className="bg-foreground text-background">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
         <div className="grid md:grid-cols-[1fr_1fr] gap-12 md:gap-16 items-start">
           {/* Left: copy */}
           <div>
-            <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-background/50 mb-3">
+            <p className="text-sm font-medium text-background/50 mb-4">
               What you get
             </p>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-background mb-4 leading-tight">
-              Not just links —<br />
+            <h2 className="text-3xl sm:text-4xl font-bold text-background mb-4 leading-tight tracking-tight">
+              Not just links —
+              <br />
               real analysis
             </h2>
-            <p className="text-background/60 max-w-md mb-8 leading-relaxed">
+            <p className="text-background/60 max-w-md mb-10 leading-relaxed">
               Each digest reads like it was written by a sharp friend who spent
               hours reading so you don&apos;t have to.
             </p>
-            <div className="space-y-4 text-sm text-background/50">
-              <div className="flex gap-3">
-                <span className="font-serif text-lg font-bold text-background/20 shrink-0 leading-none mt-0.5">
+            <div className="space-y-5 text-sm text-background/50">
+              <div className="flex gap-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background/10 text-xs font-bold text-background/60">
                   01
                 </span>
                 <p>
@@ -31,8 +32,8 @@ export function ExampleNewsletter() {
                   the point.
                 </p>
               </div>
-              <div className="flex gap-3">
-                <span className="font-serif text-lg font-bold text-background/20 shrink-0 leading-none mt-0.5">
+              <div className="flex gap-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background/10 text-xs font-bold text-background/60">
                   02
                 </span>
                 <p>
@@ -43,8 +44,8 @@ export function ExampleNewsletter() {
                   happened.
                 </p>
               </div>
-              <div className="flex gap-3">
-                <span className="font-serif text-lg font-bold text-background/20 shrink-0 leading-none mt-0.5">
+              <div className="flex gap-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background/10 text-xs font-bold text-background/60">
                   03
                 </span>
                 <p>
@@ -58,10 +59,9 @@ export function ExampleNewsletter() {
           </div>
 
           {/* Right: mock newsletter */}
-          <div className="border border-background/20 bg-background text-foreground overflow-hidden">
+          <div className="rounded-xl border border-background/20 bg-background text-foreground overflow-hidden shadow-2xl">
             {/* Mock header */}
             <div className="px-5 pt-5 pb-4 border-b border-foreground/10">
-              <div className="border-t-2 border-foreground mb-3" />
               <p className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase mb-1.5">
                 AI & Tech Weekly · March 22, 2026
               </p>

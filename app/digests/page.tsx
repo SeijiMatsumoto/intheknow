@@ -1,12 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
-import { formatDistanceToNow } from "date-fns";
 import { Inbox, CalendarDays, Newspaper } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FeedFilters } from "@/components/feed-filters";
 import { FeedList } from "@/components/feed-list";
 import { NewsletterHeader } from "@/components/newsletter-header";
+import { SubscriptionPanel } from "@/components/subscription-panel";
 import { getCategory } from "@/lib/categories";
+import { nextRunDate } from "@/lib/schedule";
 import { getUserPlan, isAdmin } from "@/lib/user";
 import { getFeedNewsletters, getFeedSends, getFeedStats } from "./data";
 
@@ -37,6 +37,10 @@ export default async function FeedPage({ searchParams }: Props) {
     getFeedNewsletters(userId, admin),
     getFeedStats(userId, admin),
   ]);
+
+  if (stats.subscriptions.length === 0 && sends.length === 0) {
+    redirect("/newsletters");
+  }
 
   const hasMore = sends.length > limit;
   const visible = hasMore ? sends.slice(0, limit) : sends;
@@ -86,33 +90,27 @@ export default async function FeedPage({ searchParams }: Props) {
 
         {/* ── Subscriptions ───────────────────────────────── */}
         {stats.subscriptions.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
-            {stats.subscriptions.map((sub) => {
+          <SubscriptionPanel
+            subscriptions={stats.subscriptions.map((sub) => {
               const cat = getCategory(sub.categoryId);
-              const CatIcon = cat.icon;
-              return (
-                <Link
-                  key={sub.newsletterSlug}
-                  href={`/newsletters/${sub.newsletterSlug}`}
-                  className="flex items-center gap-2.5 border border-border/60 rounded-lg px-3 py-2.5 hover:border-foreground/20 transition-colors group"
-                >
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary">
-                    <CatIcon className="h-3.5 w-3.5 text-foreground/70" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate group-hover:text-foreground/80 transition-colors">
-                      {sub.newsletterTitle}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/50">
-                      {sub.lastSentAt
-                        ? formatDistanceToNow(new Date(sub.lastSentAt), { addSuffix: true })
-                        : sub.frequency}
-                    </p>
-                  </div>
-                </Link>
-              );
+              return {
+                newsletterTitle: sub.newsletterTitle,
+                newsletterSlug: sub.newsletterSlug,
+                frequency: sub.frequency,
+                scheduleDays: sub.scheduleDays,
+                scheduleHour: sub.scheduleHour,
+                categoryId: sub.categoryId,
+                categoryLabel: cat.label,
+                lastSentAt: sub.lastSentAt,
+                nextRunIso: nextRunDate(
+                  sub.scheduleDays,
+                  sub.scheduleHour,
+                  [],
+                  null,
+                ).toISOString(),
+              };
             })}
-          </div>
+          />
         )}
 
         <FeedFilters

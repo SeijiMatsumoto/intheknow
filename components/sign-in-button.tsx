@@ -16,7 +16,7 @@ export function SignInModalButton() {
   }
 
   return (
-    <SignInButton mode="modal" forceRedirectUrl="/newsletters">
+    <SignInButton mode="modal" forceRedirectUrl="/digests">
       <Button>Sign in</Button>
     </SignInButton>
   );

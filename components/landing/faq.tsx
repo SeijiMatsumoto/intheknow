@@ -28,26 +28,20 @@ const QUESTIONS = [
 export function FAQ() {
   return (
     <section id="faq">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
-        <div className="border-t-[3px] border-foreground mb-4" />
-        <div className="flex items-baseline justify-between mb-8">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
+        <div className="text-center mb-14">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             Common questions
           </h2>
-          <p className="hidden sm:block text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
-            FAQ
-          </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-0">
-          {QUESTIONS.map((item, i) => (
+        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {QUESTIONS.map((item) => (
             <div
               key={item.q}
-              className={`py-6 ${
-                i % 2 === 0 ? "sm:pr-8" : "sm:pl-8 sm:border-l border-foreground/10"
-              } ${i >= 2 ? "border-t border-foreground/10" : ""}`}
+              className="rounded-xl bg-secondary/30 p-6"
             >
-              <p className="font-serif text-base font-semibold text-foreground mb-2">
+              <p className="text-base font-semibold text-foreground mb-2">
                 {item.q}
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">

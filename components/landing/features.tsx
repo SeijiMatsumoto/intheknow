@@ -43,31 +43,26 @@ const FEATURES = [
 export function Features() {
   return (
     <section>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
-        <div className="border-t-[3px] border-foreground mb-4" />
-        <div className="flex items-baseline justify-between mb-10">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
+        <div className="text-center mb-14">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             Everything you need, nothing you don&apos;t
           </h2>
-          <p className="hidden sm:block text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
-            Features
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+            Powerful features wrapped in a simple experience.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0">
-          {FEATURES.map((f, i) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {FEATURES.map((f) => (
             <div
               key={f.title}
-              className={`py-5 sm:px-6 ${
-                i % 3 === 0 ? "sm:pl-0" : i % 3 === 2 ? "sm:pr-0" : ""
-              } ${i % 3 !== 0 ? "sm:border-l border-foreground/10" : ""} ${
-                i >= 3 ? "border-t border-foreground/10" : ""
-              }`}
+              className="rounded-xl bg-secondary/30 p-6 transition-colors hover:bg-secondary/50"
             >
-              <div className="flex h-9 w-9 items-center justify-center border border-foreground/15 text-foreground mb-4">
-                <f.icon className="h-4 w-4" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-foreground/5 text-foreground mb-4">
+                <f.icon className="h-5 w-5" />
               </div>
-              <p className="font-serif text-base font-semibold text-foreground mb-2">
+              <p className="text-base font-semibold text-foreground mb-2">
                 {f.title}
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">

@@ -62,25 +62,21 @@ export function Pricing() {
   const [annual, setAnnual] = useState(true);
 
   return (
-    <section id="pricing">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
-        <div className="border-t-[3px] border-foreground mb-4" />
-        <div className="flex items-baseline justify-between mb-3">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+    <section id="pricing" className="bg-secondary/30">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
+        <div className="text-center mb-6">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             Start free, upgrade when you&apos;re hooked
           </h2>
-          <p className="hidden sm:block text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
-            Pricing
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+            Every plan includes AI-generated digests delivered to your inbox.
+            Upgrade for deeper research, more subscriptions, and custom
+            newsletters.
           </p>
         </div>
-        <p className="text-muted-foreground max-w-xl mb-8">
-          Every plan includes AI-generated digests delivered to your inbox.
-          Upgrade for deeper research, more subscriptions, and custom
-          newsletters.
-        </p>
 
         {/* Billing toggle */}
-        <div className="flex items-center justify-center gap-3 mb-10">
+        <div className="flex items-center justify-center gap-3 mb-12">
           <button
             type="button"
             onClick={() => setAnnual(false)}
@@ -93,10 +89,10 @@ export function Pricing() {
           <button
             type="button"
             onClick={() => setAnnual(!annual)}
-            className="relative h-6 w-11 rounded-full border border-border bg-secondary transition-colors"
+            className="relative h-6 w-11 rounded-full bg-foreground/15 transition-colors"
           >
             <span
-              className={`absolute top-0.5 h-4.5 w-4.5 rounded-full bg-foreground transition-transform ${
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-foreground transition-transform ${
                 annual ? "left-[22px]" : "left-0.5"
               }`}
             />
@@ -109,35 +105,35 @@ export function Pricing() {
             }`}
           >
             Annual
-            <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border border-foreground/15 px-1.5 py-0.5">
+            <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-foreground/5 rounded-full px-2 py-0.5">
               Save 25%+
             </span>
           </button>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-0">
-          {PLANS.map((plan, i) => {
+        <div className="grid sm:grid-cols-3 gap-5">
+          {PLANS.map((plan) => {
             const price = annual ? plan.annualPrice : plan.monthlyPrice;
 
             return (
               <div
                 key={plan.name}
-                className={`p-6 sm:p-8 flex flex-col relative ${
+                className={`rounded-xl p-6 sm:p-8 flex flex-col relative ${
                   plan.highlighted
-                    ? "border-2 border-foreground bg-card"
-                    : "border border-foreground/15 bg-card"
-                } ${i > 0 ? "border-t-0 sm:border-t sm:border-t-foreground/15 sm:border-l-0" : ""}`}
+                    ? "bg-card border-2 border-foreground shadow-lg"
+                    : "bg-card border border-border"
+                }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-6 bg-foreground px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-background">
+                  <div className="absolute -top-3 left-6 bg-foreground text-background px-3 py-0.5 rounded-full text-xs font-semibold">
                     Popular
                   </div>
                 )}
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                <p className="text-sm font-medium text-muted-foreground">
                   {plan.name}
                 </p>
-                <div className="mt-3 mb-5">
-                  <span className="font-serif text-4xl font-bold text-foreground">
+                <div className="mt-3 mb-6">
+                  <span className="text-4xl font-bold text-foreground">
                     ${price}
                   </span>
                   <span className="text-sm text-muted-foreground">
@@ -149,10 +145,10 @@ export function Pricing() {
                     </p>
                   )}
                 </div>
-                <div className="border-t border-foreground/10 pt-5 mb-6 flex-1">
+                <div className="border-t border-border pt-6 mb-6 flex-1">
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     {plan.features.map((f) => (
-                      <li key={f} className="flex gap-2">
+                      <li key={f} className="flex gap-2.5">
                         <Check className="h-4 w-4 text-foreground shrink-0 mt-0.5" />
                         {f}
                       </li>

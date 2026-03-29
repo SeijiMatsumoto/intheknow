@@ -72,7 +72,7 @@ export default async function NewsletterDetailPage({
             className="absolute left-1/2 -translate-x-1/2"
           >
             <span className="font-serif text-sm font-bold text-foreground">
-              ITK Dispatch
+              In The Know
             </span>
           </Link>
 

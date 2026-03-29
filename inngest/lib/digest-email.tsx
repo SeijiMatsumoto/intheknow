@@ -138,7 +138,7 @@ export function DigestEmail({
               letterSpacing: "-0.01em",
             }}
           >
-            ITK Dispatch
+            In The Know
           </Text>
           <Hr
             style={{ borderTop: `1px solid ${C.border}`, margin: "0 0 6px" }}
@@ -480,7 +480,7 @@ export function DigestEmail({
               margin: "0 0 8px",
             }}
           >
-            ITK Dispatch
+            In The Know
           </Text>
           <Text
             style={{
@@ -492,8 +492,8 @@ export function DigestEmail({
             }}
           >
             You subscribed to{" "}
-            <strong style={{ color: C.muted }}>{newsletterTitle}</strong> on ITK
-            Dispatch.
+            <strong style={{ color: C.muted }}>{newsletterTitle}</strong> on In
+            The Know.
           </Text>
           <Text style={{ textAlign: "center", margin: 0 }}>
             <Link

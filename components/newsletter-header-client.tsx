@@ -20,7 +20,7 @@ export function NewsletterHeaderClient({ userId, admin, hideProfile }: Props) {
             className="flex items-center gap-2"
           >
             <span className="font-serif text-xl font-bold tracking-tight text-foreground">
-              ITK Dispatch
+              In The Know
             </span>
           </Link>
 

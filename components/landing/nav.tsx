@@ -6,7 +6,7 @@ export function LandingNav() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="relative flex items-center justify-between h-16">
           <span className="font-serif text-xl font-bold tracking-tight text-foreground">
-            ITK Dispatch
+            In The Know
           </span>
           <nav className="hidden sm:flex items-center gap-8 text-sm text-muted-foreground absolute left-1/2 -translate-x-1/2">
             <a

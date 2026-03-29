@@ -191,7 +191,7 @@ export default async function FeedDetailPage({
         <div className="text-center mb-1">
           <div className="border-t-2 border-foreground mb-3" />
           <p className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            ITK Dispatch
+            In The Know
           </p>
           <div className="border-t border-foreground/20 mt-3 mb-2" />
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">
@@ -381,14 +381,14 @@ export default async function FeedDetailPage({
         {/* ── Footer ────────────────────────────────────────────── */}
         <div className="mt-8 sm:mt-12 border-t-2 border-foreground pt-4 text-center">
           <p className="font-serif text-sm font-bold text-foreground">
-            ITK Dispatch
+            In The Know
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground/40">
             You subscribed to{" "}
             <strong className="text-muted-foreground/60">
               {send.run.newsletter.title}
             </strong>{" "}
-            on ITK Dispatch.
+            on In The Know.
           </p>
         </div>
       </div>

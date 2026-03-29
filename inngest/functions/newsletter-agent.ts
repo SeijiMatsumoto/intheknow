@@ -25,7 +25,7 @@ export const DigestSchema = z.object({
   keyTakeaways: z
     .array(z.string())
     .describe(
-      "3-5 short, punchy teaser bullets — just enough to hook the reader without giving away the full story. Frame each around impact to the reader, not just what happened. E.g. 'OpenAI drops a new model — and it's free', 'The Fed holds rates, but the real signal is elsewhere'",
+      "3-5 punchy one-line teasers. State the headline, not the analysis. E.g. 'OpenAI drops a new model — and it's free', 'NVIDIA beats earnings but guidance spooks investors'",
     ),
   sections: z.array(
     z.object({
@@ -90,7 +90,7 @@ export const DigestSchema = z.object({
           detail: z
             .string()
             .describe(
-              "1-3 sentences explaining why this matters to the reader. Don't just restate facts — tell them the 'so what'. How does this affect their work, their tools, their industry? Write like you're explaining it to a smart colleague over coffee.",
+              "1-2 sentences. What happened and what it means — straight to the point, no editorializing.",
             ),
           quote: z
             .string()

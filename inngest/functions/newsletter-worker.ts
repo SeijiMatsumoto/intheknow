@@ -267,10 +267,9 @@ export const newsletterWorker = inngest.createFunction(
 
     // 4. Render emails (full + teaser for free users)
     const { fullHtml, teaserHtml } = await step.run("render-email", async () => {
-      const freq = newsletter.frequency as Frequency;
       const [full, teaser] = await Promise.all([
-        renderEmail(digest, newsletter.title, freq),
-        renderEmail(digest, newsletter.title, freq, { teaser: true }),
+        renderEmail(digest, newsletter.title),
+        renderEmail(digest, newsletter.title, { teaser: true }),
       ]);
       logger.info(
         `Email rendered — full: ${full.length} chars, teaser: ${teaser.length} chars`,

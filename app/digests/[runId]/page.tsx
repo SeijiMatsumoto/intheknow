@@ -91,34 +91,30 @@ function SourceRow({ sources }: { sources: DigestSource[] }) {
 function StoryItem({
   item,
   full,
-  lead = false,
 }: {
   item: DigestItem;
   full: boolean;
-  lead?: boolean;
 }) {
   const sources = getItemSources(item);
   const ItemIcon = getDigestIcon(item.icon);
-  const titleSize = lead
-    ? "font-serif text-xl sm:text-2xl font-bold leading-tight"
-    : "font-serif text-[15px] font-semibold leading-snug";
 
   return (
     <div>
-      <p className={`${titleSize} text-foreground flex items-start gap-2`}>
+      {item.category && (
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+          {item.category}
+        </p>
+      )}
+      <p className="font-serif text-[15px] font-semibold leading-snug text-foreground flex items-start gap-2">
         {ItemIcon && (
-          <ItemIcon
-            className={`${lead ? "h-5 w-5 mt-1" : "h-4 w-4 mt-0.5"} shrink-0 text-muted-foreground`}
-          />
+          <ItemIcon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
         )}
         {stripEmoji(item.title)}
       </p>
       {full && (
         <>
           {item.detail && (
-            <p
-              className={`mt-2 text-[13px] leading-relaxed text-muted-foreground ${lead ? "first-letter:text-2xl first-letter:font-serif first-letter:font-bold first-letter:text-foreground first-letter:float-left first-letter:mr-1 first-letter:leading-none" : ""}`}
-            >
+            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
               {item.detail}
             </p>
           )}
@@ -178,12 +174,6 @@ export default async function FeedDetailPage({
 
   const title = content.editionTitle ?? content.title;
 
-  // Flatten all items with their section context for layout
-  const allItems = (content.sections ?? []).flatMap((section) =>
-    section.items.map((item) => ({ ...item, sectionHeading: section.heading })),
-  );
-  const leadItem = allItems[0] ?? null;
-  const restItems = allItems.slice(1);
 
   return (
     <div className="min-h-screen bg-background">
@@ -242,54 +232,34 @@ export default async function FeedDetailPage({
 
         {hasFullAccess ? (
           <>
-            {/* ── Lead story ──────────────────────────────────── */}
-            {leadItem && (
-              <div className="pb-6 sm:pb-8 border-b border-foreground/15">
-                <StoryItem item={leadItem} full lead />
-              </div>
-            )}
-
-            {/* ── Remaining stories (2-col on desktop) ────────── */}
-            {restItems.length > 0 && (() => {
-              // Group remaining items by section
-              const sectionGroups: { heading: string; items: (DigestItem & { sectionHeading: string })[] }[] = [];
-              let currentHeading = "";
-              for (const item of restItems) {
-                if (item.sectionHeading !== currentHeading) {
-                  currentHeading = item.sectionHeading;
-                  sectionGroups.push({ heading: currentHeading, items: [] });
-                }
-                sectionGroups[sectionGroups.length - 1].items.push(item);
-              }
-
-              return sectionGroups.map((group) => (
-                <div key={group.heading}>
-                  <div className="mt-6 sm:mt-8">
-                    <SectionRule label={group.heading} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2">
-                    {group.items.map((item, idx) => {
-                      const isLast = idx === group.items.length - 1;
-                      const isOddLast = isLast && group.items.length % 2 === 1;
-                      return (
-                        <div
-                          key={item.sources?.[0]?.url ?? idx}
-                          className={`py-5 sm:py-6 border-b border-foreground/10 ${
-                            isOddLast
-                              ? "sm:col-span-2"
-                              : idx % 2 === 0
-                                ? "sm:pr-6 sm:border-r sm:border-r-foreground/10"
-                                : "sm:pl-6"
-                          }`}
-                        >
-                          <StoryItem item={item} full />
-                        </div>
-                      );
-                    })}
-                  </div>
+            {/* ── Stories by section (2-col on desktop) ───────── */}
+            {(content.sections ?? []).map((section) => (
+              <div key={section.heading}>
+                <div className="mt-6 sm:mt-8">
+                  <SectionRule label={section.heading} />
                 </div>
-              ));
-            })()}
+                <div className="grid grid-cols-1 sm:grid-cols-2">
+                  {section.items.map((item, idx) => {
+                    const isLast = idx === section.items.length - 1;
+                    const isOddLast = isLast && section.items.length % 2 === 1;
+                    return (
+                      <div
+                        key={item.sources?.[0]?.url ?? idx}
+                        className={`py-5 sm:py-6 border-b border-foreground/10 ${
+                          isOddLast
+                            ? "sm:col-span-2"
+                            : idx % 2 === 0
+                              ? "sm:pr-6 sm:border-r sm:border-r-foreground/10"
+                              : "sm:pl-6"
+                        }`}
+                      >
+                        <StoryItem item={item} full />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
 
             {/* ── The public square (social consensus) ────────── */}
             {content.socialConsensus && (

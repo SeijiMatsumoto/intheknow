@@ -190,6 +190,7 @@ export type DigestSource = {
 
 export type DigestItem = {
   title: string;
+  category?: string;
   icon?: string;
   detail?: string;
   quote?: string;

@@ -157,7 +157,6 @@ async function main() {
   const html = await renderEmail(
     result.digest,
     newsletter.title,
-    newsletter.frequency,
   );
   const htmlPath = resolve(outDir, "newsletter-agent.html");
   writeFileSync(htmlPath, html, "utf-8");

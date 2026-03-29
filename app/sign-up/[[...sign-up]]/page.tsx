@@ -1,9 +1,194 @@
-import { SignUp } from "@clerk/nextjs";
+"use client";
+
+import { useSignUp } from "@clerk/nextjs";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function SignUpPage() {
+  const { signUp } = useSignUp();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if (!signUp) return null;
+
+  async function handleOAuth() {
+    if (!signUp) return;
+    setError("");
+    const { error } = await signUp.sso({
+      strategy: "oauth_google",
+      redirectUrl: "/digests",
+      redirectCallbackUrl: "/sign-up/sso-callback",
+    });
+    if (error) setError(error.message ?? "Something went wrong.");
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signUp) return;
+    setError("");
+    setLoading(true);
+    try {
+      const createResult = await signUp.create({ emailAddress: email });
+      if (createResult.error) {
+        setError(createResult.error.message ?? "Something went wrong.");
+        return;
+      }
+      const sendResult = await signUp.verifications.sendEmailCode();
+      if (sendResult.error) {
+        setError(sendResult.error.message ?? "Failed to send code.");
+        return;
+      }
+      setStep("code");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signUp) return;
+    setError("");
+    setLoading(true);
+    try {
+      const verifyResult = await signUp.verifications.verifyEmailCode({
+        code,
+      });
+      if (verifyResult.error) {
+        setError("Invalid code. Please try again.");
+        return;
+      }
+      if (signUp.status === "complete") {
+        await signUp.finalize();
+        router.push("/digests");
+      }
+    } catch {
+      setError("Invalid code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <SignUp />
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <Link href="/">
+            <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
+              In The Know
+            </span>
+          </Link>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Create your account
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6">
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full gap-2"
+            onClick={handleOAuth}
+          >
+            <svg viewBox="0 0 24 24" className="size-4">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            Continue with Google
+          </Button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-card px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          {step === "email" ? (
+            <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
+              />
+              <Button size="lg" className="w-full" disabled={loading}>
+                {loading ? "Sending code..." : "Continue with email"}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleCodeSubmit} className="space-y-3">
+              <p className="text-sm text-muted-foreground text-center">
+                We sent a code to{" "}
+                <strong className="text-foreground">{email}</strong>
+              </p>
+              <input
+                type="text"
+                placeholder="Enter code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+                autoFocus
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground text-center tracking-widest placeholder:text-muted-foreground placeholder:tracking-normal focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
+              />
+              <Button size="lg" className="w-full" disabled={loading}>
+                {loading ? "Verifying..." : "Verify"}
+              </Button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await signUp?.reset();
+                  setStep("email");
+                  setCode("");
+                  setError("");
+                }}
+                className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Use a different email
+              </button>
+            </form>
+          )}
+
+          {error && (
+            <p className="mt-3 text-xs text-destructive text-center">{error}</p>
+          )}
+        </div>
+
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link
+            href="/sign-in"
+            className="text-foreground hover:underline font-medium"
+          >
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

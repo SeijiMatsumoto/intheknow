@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { Inbox, CalendarDays, Newspaper } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { FeedFilters } from "@/components/feed-filters";
 import { FeedList } from "@/components/feed-list";
 import { NewsletterHeader } from "@/components/newsletter-header";
@@ -38,8 +40,32 @@ export default async function FeedPage({ searchParams }: Props) {
     getFeedStats(userId, admin),
   ]);
 
-  if (stats.subscriptions.length === 0 && sends.length === 0) {
-    redirect("/newsletters");
+  const isEmpty = stats.subscriptions.length === 0 && sends.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NewsletterHeader />
+        <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 md:py-8">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-6">
+            My Digests
+          </h1>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Newspaper className="h-10 w-10 text-muted-foreground/30 mb-4" />
+            <p className="text-lg font-medium text-foreground mb-1">
+              No digests yet
+            </p>
+            <p className="text-sm text-muted-foreground max-w-sm mb-6">
+              Subscribe to newsletters to start receiving curated digests on the
+              topics you care about.
+            </p>
+            <Link href="/newsletters">
+              <Button size="lg">Browse newsletters</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   const hasMore = sends.length > limit;

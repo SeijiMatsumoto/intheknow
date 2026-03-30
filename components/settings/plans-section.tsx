@@ -85,7 +85,7 @@ const PLAN_CARDS = [
     monthlyPrice: 20,
     annualPrice: 15,
     features: [
-      "Unlimited subscriptions",
+      "20 newsletter subscriptions",
       "Full digest with deep research",
       "Social consensus section",
       "10 custom newsletters",

@@ -44,6 +44,8 @@ const MODEL_PRICING: Record<string, ModelPricing> = {
 const API_PRICING = {
   /** Perplexity Search API — price per search query. */
   perplexitySearch: 0.005,
+  /** Serper API — $1.00/1k credits, $0.001 per search. */
+  serperSearch: 0.001,
   /** Resend — price per email (overage rate). */
   resendPerEmail: 0.0009,
 } as const;
@@ -85,7 +87,7 @@ export function digestCostBreakdown(
   const llm = llmCost(model, inputTokens, outputTokens);
 
   const webSearches = toolCallCounts.searchWeb ?? 0;
-  const webSearchCost = webSearches * API_PRICING.perplexitySearch;
+  const webSearchCost = webSearches * API_PRICING.serperSearch;
 
   const blueskySearches = toolCallCounts.searchBluesky ?? 0;
 

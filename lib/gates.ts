@@ -4,7 +4,7 @@
  * ┌─────────────────────────┬──────────┬──────────┬──────────┐
  * │ Feature                 │ Free     │ Plus     │ Pro      │
  * ├─────────────────────────┼──────────┼──────────┼──────────┤
- * │ Curated subscriptions   │ 3        │ 10       │ ∞        │
+ * │ Curated subscriptions   │ 3        │ 10       │ 20       │
  * │ Full digest (analysis)  │ ✓        │ ✓        │ ✓        │
  * │ Custom schedule         │ ✗        │ ✓        │ ✓        │
  * │ Custom newsletters      │ ✗        │ 3        │ 10       │
@@ -99,7 +99,7 @@ const LIMITS: Record<Plan, Record<LimitKey, number>> = {
     max_custom_newsletters: 3,
   },
   pro: {
-    max_subscriptions: Infinity,
+    max_subscriptions: 20,
     max_custom_newsletters: 10,
   },
   admin: {

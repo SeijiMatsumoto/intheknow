@@ -98,11 +98,11 @@ const LIMITS: Record<Plan, Record<LimitKey, number>> = {
   },
   plus: {
     max_subscriptions: 10,
-    max_custom_newsletters: 2,
+    max_custom_newsletters: 3,
   },
   pro: {
     max_subscriptions: Infinity,
-    max_custom_newsletters: 5,
+    max_custom_newsletters: 10,
   },
   admin: {
     max_subscriptions: Infinity,

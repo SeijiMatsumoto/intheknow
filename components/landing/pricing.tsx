@@ -35,7 +35,7 @@ const PLANS: PlanCard[] = [
       "10 newsletter subscriptions",
       "Full digest with analysis",
       "Custom schedule",
-      "2 custom newsletters",
+      "3 custom newsletters",
     ],
     cta: <Button className="w-full">Get Plus</Button>,
   },
@@ -47,7 +47,7 @@ const PLANS: PlanCard[] = [
       "Unlimited subscriptions",
       "Full digest with deep research",
       "Social consensus section",
-      "5 custom newsletters",
+      "10 custom newsletters",
       "Daily custom newsletter cadence",
     ],
     cta: (

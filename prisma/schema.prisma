@@ -8,9 +8,13 @@ datasource db {
 }
 
 model UserPlan {
-  userId    String   @id @map("user_id")
-  plan      String   @default("free") // 'free' | 'pro'
-  updatedAt DateTime @updatedAt @map("updated_at")
+  userId              String    @id @map("user_id")
+  plan                String    @default("free") // 'free' | 'plus' | 'pro' | 'admin'
+  stripeCustomerId    String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?  @unique @map("stripe_subscription_id")
+  stripePriceId       String?   @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map("stripe_current_period_end")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   @@map("user_plans")
 }

@@ -1,10 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { format } from "date-fns";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BottomNav } from "@/components/bottom-nav";
 import { LocalTime } from "@/components/local-time";
+import { NewsletterHeader } from "@/components/newsletter-header";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { SubscriptionRow } from "@/components/newsletters/subscription-row";
@@ -56,24 +57,16 @@ export default async function NewsletterDetailPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background">
-        <div className="mx-auto flex h-14 sm:h-16 max-w-5xl items-center justify-between px-6">
-          <Link
-            href="/newsletters"
-            className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">All newsletters</span>
-          </Link>
+      <NewsletterHeader />
 
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 pb-12 sm:py-8 sm:pb-16">
+        {/* Back + actions row */}
+        <div className="flex items-center justify-between mb-6">
           <Link
             href="/newsletters"
-            className="absolute left-1/2 -translate-x-1/2"
+            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span className="font-serif text-sm font-bold text-foreground">
-              In The Know
-            </span>
+            ← All newsletters
           </Link>
 
           <div className="hidden sm:flex items-center gap-3">
@@ -90,11 +83,9 @@ export default async function NewsletterDetailPage({
             />
           </div>
         </div>
-      </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-8 pb-12 sm:py-16 sm:pb-16">
         {/* Masthead */}
-        <div className="mx-auto max-w-5xl text-center">
+        <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
             {cat.label} · {newsletter.frequency}
           </p>
@@ -172,68 +163,64 @@ export default async function NewsletterDetailPage({
         </div>
 
         {/* Thin decorative rule */}
-        <div className="mx-auto max-w-5xl border-t border-foreground/20 mb-6 sm:mb-8" />
+        <div className="border-t border-foreground/20 mb-6 sm:mb-8" />
 
-        {/* Content */}
-        <div className="mx-auto max-w-5xl">
-          {/* Past editions */}
-          <section>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6">
-              Past editions
-            </h2>
+        {/* Past editions */}
+        <section>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6">
+            Past editions
+          </h2>
 
-            {pastRuns.length > 0 ? (
-              <div className="divide-y divide-border">
-                {pastRuns.map((run) => {
-                  const content = run.content as {
-                    editionTitle?: string;
-                    title?: string;
-                    summary?: string;
-                  } | null;
-                  const title =
-                    content?.editionTitle ??
-                    content?.title ??
-                    "Untitled edition";
-                  const summary = content?.summary;
-                  const date = format(new Date(run.runAt), "MMM d, yyyy");
+          {pastRuns.length > 0 ? (
+            <div className="divide-y divide-border">
+              {pastRuns.map((run) => {
+                const content = run.content as {
+                  editionTitle?: string;
+                  title?: string;
+                  summary?: string;
+                } | null;
+                const title =
+                  content?.editionTitle ??
+                  content?.title ??
+                  "Untitled edition";
+                const summary = content?.summary;
+                const date = format(new Date(run.runAt), "MMM d, yyyy");
 
-                  return (
-                    <Link
-                      key={run.id}
-                      href={`/digests/${run.id}`}
-                      className="group flex items-start gap-4 py-5 transition-colors"
-                    >
-                      <p className="w-24 shrink-0 text-xs text-muted-foreground pt-0.5">
-                        {date}
+                return (
+                  <Link
+                    key={run.id}
+                    href={`/digests/${run.id}`}
+                    className="group flex items-start gap-4 py-5 transition-colors"
+                  >
+                    <p className="w-24 shrink-0 text-xs text-muted-foreground pt-0.5">
+                      {date}
+                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-serif font-semibold text-foreground group-hover:underline decoration-foreground/30 underline-offset-2">
+                        {title}
                       </p>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-serif font-semibold text-foreground group-hover:underline decoration-foreground/30 underline-offset-2">
-                          {title}
+                      {summary && (
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                          {summary}
                         </p>
-                        {summary && (
-                          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                            {summary}
-                          </p>
-                        )}
-                      </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/30 group-hover:text-foreground transition-colors mt-1" />
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No editions have been sent yet. Subscribe to get notified when
-                the first one goes out.
-              </p>
-            )}
-          </section>
-
-        </div>
+                      )}
+                    </div>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/30 group-hover:text-foreground transition-colors mt-1" />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              No editions have been sent yet. Subscribe to get notified when
+              the first one goes out.
+            </p>
+          )}
+        </section>
       </main>
 
       <footer className="border-t border-border mt-16 mb-16 sm:mb-0">
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-6xl px-6 py-8">
           <p className="text-center text-sm text-muted-foreground">
             Unsubscribe anytime. We respect your inbox.
           </p>

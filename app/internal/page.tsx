@@ -40,7 +40,7 @@ export default async function InternalPage({
   return (
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
-      <div className="mx-auto max-w-5xl px-6 py-12">
+      <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight">Internal</h1>
           <p className="mt-1 text-sm text-muted-foreground">

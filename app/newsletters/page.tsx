@@ -64,7 +64,7 @@ export default async function NewslettersPage() {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-0 md:py-6">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 pb-0 md:py-6">
         {/* Hero */}
         <PageHeader
           title="Explore"
@@ -79,7 +79,7 @@ export default async function NewslettersPage() {
       </main>
 
       <footer className="border-t border-border bg-card/50 mt-16 mb-16 sm:mb-0">
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-6xl px-6 py-8">
           <p className="text-center text-sm text-muted-foreground">
             Unsubscribe anytime. We respect your inbox.
           </p>

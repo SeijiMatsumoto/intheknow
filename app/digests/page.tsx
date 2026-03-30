@@ -46,7 +46,7 @@ export default async function FeedPage({ searchParams }: Props) {
     return (
       <div className="min-h-screen bg-background">
         <NewsletterHeader />
-        <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 md:py-8">
+        <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 md:py-8">
           <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-6">
             My Digests
           </h1>
@@ -92,64 +92,89 @@ export default async function FeedPage({ searchParams }: Props) {
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 pb-24 sm:pb-12 md:py-8">
-        {/* ── Page header ─────────────────────────────────── */}
-        <div className="flex items-baseline justify-between mb-6">
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            My Digests
-          </h1>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
-            <span className="flex items-center gap-1.5">
-              <Inbox className="h-3.5 w-3.5" />
-              {stats.totalDigests}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {stats.digestsThisWeek} this week
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Newspaper className="h-3.5 w-3.5" />
-              {stats.subscriptions.length}
-            </span>
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 pb-24 sm:pb-12 md:py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* ── Sidebar ──────────────────────────────────── */}
+          <aside className="lg:w-64 lg:shrink-0 lg:sticky lg:top-20 lg:self-start">
+            <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight text-foreground mb-4">
+              My Digests
+            </h1>
+
+            <div className="flex flex-row lg:flex-col gap-3 mb-6">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Inbox className="h-3.5 w-3.5" />
+                <span>
+                  <span className="font-medium text-foreground">
+                    {stats.totalDigests}
+                  </span>{" "}
+                  digests
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span>
+                  <span className="font-medium text-foreground">
+                    {stats.digestsThisWeek}
+                  </span>{" "}
+                  this week
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Newspaper className="h-3.5 w-3.5" />
+                <span>
+                  <span className="font-medium text-foreground">
+                    {stats.subscriptions.length}
+                  </span>{" "}
+                  subscriptions
+                </span>
+              </div>
+            </div>
+
+            {stats.subscriptions.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40 mb-2">
+                  Subscriptions
+                </p>
+                <SubscriptionPanel
+                  subscriptions={stats.subscriptions.map((sub) => {
+                    const cat = getCategory(sub.categoryId);
+                    return {
+                      newsletterTitle: sub.newsletterTitle,
+                      newsletterSlug: sub.newsletterSlug,
+                      frequency: sub.frequency,
+                      scheduleDays: sub.scheduleDays,
+                      scheduleHour: sub.scheduleHour,
+                      categoryId: sub.categoryId,
+                      categoryLabel: cat.label,
+                      lastSentAt: sub.lastSentAt,
+                      nextRunIso: nextRunDate(
+                        sub.scheduleDays,
+                        sub.scheduleHour,
+                        [],
+                        null,
+                      ).toISOString(),
+                    };
+                  })}
+                />
+              </div>
+            )}
+          </aside>
+
+          {/* ── Main content ─────────────────────────────── */}
+          <div className="flex-1 min-w-0">
+            <FeedFilters
+              newsletters={newsletters}
+              filters={{ newsletter, frequency, dateRange }}
+            />
+
+            <FeedList
+              sends={serialized}
+              hasFilters={hasFilters}
+              hasMore={hasMore}
+              currentLimit={limit}
+            />
           </div>
         </div>
-
-        {/* ── Subscriptions ───────────────────────────────── */}
-        {stats.subscriptions.length > 0 && (
-          <SubscriptionPanel
-            subscriptions={stats.subscriptions.map((sub) => {
-              const cat = getCategory(sub.categoryId);
-              return {
-                newsletterTitle: sub.newsletterTitle,
-                newsletterSlug: sub.newsletterSlug,
-                frequency: sub.frequency,
-                scheduleDays: sub.scheduleDays,
-                scheduleHour: sub.scheduleHour,
-                categoryId: sub.categoryId,
-                categoryLabel: cat.label,
-                lastSentAt: sub.lastSentAt,
-                nextRunIso: nextRunDate(
-                  sub.scheduleDays,
-                  sub.scheduleHour,
-                  [],
-                  null,
-                ).toISOString(),
-              };
-            })}
-          />
-        )}
-
-        <FeedFilters
-          newsletters={newsletters}
-          filters={{ newsletter, frequency, dateRange }}
-        />
-
-        <FeedList
-          sends={serialized}
-          hasFilters={hasFilters}
-          hasMore={hasMore}
-          currentLimit={limit}
-        />
       </main>
     </div>
   );

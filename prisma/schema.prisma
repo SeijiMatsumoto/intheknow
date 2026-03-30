@@ -54,7 +54,6 @@ model Subscription {
   id           String    @id @default(uuid())
   userId       String    @map("user_id")
   newsletterId String    @map("newsletter_id")
-  digestLength String    @default("standard") @map("digest_length") // 'brief' | 'standard' | 'deep_dive'
   scheduleDays String[]  @default([]) @map("schedule_days") // [] = use newsletter default
   scheduleHour Int?      @map("schedule_hour")               // null = use newsletter default (UTC hour 0–23)
   pausedAt     DateTime? @map("paused_at")

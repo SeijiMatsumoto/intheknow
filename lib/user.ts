@@ -15,7 +15,15 @@ export const getUserPlan = cache(async (userId: string): Promise<Plan> => {
   const userPlan = await prisma.userPlan.findUnique({
     where: { userId },
   });
-  return (userPlan?.plan as Plan) ?? "free";
+  const dbPlan = (userPlan?.plan as Plan) ?? "free";
+
+  if (dbPlan === "admin") {
+    const { getPlanOverride } = await import("@/app/actions/admin");
+    const override = await getPlanOverride();
+    if (override) return override;
+  }
+
+  return dbPlan;
 });
 
 /** True for plus, pro, or admin. */

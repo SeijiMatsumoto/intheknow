@@ -5,10 +5,9 @@
  * │ Feature                 │ Free     │ Plus     │ Pro      │
  * ├─────────────────────────┼──────────┼──────────┼──────────┤
  * │ Curated subscriptions   │ 3        │ 10       │ ∞        │
- * │ Full digest (analysis)  │ ✗        │ ✓        │ ✓        │
+ * │ Full digest (analysis)  │ ✓        │ ✓        │ ✓        │
  * │ Custom schedule         │ ✗        │ ✓        │ ✓        │
- * │ Digest length pref      │ ✗        │ ✓        │ ✓        │
- * │ Custom newsletters      │ ✗        │ 2        │ 5        │
+ * │ Custom newsletters      │ ✗        │ 3        │ 10       │
  * │ Social consensus        │ ✗        │ ✗        │ ✓        │
  * │ Deep research           │ ✗        │ ✗        │ ✓        │
  * │ Daily cadence (custom)  │ ✗        │ ✗        │ ✓        │
@@ -32,7 +31,6 @@ import { getUserPlan, type Plan } from "./user";
 export type Feature =
   | "full_digest" // AI analysis, quotes, bottom line in digests
   | "custom_schedule" // customize delivery days/time per subscription
-  | "digest_length" // choose brief / standard / deep dive
   | "custom_newsletter" // create custom newsletters
   | "multiple_subscriptions" // subscribe to more than free limit
   | "social_consensus" // "what people are saying" from Bluesky/social
@@ -46,9 +44,9 @@ type PlanFeatures = Record<Feature, FeatureValue>;
 
 const PLAN_CONFIG: Record<Plan, PlanFeatures> = {
   free: {
-    full_digest: false,
+    full_digest: true,
     custom_schedule: false,
-    digest_length: false,
+
     custom_newsletter: false,
     multiple_subscriptions: false,
     social_consensus: false,
@@ -58,7 +56,7 @@ const PLAN_CONFIG: Record<Plan, PlanFeatures> = {
   plus: {
     full_digest: true,
     custom_schedule: true,
-    digest_length: true,
+
     custom_newsletter: true,
     multiple_subscriptions: true,
     social_consensus: false,
@@ -68,7 +66,7 @@ const PLAN_CONFIG: Record<Plan, PlanFeatures> = {
   pro: {
     full_digest: true,
     custom_schedule: true,
-    digest_length: true,
+
     custom_newsletter: true,
     multiple_subscriptions: true,
     social_consensus: true,
@@ -78,7 +76,7 @@ const PLAN_CONFIG: Record<Plan, PlanFeatures> = {
   admin: {
     full_digest: true,
     custom_schedule: true,
-    digest_length: true,
+
     custom_newsletter: true,
     multiple_subscriptions: true,
     social_consensus: true,

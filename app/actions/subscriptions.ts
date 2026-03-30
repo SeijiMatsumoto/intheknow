@@ -27,7 +27,6 @@ export async function subscribe(
     data: {
       userId,
       newsletterId,
-      digestLength: "standard",
     },
   });
 

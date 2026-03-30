@@ -21,7 +21,7 @@ const PLANS: PlanCard[] = [
     annualPrice: 0,
     features: [
       "1 newsletter subscription",
-      "Headline digest emails",
+      "Full digest emails",
       "Browse all digests on the web",
     ],
     cta: <SignInModalButton />,

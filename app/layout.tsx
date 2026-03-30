@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { AdminToolbarWrapper } from "@/components/admin-toolbar-wrapper";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -37,7 +38,10 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
         >
           <NuqsAdapter>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+              {children}
+              <AdminToolbarWrapper />
+            </ThemeProvider>
           </NuqsAdapter>
         </body>
       </html>

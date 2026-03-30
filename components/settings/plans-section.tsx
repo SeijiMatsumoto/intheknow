@@ -63,7 +63,7 @@ const PLAN_CARDS = [
     annualPrice: 0,
     features: [
       "3 newsletter subscriptions",
-      "Headline digest emails",
+      "Full digest emails",
       "Browse all digests on the web",
     ],
   },

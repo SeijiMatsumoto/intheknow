@@ -1,19 +1,21 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { useClerk, useSignIn } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function SignInPage() {
   const { signIn } = useSignIn();
+  const { setActive } = useClerk();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const codeFormRef = useRef<HTMLFormElement>(null);
 
   if (!signIn) return null;
 
@@ -63,10 +65,8 @@ export default function SignInPage() {
         setError(verifyResult.error.message ?? "Invalid code. Please try again.");
         return;
       }
-      const finalizeResult = await signIn.finalize();
-      if (finalizeResult.error) {
-        setError(finalizeResult.error.message ?? "Something went wrong.");
-        return;
+      if (signIn.createdSessionId) {
+        await setActive({ session: signIn.createdSessionId });
       }
       router.push("/digests");
     } catch {
@@ -142,7 +142,7 @@ export default function SignInPage() {
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleCodeSubmit} className="space-y-3">
+            <form ref={codeFormRef} onSubmit={handleCodeSubmit} className="space-y-3">
               <p className="text-sm text-muted-foreground text-center">
                 We sent a code to{" "}
                 <strong className="text-foreground">{email}</strong>
@@ -151,7 +151,13 @@ export default function SignInPage() {
                 type="text"
                 placeholder="Enter code"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCode(val);
+                  if (val.length === 6) {
+                    codeFormRef.current?.requestSubmit();
+                  }
+                }}
                 required
                 // biome-ignore lint/a11y/noAutofocus: UX convenience for code input
                 autoFocus

@@ -65,6 +65,10 @@ export default function SignUpPage() {
         setError(verifyResult.error.message ?? "Invalid code. Please try again.");
         return;
       }
+      if (verifyResult.status === "complete") {
+        router.push("/digests");
+        return;
+      }
       const finalizeResult = await signUp.finalize();
       if (finalizeResult.error) {
         setError(finalizeResult.error.message ?? "Something went wrong.");
@@ -139,7 +143,7 @@ export default function SignUpPage() {
                 required
                 className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
               />
-              <Button size="lg" className="w-full" disabled={loading}>
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
                 {loading ? "Sending code..." : "Continue with email"}
               </Button>
             </form>
@@ -159,7 +163,7 @@ export default function SignUpPage() {
                 autoFocus
                 className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground text-center tracking-widest placeholder:text-muted-foreground placeholder:tracking-normal focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
               />
-              <Button size="lg" className="w-full" disabled={loading}>
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
                 {loading ? "Verifying..." : "Verify"}
               </Button>
               <button

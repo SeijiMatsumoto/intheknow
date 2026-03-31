@@ -1,8 +1,15 @@
 "use server";
 
 import { openai } from "@ai-sdk/openai";
-import { getTracer } from "@lmnr-ai/lmnr";
-import { generateText, Output } from "ai";
+import * as ai from "ai";
+import { Output } from "ai";
+import {
+  createLangSmithProviderOptions,
+  wrapAISDK,
+} from "langsmith/experimental/vercel";
+
+const { generateText } = wrapAISDK(ai);
+
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
@@ -85,10 +92,10 @@ export async function generateNewsletterFields(
     const { output } = await generateText({
       model: openai("gpt-5.4-mini"),
       output: Output.object({ schema }),
-      experimental_telemetry: {
-        isEnabled: true,
-        tracer: getTracer(),
-        metadata: { task: "generate-newsletter-fields" },
+      providerOptions: {
+        langsmith: createLangSmithProviderOptions({
+          metadata: { task: "generate-newsletter-fields" },
+        }),
       },
       system: `You are a newsletter configuration assistant. Your job is to generate structured newsletter configurations from user descriptions.
 

@@ -1,6 +1,13 @@
 import { openai } from "@ai-sdk/openai";
-import { getTracer } from "@lmnr-ai/lmnr";
-import { generateText, Output } from "ai";
+import * as ai from "ai";
+import { Output } from "ai";
+import {
+  createLangSmithProviderOptions,
+  wrapAISDK,
+} from "langsmith/experimental/vercel";
+
+const { generateText } = wrapAISDK(ai);
+
 import { z } from "zod";
 
 // ── Schema ───────────────────────────────────────────────────────────────────
@@ -85,10 +92,10 @@ export async function checkRelevancy(
   const { output, usage } = await generateText({
     model: openai("gpt-4o-mini"),
     output: Output.object({ schema: RelevancySchema }),
-    experimental_telemetry: {
-      isEnabled: true,
-      tracer: getTracer(),
-      metadata: { task: "check-relevancy", query, itemCount: items.length },
+    providerOptions: {
+      langsmith: createLangSmithProviderOptions({
+        metadata: { task: "check-relevancy", query, itemCount: items.length },
+      }),
     },
     system: `You are an editorial filter for a curated newsletter. Your job is to decide what a subscriber would actually want to read.
 
@@ -121,5 +128,7 @@ Mark as NOT relevant ONLY if it clearly falls into one of these categories:
     results.map((r) => [r.index, { relevant: r.relevant, summary: r.summary }]),
   );
 
-  return items.map((_, i) => indexed.get(i) ?? { relevant: false, summary: "" });
+  return items.map(
+    (_, i) => indexed.get(i) ?? { relevant: false, summary: "" },
+  );
 }

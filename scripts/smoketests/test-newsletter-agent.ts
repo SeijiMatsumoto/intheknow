@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Laminar, observe } from "@lmnr-ai/lmnr";
+import { randomUUID } from "node:crypto";
+import { Client } from "langsmith";
+import { traceable } from "langsmith/traceable";
 import {
   runNewsletterAgent,
   type ToolCallLog,
@@ -59,27 +61,13 @@ function formatToolCall(tc: ToolCallLog): string {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
-function traceUrl(): string | null {
-  const projectId = process.env.LMNR_PROJECT_ID;
-  const traceId = Laminar.getTraceId();
-  if (!projectId || !traceId) return null;
-  return `https://laminar.sh/project/${projectId}/traces/${traceId}`;
-}
-
 async function main() {
-  Laminar.initialize({ projectApiKey: process.env.LMNR_PROJECT_API_KEY });
-
   const start = Date.now();
+  const runId = randomUUID();
 
-  const result = await observe(
-    { name: "smoketest/newsletter-agent" },
+  const wrappedRun = traceable(
     async () => {
-      // Print trace link as soon as we have a span context
-      const link = traceUrl();
-      if (link) {
-        console.log(`\n  🔗 Trace: ${link}\n`);
-      }
-
+      console.log(`\n  🔗 LangSmith run ID: ${runId}\n`);
       console.log(SECTION("NEWSLETTER AGENT SMOKE TEST"));
       console.log(`  Newsletter:  ${newsletter.title}`);
       console.log(`  Frequency:   ${newsletter.frequency}`);
@@ -89,7 +77,10 @@ async function main() {
 
       return runNewsletterAgent(newsletter);
     },
+    { name: "smoketest/newsletter-agent", id: runId },
   );
+
+  const result = await wrappedRun();
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
@@ -154,10 +145,7 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
 
   // HTML email
-  const html = await renderEmail(
-    result.digest,
-    newsletter.title,
-  );
+  const html = await renderEmail(result.digest, newsletter.title);
   const htmlPath = resolve(outDir, "newsletter-agent.html");
   writeFileSync(htmlPath, html, "utf-8");
 
@@ -170,7 +158,8 @@ async function main() {
   console.log(`  JSON:  ${jsonPath}`);
 
   // Flush telemetry before exit
-  await Laminar.shutdown();
+  const client = new Client();
+  await client.awaitPendingTraceBatches();
   console.log("");
 }
 

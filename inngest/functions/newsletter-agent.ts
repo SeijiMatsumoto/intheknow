@@ -1,6 +1,13 @@
 import { openai } from "@ai-sdk/openai";
-import { getTracer } from "@lmnr-ai/lmnr";
-import { generateText, hasToolCall, stepCountIs, type Tool } from "ai";
+import * as ai from "ai";
+import { hasToolCall, stepCountIs, type Tool } from "ai";
+import {
+  createLangSmithProviderOptions,
+  wrapAISDK,
+} from "langsmith/experimental/vercel";
+
+const { generateText } = wrapAISDK(ai);
+
 import { z } from "zod";
 import { getDigestConfig } from "@/lib/digest-config";
 import { type Frequency, windowLabel } from "@/lib/frequency";
@@ -238,10 +245,10 @@ export async function runNewsletterAgent(
     model: openai(config.model),
     tools,
     stopWhen: [hasToolCall("submitAnswer"), stepCountIs(config.maxSteps)],
-    experimental_telemetry: {
-      isEnabled: true,
-      tracer: getTracer(),
-      metadata: { newsletterTitle: title, tier, frequency },
+    providerOptions: {
+      langsmith: createLangSmithProviderOptions({
+        metadata: { newsletterTitle: title, tier, frequency },
+      }),
     },
     system: `You are an expert newsletter writer and research editor. You write like a sharp, opinionated industry insider — a smart colleague catching the reader up. Friendly, conversational, warm. Use "you" to address the reader. Always frame stories through the lens of the newsletter's specific topic and audience.
 

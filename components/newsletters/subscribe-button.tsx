@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, Lock } from "lucide-react";
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import { subscribe, unsubscribe } from "@/app/actions/subscriptions";
 import { Button } from "@/components/ui/button";
@@ -69,14 +68,8 @@ export function SubscribeButton({
                 Free plan limit reached
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Upgrade to Pro for unlimited subscriptions.
+                You&apos;ve reached the maximum number of subscriptions for your plan.
               </p>
-              <Link
-                href="/settings"
-                className="mt-1.5 inline-block text-xs font-semibold text-foreground hover:underline"
-              >
-                Upgrade →
-              </Link>
             </div>
           </div>
         </div>

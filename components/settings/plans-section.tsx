@@ -250,10 +250,9 @@ export function PlansSection({
                   variant={p.id === "plus" ? "default" : "outline"}
                   size="sm"
                   className="w-full mt-4"
-                  disabled={loading === p.id}
-                  onClick={() => handleUpgrade(p.id as "plus" | "pro")}
+                  disabled
                 >
-                  {loading === p.id ? "Redirecting…" : `Upgrade to ${p.name}`}
+                  Coming soon
                 </Button>
               )}
               {isCurrent && isPaid && (
@@ -261,12 +260,9 @@ export function PlansSection({
                   variant="outline"
                   size="sm"
                   className="w-full mt-4"
-                  disabled={loading === "manage"}
-                  onClick={handleManage}
+                  disabled
                 >
-                  {loading === "manage"
-                    ? "Redirecting…"
-                    : "Manage subscription"}
+                  Manage subscription
                 </Button>
               )}
               {!isCurrent && p.id === "free" && isPaid && (
@@ -274,8 +270,7 @@ export function PlansSection({
                   variant="outline"
                   size="sm"
                   className="w-full mt-4"
-                  disabled={loading === "manage"}
-                  onClick={handleManage}
+                  disabled
                 >
                   {loading === "manage" ? "Redirecting…" : "Downgrade"}
                 </Button>

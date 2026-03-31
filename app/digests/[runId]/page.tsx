@@ -353,28 +353,7 @@ export default async function FeedDetailPage({
               </div>
             ))}
 
-            {/* Upgrade CTA */}
-            <div className="mt-8 border border-foreground/15 px-6 sm:px-10 py-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-border">
-                  <Lock className="h-4 w-4 text-foreground/70" />
-                </div>
-                <p className="font-serif text-sm font-semibold text-foreground">
-                  Unlock full analysis
-                </p>
-                <p className="mt-1.5 max-w-xs text-xs text-muted-foreground">
-                  AI-generated commentary, key quotes, and &ldquo;The Bottom
-                  Line&rdquo; are available on Pro.
-                </p>
-                <Link
-                  href="/settings"
-                  className="mt-4 inline-flex items-center gap-1.5 bg-foreground px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-background transition-opacity hover:opacity-80"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Upgrade to Pro
-                </Link>
-              </div>
-            </div>
+            {/* Upgrade CTA — hidden while plans are disabled */}
           </>
         )}
 

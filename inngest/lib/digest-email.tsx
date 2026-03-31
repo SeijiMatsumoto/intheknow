@@ -333,39 +333,7 @@ export function DigestEmail({
             );
           })}
 
-          {teaser ? (
-            /* ── Upgrade CTA ──────────────────────────────── */
-            <Section style={{ padding: "32px 0", textAlign: "center" }}>
-              <Text
-                style={{
-                  fontFamily: font,
-                  fontSize: "14px",
-                  color: C.muted,
-                  lineHeight: "1.65",
-                  margin: "0 0 16px",
-                }}
-              >
-                Want the full analysis, source links, and expert takes?
-              </Text>
-              <Link
-                href="https://thelatest.io/pricing"
-                style={{
-                  display: "inline-block",
-                  padding: "12px 28px",
-                  background: C.foreground,
-                  color: C.bg,
-                  fontFamily: font,
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                Upgrade to read more →
-              </Link>
-            </Section>
-          ) : (
+          {teaser ? null : (
             <>
               {/* ── The Public Square ──────────────────────── */}
               {digest.socialConsensus && (

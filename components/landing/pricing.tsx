@@ -37,7 +37,7 @@ const PLANS: PlanCard[] = [
       "Custom schedule",
       "3 custom newsletters",
     ],
-    cta: <Button className="w-full">Get Plus</Button>,
+    cta: <Button className="w-full" disabled>Coming soon</Button>,
   },
   {
     name: "Pro",
@@ -51,8 +51,8 @@ const PLANS: PlanCard[] = [
       "Daily custom newsletter cadence",
     ],
     cta: (
-      <Button variant="outline" className="w-full">
-        Get Pro
+      <Button variant="outline" className="w-full" disabled>
+        Coming soon
       </Button>
     ),
   },

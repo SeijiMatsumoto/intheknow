@@ -155,25 +155,25 @@ export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
           </button>
         </div>
 
-        {/* Upgrade wall */}
+        {/* Limit wall */}
         {!canCreate && (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
               <Lock className="h-6 w-6 text-muted-foreground" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">Pro feature</p>
+              <p className="font-semibold text-foreground">Limit reached</p>
               <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                Custom newsletters are available on the Pro plan. Upgrade to
-                create newsletters tailored to any topic.
+                You&apos;ve reached the maximum number of custom newsletters for
+                your plan.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="mt-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-accent-foreground"
+              className="mt-2 rounded-lg bg-secondary px-5 py-2 text-sm font-medium text-foreground"
             >
-              Upgrade to Pro
+              Got it
             </button>
           </div>
         )}

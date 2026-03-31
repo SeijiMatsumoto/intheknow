@@ -62,13 +62,15 @@ export default function SignUpPage() {
         code,
       });
       if (verifyResult.error) {
-        setError("Invalid code. Please try again.");
+        setError(verifyResult.error.message ?? "Invalid code. Please try again.");
         return;
       }
-      if (signUp.status === "complete") {
-        await signUp.finalize();
-        router.push("/digests");
+      const finalizeResult = await signUp.finalize();
+      if (finalizeResult.error) {
+        setError(finalizeResult.error.message ?? "Something went wrong.");
+        return;
       }
+      router.push("/digests");
     } catch {
       setError("Invalid code. Please try again.");
     } finally {
@@ -97,7 +99,7 @@ export default function SignUpPage() {
             className="w-full gap-2"
             onClick={handleOAuth}
           >
-            <svg viewBox="0 0 24 24" className="size-4">
+            <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                 fill="#4285F4"
@@ -153,6 +155,7 @@ export default function SignUpPage() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 required
+                // biome-ignore lint/a11y/noAutofocus: UX convenience for code input
                 autoFocus
                 className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground text-center tracking-widest placeholder:text-muted-foreground placeholder:tracking-normal focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
               />

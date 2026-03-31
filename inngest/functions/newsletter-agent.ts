@@ -262,7 +262,9 @@ export async function runNewsletterAgent(
 </guidelines>
 
 <search-queries>
-- First-round queries are for DISCOVERY. Use broad topic queries (2-5 words, core nouns only).
+- Start with 1-2 BROAD catch-all queries to surface breaking/unexpected stories that might not fit predefined categories.
+  GOOD broad: "tech news today", "AI news", "startup funding"  These catch stories you wouldn't think to search for.
+- Then add 3-4 TOPIC-SPECIFIC discovery queries using core nouns (2-5 words).
   GOOD: "AI model announcements", "federal reserve policy"  BAD: "OpenAI GPT-5 release" (you don't know what happened yet)
 - Follow-up queries can be specific: "GPT-5 pricing details", "NVIDIA earnings breakdown"
 - No dates, time references, or site: operators — date filtering is automatic.
@@ -270,7 +272,7 @@ export async function runNewsletterAgent(
 </search-queries>
 
 <workflow>
-1. Call searchWeb 3-5 times in parallel with diverse queries covering the newsletter's topic areas.
+1. Call searchWeb 5-6 times in parallel: 1-2 broad catch-all queries + 3-4 topic-specific queries covering the newsletter's areas.
 2. Review results. If a major topic area has zero coverage, do a follow-up round of 2-3 searches. Otherwise proceed.${blueskyInstruction}
 ${submitStep}. Call submitAnswer with the fully written newsletter.
 

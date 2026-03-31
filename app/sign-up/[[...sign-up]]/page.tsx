@@ -65,15 +65,6 @@ export default function SignUpPage() {
         setError(verifyResult.error.message ?? "Invalid code. Please try again.");
         return;
       }
-      if (verifyResult.status === "complete") {
-        router.push("/digests");
-        return;
-      }
-      const finalizeResult = await signUp.finalize();
-      if (finalizeResult.error) {
-        setError(finalizeResult.error.message ?? "Something went wrong.");
-        return;
-      }
       router.push("/digests");
     } catch {
       setError("Invalid code. Please try again.");

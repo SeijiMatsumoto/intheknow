@@ -1,33 +1,34 @@
 "use client";
 
-import { useClerk, useSignIn } from "@clerk/nextjs";
+import { useSignIn } from "@clerk/nextjs/legacy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function SignInPage() {
-  const { signIn } = useSignIn();
-  const { setActive } = useClerk();
+  const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const codeFormRef = useRef<HTMLFormElement>(null);
 
-  if (!signIn) return null;
+  if (!isLoaded || !signIn) return null;
 
   async function handleOAuth() {
     if (!signIn) return;
     setError("");
-    const { error } = await signIn.sso({
-      strategy: "oauth_google",
-      redirectUrl: "/digests",
-      redirectCallbackUrl: "/sign-in/sso-callback",
-    });
-    if (error) setError(error.message ?? "Something went wrong.");
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sign-in/sso-callback",
+        redirectUrlComplete: "/digests",
+      });
+    } catch {
+      setError("Something went wrong.");
+    }
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
@@ -36,16 +37,15 @@ export default function SignInPage() {
     setError("");
     setLoading(true);
     try {
-      const createResult = await signIn.create({ identifier: email });
-      if (createResult.error) {
-        setError(createResult.error.message ?? "No account found with that email.");
-        return;
-      }
-      const sendResult = await signIn.emailCode.sendCode();
-      if (sendResult.error) {
-        setError(sendResult.error.message ?? "Failed to send code.");
-        return;
-      }
+      await signIn.create({
+        identifier: email,
+      });
+      await signIn.prepareFirstFactor({
+        strategy: "email_code",
+        emailAddressId: signIn.supportedFirstFactors!.find(
+          (f) => f.strategy === "email_code",
+        )!.emailAddressId,
+      });
       setStep("code");
     } catch {
       setError("No account found with that email.");
@@ -54,21 +54,21 @@ export default function SignInPage() {
     }
   }
 
-  async function handleCodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!signIn) return;
+  async function submitCode(codeValue: string) {
+    if (!signIn || !setActive) return;
     setError("");
     setLoading(true);
     try {
-      const verifyResult = await signIn.emailCode.verifyCode({ code });
-      if (verifyResult.error) {
-        setError(verifyResult.error.message ?? "Invalid code. Please try again.");
-        return;
+      const result = await signIn.attemptFirstFactor({
+        strategy: "email_code",
+        code: codeValue,
+      });
+      if (result.status === "complete" && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        router.push("/digests");
+      } else {
+        setError("Verification incomplete. Please try again.");
       }
-      if (signIn.createdSessionId) {
-        await setActive({ session: signIn.createdSessionId });
-      }
-      router.push("/digests");
     } catch {
       setError("Invalid code. Please try again.");
     } finally {
@@ -142,7 +142,7 @@ export default function SignInPage() {
               </Button>
             </form>
           ) : (
-            <form ref={codeFormRef} onSubmit={handleCodeSubmit} className="space-y-3">
+            <form onSubmit={(e) => { e.preventDefault(); submitCode(code); }} className="space-y-3">
               <p className="text-sm text-muted-foreground text-center">
                 We sent a code to{" "}
                 <strong className="text-foreground">{email}</strong>
@@ -155,7 +155,7 @@ export default function SignInPage() {
                   const val = e.target.value;
                   setCode(val);
                   if (val.length === 6) {
-                    codeFormRef.current?.requestSubmit();
+                    submitCode(val);
                   }
                 }}
                 required
@@ -168,8 +168,7 @@ export default function SignInPage() {
               </Button>
               <button
                 type="button"
-                onClick={async () => {
-                  await signIn?.reset();
+                onClick={() => {
                   setStep("email");
                   setCode("");
                   setError("");

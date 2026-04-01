@@ -1,33 +1,34 @@
 "use client";
 
-import { useClerk, useSignUp } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs/legacy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function SignUpPage() {
-  const { signUp } = useSignUp();
-  const { setActive } = useClerk();
+  const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const codeFormRef = useRef<HTMLFormElement>(null);
 
-  if (!signUp) return null;
+  if (!isLoaded || !signUp) return null;
 
   async function handleOAuth() {
     if (!signUp) return;
     setError("");
-    const { error } = await signUp.sso({
-      strategy: "oauth_google",
-      redirectUrl: "/digests",
-      redirectCallbackUrl: "/sign-up/sso-callback",
-    });
-    if (error) setError(error.message ?? "Something went wrong.");
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sign-up/sso-callback",
+        redirectUrlComplete: "/digests",
+      });
+    } catch {
+      setError("Something went wrong.");
+    }
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
@@ -36,16 +37,8 @@ export default function SignUpPage() {
     setError("");
     setLoading(true);
     try {
-      const createResult = await signUp.create({ emailAddress: email });
-      if (createResult.error) {
-        setError(createResult.error.message ?? "Something went wrong.");
-        return;
-      }
-      const sendResult = await signUp.verifications.sendEmailCode();
-      if (sendResult.error) {
-        setError(sendResult.error.message ?? "Failed to send code.");
-        return;
-      }
+      await signUp.create({ emailAddress: email });
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setStep("code");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -54,25 +47,29 @@ export default function SignUpPage() {
     }
   }
 
-  async function handleCodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!signUp) return;
+  async function submitCode(codeValue: string) {
+    if (!signUp || !setActive) return;
     setError("");
     setLoading(true);
     try {
-      const verifyResult = await signUp.verifications.verifyEmailCode({
-        code,
+      const result = await signUp.attemptEmailAddressVerification({
+        code: codeValue,
       });
-      if (verifyResult.error) {
-        setError(verifyResult.error.message ?? "Invalid code. Please try again.");
-        return;
+      if (result.status === "complete" && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        router.push("/digests");
+      } else {
+        console.log("[sign-up] incomplete:", {
+          status: result.status,
+          missingFields: result.missingFields,
+          unverifiedFields: result.unverifiedFields,
+          createdSessionId: result.createdSessionId,
+        });
+        setError("Verification incomplete. Please try again.");
       }
-      if (signUp.createdSessionId) {
-        await setActive({ session: signUp.createdSessionId });
-      }
-      router.push("/digests");
-    } catch {
-      setError("Invalid code. Please try again.");
+    } catch (err) {
+      console.error("[sign-up] error:", err);
+      setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -139,12 +136,23 @@ export default function SignUpPage() {
                 required
                 className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
               />
-              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={loading}
+              >
                 {loading ? "Sending code..." : "Continue with email"}
               </Button>
             </form>
           ) : (
-            <form ref={codeFormRef} onSubmit={handleCodeSubmit} className="space-y-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitCode(code);
+              }}
+              className="space-y-3"
+            >
               <p className="text-sm text-muted-foreground text-center">
                 We sent a code to{" "}
                 <strong className="text-foreground">{email}</strong>
@@ -157,7 +165,7 @@ export default function SignUpPage() {
                   const val = e.target.value;
                   setCode(val);
                   if (val.length === 6) {
-                    codeFormRef.current?.requestSubmit();
+                    submitCode(val);
                   }
                 }}
                 required
@@ -165,13 +173,17 @@ export default function SignUpPage() {
                 autoFocus
                 className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground text-center tracking-widest placeholder:text-muted-foreground placeholder:tracking-normal focus:border-ring focus:ring-3 focus:ring-ring/50 focus:outline-none"
               />
-              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={loading}
+              >
                 {loading ? "Verifying..." : "Verify"}
               </Button>
               <button
                 type="button"
-                onClick={async () => {
-                  await signUp?.reset();
+                onClick={() => {
                   setStep("email");
                   setCode("");
                   setError("");

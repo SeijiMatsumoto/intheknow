@@ -3,6 +3,8 @@ import { format, parseISO } from "date-fns";
 import { Lock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getDigestFeedback } from "@/app/actions/digest-feedback";
+import { DigestFeedback } from "@/components/feed/digest-feedback";
 import { getDigestIcon, stripEmoji } from "@/lib/digest-icons";
 import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { canUsePlan } from "@/lib/gates";
@@ -159,7 +161,10 @@ export default async function FeedDetailPage({
   if (!userId) redirect("/");
 
   const plan = await getUserPlan(userId);
-  const send = await getFeedDigest(runId, userId, isAdmin(plan));
+  const [send, existingFeedback] = await Promise.all([
+    getFeedDigest(runId, userId, isAdmin(plan)),
+    getDigestFeedback(runId),
+  ]);
 
   if (!send) notFound();
 
@@ -356,6 +361,9 @@ export default async function FeedDetailPage({
             {/* Upgrade CTA — hidden while plans are disabled */}
           </>
         )}
+
+        {/* ── Feedback ───────────────────────────────────────────── */}
+        <DigestFeedback runId={runId} existing={existingFeedback} />
 
         {/* ── Footer ────────────────────────────────────────────── */}
         <div className="mt-8 sm:mt-12 border-t-2 border-foreground pt-4 text-center">

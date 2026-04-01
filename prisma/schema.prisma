@@ -77,8 +77,9 @@ model DigestRun {
   error          String?
   createdAt      DateTime  @default(now()) @map("created_at")
 
-  newsletter  Newsletter   @relation(fields: [newsletterId], references: [id])
-  digestSends DigestSend[]
+  newsletter      Newsletter       @relation(fields: [newsletterId], references: [id])
+  digestSends     DigestSend[]
+  digestFeedback  DigestFeedback[]
 
   @@index([newsletterId, status, runAt])
   @@map("digest_runs")
@@ -96,4 +97,19 @@ model DigestSend {
   @@index([userId, status])
   @@index([runId, userId])
   @@map("digest_sends")
+}
+
+model DigestFeedback {
+  id        String   @id @default(uuid())
+  runId     String   @map("run_id")
+  userId    String   @map("user_id")
+  rating    String   // 'up' | 'down'
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  run DigestRun @relation(fields: [runId], references: [id])
+
+  @@unique([runId, userId])
+  @@index([runId])
+  @@map("digest_feedback")
 }

@@ -1,6 +1,6 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient } from "../app/generated/prisma/client";
 import { config } from "dotenv";
+import { PrismaClient } from "../app/generated/prisma/client";
 
 config({ path: ".env.local", override: true });
 
@@ -25,6 +25,7 @@ const categories = [
   { id: "design", label: "Design & Creative", sortOrder: 14 },
   { id: "startups", label: "Startups & VC", sortOrder: 15 },
   { id: "culture", label: "Culture & Society", sortOrder: 16 },
+  { id: "security", label: "Cybersecurity", sortOrder: 17 },
 ];
 
 const systemNewsletters = [
@@ -35,7 +36,15 @@ const systemNewsletters = [
     description:
       "Everything that happened in AI today — model drops, product launches, industry moves, and the tools worth knowing about.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    scheduleDays: [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ],
     scheduleHour: 8,
     categoryId: "ai-tech",
     keywords: [
@@ -148,7 +157,7 @@ const systemNewsletters = [
     description:
       "What moved markets today — equities, crypto, commodities, and the macro signals driving them.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
     scheduleHour: 7,
     categoryId: "finance",
     keywords: [
@@ -199,7 +208,7 @@ const systemNewsletters = [
     description:
       "The day's most important political stories — US politics, policy, legislation, and global affairs.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
     scheduleHour: 7,
     categoryId: "politics",
     keywords: [
@@ -400,9 +409,9 @@ const systemNewsletters = [
     slug: "health-headlines",
     description:
       "Medical breakthroughs, public health updates, nutrition research, and wellness trends worth knowing.",
-    frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-    scheduleHour: 7,
+    frequency: "weekly",
+    scheduleDays: ["tuesday"],
+    scheduleHour: 8,
     categoryId: "health",
     keywords: [
       "health",
@@ -458,7 +467,15 @@ const systemNewsletters = [
     description:
       "The most important global stories — conflicts, diplomacy, elections, and events shaping the world beyond US borders.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    scheduleDays: [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ],
     scheduleHour: 7,
     categoryId: "world-news",
     keywords: [
@@ -485,7 +502,15 @@ const systemNewsletters = [
     description:
       "Token prices, protocol updates, regulatory moves, and the signals that matter in crypto and Web3.",
     frequency: "daily",
-    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    scheduleDays: [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ],
     scheduleHour: 8,
     categoryId: "crypto",
     keywords: [
@@ -653,6 +678,251 @@ const systemNewsletters = [
       sites: [
         "https://www.theatlantic.com/culture/",
         "https://www.vox.com/culture",
+      ],
+    },
+  },
+
+  // ── Cybersecurity ─────────────────────────────────────────────────
+  {
+    title: "Threat Brief",
+    slug: "threat-brief",
+    description:
+      "Breaches, vulnerabilities, threat intelligence, and the security stories that matter — no FUD, just signal.",
+    frequency: "daily",
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleHour: 7,
+    categoryId: "security",
+    keywords: [
+      "cybersecurity",
+      "data breach",
+      "vulnerability",
+      "CVE",
+      "ransomware",
+      "zero-day",
+      "CISA",
+      "threat intelligence",
+      "infosec",
+    ],
+    sources: {
+      sites: [
+        "https://krebsonsecurity.com",
+        "https://www.bleepingcomputer.com",
+        "https://thehackernews.com",
+      ],
+    },
+  },
+  {
+    title: "Security Weekly",
+    slug: "security-weekly",
+    description:
+      "The week in cybersecurity — major incidents, new attack techniques, defensive tooling, and policy shifts.",
+    frequency: "weekly",
+    scheduleDays: ["monday"],
+    scheduleHour: 8,
+    categoryId: "security",
+    keywords: [
+      "cybersecurity weekly",
+      "security news",
+      "penetration testing",
+      "cloud security",
+      "supply chain attack",
+      "SOC",
+      "SIEM",
+      "endpoint security",
+      "security policy",
+    ],
+    sources: {
+      sites: [
+        "https://www.darkreading.com",
+        "https://www.securityweek.com",
+        "https://risky.biz",
+      ],
+    },
+  },
+
+  // ── AI & Tech (new) ────────────────────────────────────────────────
+  {
+    title: "Dev Weekly",
+    slug: "dev-weekly",
+    description:
+      "Framework releases, language updates, open source drops, and the tools and practices shaping modern software engineering.",
+    frequency: "weekly",
+    scheduleDays: ["thursday"],
+    scheduleHour: 8,
+    categoryId: "ai-tech",
+    keywords: [
+      "software engineering",
+      "web development",
+      "React",
+      "TypeScript",
+      "Rust",
+      "Go",
+      "open source",
+      "DevOps",
+      "Kubernetes",
+      "developer tools",
+    ],
+    sources: {
+      sites: [
+        "https://news.ycombinator.com",
+        "https://changelog.com",
+        "https://thenewstack.io",
+      ],
+    },
+  },
+
+  // ── Finance (new) ─────────────────────────────────────────────────
+  {
+    title: "Personal Finance",
+    slug: "personal-finance",
+    description:
+      "Investing strategies, savings tips, tax changes, and practical money advice for building wealth.",
+    frequency: "weekly",
+    scheduleDays: ["wednesday"],
+    scheduleHour: 8,
+    categoryId: "finance",
+    keywords: [
+      "personal finance",
+      "investing",
+      "401k",
+      "index funds",
+      "savings",
+      "budgeting",
+      "tax",
+      "retirement",
+      "credit score",
+      "Roth IRA",
+    ],
+    sources: {
+      sites: [
+        "https://www.nerdwallet.com/blog",
+        "https://www.investopedia.com",
+        "https://www.fool.com",
+      ],
+    },
+  },
+
+  // ── Science (new) ─────────────────────────────────────────────────
+  {
+    title: "Space & Cosmos",
+    slug: "space-and-cosmos",
+    description:
+      "Launches, missions, discoveries, and the race to explore beyond Earth — from NASA to SpaceX to the James Webb.",
+    frequency: "weekly",
+    scheduleDays: ["friday"],
+    scheduleHour: 9,
+    categoryId: "science",
+    keywords: [
+      "space",
+      "NASA",
+      "SpaceX",
+      "rocket launch",
+      "James Webb",
+      "Mars",
+      "Moon",
+      "astronomy",
+      "satellite",
+      "ISS",
+    ],
+    sources: {
+      sites: [
+        "https://www.space.com",
+        "https://spacenews.com",
+        "https://arstechnica.com/space/",
+      ],
+    },
+  },
+
+  // ── AI & Tech (new) ───────────────────────────────────────────────
+  {
+    title: "Tech Radar",
+    slug: "tech-radar",
+    description:
+      "Big tech moves, product launches, app updates, and the non-AI tech stories you should know about.",
+    frequency: "daily",
+    scheduleDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+    scheduleHour: 8,
+    categoryId: "ai-tech",
+    keywords: [
+      "Apple",
+      "Google",
+      "Microsoft",
+      "tech news",
+      "product launch",
+      "app update",
+      "software",
+      "hardware",
+      "smartphone",
+      "social media platform",
+    ],
+    sources: {
+      rss: ["https://www.theverge.com/rss/index.xml"],
+      sites: [
+        "https://techcrunch.com",
+        "https://arstechnica.com",
+        "https://www.wired.com",
+      ],
+    },
+  },
+
+  // ── Sports (new) ──────────────────────────────────────────────────
+  {
+    title: "The Transfer Wire",
+    slug: "the-transfer-wire",
+    description:
+      "Trades, signings, contract drama, and front office moves across the NFL, NBA, MLB, and beyond.",
+    frequency: "weekly",
+    scheduleDays: ["wednesday"],
+    scheduleHour: 8,
+    categoryId: "sports",
+    keywords: [
+      "trade",
+      "free agent",
+      "contract",
+      "signing",
+      "NFL trade",
+      "NBA trade",
+      "MLB trade",
+      "draft",
+      "roster move",
+      "salary cap",
+    ],
+    sources: {
+      sites: [
+        "https://www.espn.com",
+        "https://theathletic.com",
+        "https://www.sportingnews.com",
+      ],
+    },
+  },
+
+  // ── Entertainment (new) ───────────────────────────────────────────
+  {
+    title: "Music Radar",
+    slug: "music-radar",
+    description:
+      "Album drops, tour announcements, industry shakeups, and the music stories worth your attention.",
+    frequency: "weekly",
+    scheduleDays: ["thursday"],
+    scheduleHour: 9,
+    categoryId: "entertainment",
+    keywords: [
+      "new album",
+      "music release",
+      "concert",
+      "tour",
+      "Spotify",
+      "Grammy",
+      "music industry",
+      "vinyl",
+      "hip hop",
+      "pop music",
+    ],
+    sources: {
+      sites: [
+        "https://pitchfork.com",
+        "https://www.stereogum.com",
+        "https://www.billboard.com",
       ],
     },
   },

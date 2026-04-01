@@ -131,7 +131,7 @@ export function NewslettersClient({
           </div>
 
           <Select value={category} onValueChange={(v) => setCategory(v)}>
-            <SelectTrigger className="shrink-0 h-9">
+            <SelectTrigger className="shrink-0 h-9 min-w-[180px]">
               <SelectValue placeholder="All categories">
                 {category === "all"
                   ? "All categories"
@@ -141,11 +141,13 @@ export function NewslettersClient({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All categories</SelectItem>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.label}
-                </SelectItem>
-              ))}
+              {[...CATEGORIES]
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
 

@@ -113,9 +113,11 @@ export function OnboardingClient() {
 
   function handleFinish() {
     startTransition(async () => {
+      // Update name client-side so the session reflects it immediately
+      if (user && (firstName || lastName)) {
+        await user.update({ firstName, lastName });
+      }
       await completeOnboarding({
-        firstName,
-        lastName,
         newsletterIds: [...selectedNewsletters],
       });
     });

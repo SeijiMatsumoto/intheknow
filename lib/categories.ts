@@ -16,6 +16,7 @@ import {
   Palette,
   Rocket,
   Users,
+  Shield,
 } from "lucide-react";
 
 export const CATEGORIES = [
@@ -171,6 +172,15 @@ export const CATEGORIES = [
     bg: "bg-slate-500/10",
     border: "border-slate-500/30",
     pill: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+  },
+  {
+    id: "security",
+    label: "Cybersecurity",
+    icon: Shield,
+    color: "text-green-400",
+    bg: "bg-green-500/10",
+    border: "border-green-500/30",
+    pill: "bg-green-500/15 text-green-400 border-green-500/30",
   },
 ] as const;
 

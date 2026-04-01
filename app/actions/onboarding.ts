@@ -1,6 +1,6 @@
 "use server";
 
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getLimit } from "@/lib/gates";
@@ -35,19 +35,10 @@ export async function getNewslettersByCategories(categoryIds: string[]) {
 }
 
 export async function completeOnboarding(input: {
-  firstName: string;
-  lastName: string;
   newsletterIds: string[];
 }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthenticated");
-
-  // Always update name in Clerk (even if empty, to clear previous values)
-  const clerk = await clerkClient();
-  await clerk.users.updateUser(userId, {
-    firstName: input.firstName,
-    lastName: input.lastName,
-  });
 
   // Bulk subscribe, respecting plan limits
   if (input.newsletterIds.length > 0) {

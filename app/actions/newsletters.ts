@@ -104,12 +104,34 @@ export async function updateNewsletter(id: string, formData: FormData) {
 }
 
 export async function deleteNewsletter(id: string) {
+  const runs = await prisma.digestRun.findMany({
+    where: { newsletterId: id },
+    select: { id: true },
+  });
+  if (runs.length > 0) {
+    await prisma.digestSend.deleteMany({
+      where: { runId: { in: runs.map((r) => r.id) } },
+    });
+    await prisma.digestRun.deleteMany({ where: { newsletterId: id } });
+  }
+  await prisma.subscription.deleteMany({ where: { newsletterId: id } });
   await prisma.newsletter.delete({ where: { id } });
   revalidatePath("/internal");
   redirect("/internal");
 }
 
 export async function deleteNewsletterById(id: string) {
+  const runs = await prisma.digestRun.findMany({
+    where: { newsletterId: id },
+    select: { id: true },
+  });
+  if (runs.length > 0) {
+    await prisma.digestSend.deleteMany({
+      where: { runId: { in: runs.map((r) => r.id) } },
+    });
+    await prisma.digestRun.deleteMany({ where: { newsletterId: id } });
+  }
+  await prisma.subscription.deleteMany({ where: { newsletterId: id } });
   await prisma.newsletter.delete({ where: { id } });
   revalidatePath("/internal");
   revalidatePath("/newsletters");

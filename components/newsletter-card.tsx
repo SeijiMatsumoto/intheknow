@@ -35,7 +35,9 @@ export function NewsletterCard({
   return (
     <div
       className={`group relative flex flex-col border transition-all duration-200 hover:shadow-md hover:border-foreground/25 ${
-        isSubscribed ? "border-border bg-secondary/40" : "border-border bg-card"
+        isSubscribed
+          ? "border-border border-l-foreground border-l-2 bg-secondary/40"
+          : "border-border bg-card"
       }`}
     >
       <Link

@@ -1,0 +1,70 @@
+"use server";
+
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { getLimit } from "@/lib/gates";
+
+export async function getNewslettersByCategories(categoryIds: string[]) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+
+  if (categoryIds.length === 0) return { newsletters: [], maxSubscriptions: 0 };
+
+  const [newsletters, limit, existing] = await Promise.all([
+    prisma.newsletter.findMany({
+      where: {
+        createdBy: null,
+        categoryId: { in: categoryIds },
+      },
+      orderBy: { title: "asc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        frequency: true,
+        categoryId: true,
+        keywords: true,
+      },
+    }),
+    getLimit(userId, "max_subscriptions"),
+    prisma.subscription.count({ where: { userId } }),
+  ]);
+
+  return { newsletters, maxSubscriptions: limit - existing };
+}
+
+export async function completeOnboarding(input: {
+  firstName: string;
+  lastName: string;
+  newsletterIds: string[];
+}) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+
+  // Always update name in Clerk (even if empty, to clear previous values)
+  const clerk = await clerkClient();
+  await clerk.users.updateUser(userId, {
+    firstName: input.firstName,
+    lastName: input.lastName,
+  });
+
+  // Bulk subscribe, respecting plan limits
+  if (input.newsletterIds.length > 0) {
+    const limit = await getLimit(userId, "max_subscriptions");
+    const existing = await prisma.subscription.count({ where: { userId } });
+    const toCreate = input.newsletterIds.slice(0, limit - existing);
+
+    if (toCreate.length > 0) {
+      await prisma.subscription.createMany({
+        data: toCreate.map((newsletterId) => ({
+          userId,
+          newsletterId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  redirect("/newsletters");
+}

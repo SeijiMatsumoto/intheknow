@@ -24,7 +24,7 @@ export default function SignUpPage() {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sign-up/sso-callback",
-        redirectUrlComplete: "/digests",
+        redirectUrlComplete: "/onboarding",
       });
     } catch {
       setError("Something went wrong.");
@@ -57,16 +57,14 @@ export default function SignUpPage() {
       });
       if (result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        router.push("/digests");
-      } else {
-        setError("Verification incomplete. Please try again.");
+        router.push("/onboarding");
+        return;
       }
+      setError("Verification incomplete. Please try again.");
     } catch (err) {
-      console.error("[sign-up] error:", err);
       setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }
 
   return (

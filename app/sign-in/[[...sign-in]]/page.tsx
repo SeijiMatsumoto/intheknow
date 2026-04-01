@@ -24,7 +24,7 @@ export default function SignInPage() {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sign-in/sso-callback",
-        redirectUrlComplete: "/digests",
+        redirectUrlComplete: "/newsletters",
       });
     } catch {
       setError("Something went wrong.");
@@ -65,15 +65,14 @@ export default function SignInPage() {
       });
       if (result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        router.push("/digests");
-      } else {
-        setError("Verification incomplete. Please try again.");
+        router.push("/newsletters");
+        return;
       }
+      setError("Verification incomplete. Please try again.");
     } catch {
       setError("Invalid code. Please try again.");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }
 
   return (

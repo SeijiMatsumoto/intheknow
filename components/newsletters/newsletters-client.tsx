@@ -86,17 +86,21 @@ export function NewslettersClient({
     };
   }, [applyBaseFilters, frequency]);
 
-  const customItems = useMemo(
-    () =>
-      items.filter((item) => item.newsletter.isCustom && applyFilters(item)),
-    [items, applyFilters],
-  );
+  const [showSubscribed, setShowSubscribed] = useState(false);
 
-  const filteredItems = useMemo(
-    () =>
-      items.filter((item) => !item.newsletter.isCustom && applyFilters(item)),
-    [items, applyFilters],
-  );
+  const filteredItems = useMemo(() => {
+    const filtered = items.filter((item) => {
+      if (!applyFilters(item)) return false;
+      if (showSubscribed && !item.subscriptionId) return false;
+      return true;
+    });
+    // Sort subscribed first
+    return filtered.sort((a, b) => {
+      const aSubscribed = a.subscriptionId ? 0 : 1;
+      const bSubscribed = b.subscriptionId ? 0 : 1;
+      return aSubscribed - bSubscribed;
+    });
+  }, [items, applyFilters, showSubscribed]);
 
   return (
     <>
@@ -169,15 +173,27 @@ export function NewslettersClient({
 
         {/* Stats + Add custom */}
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{subscribedCount}</span>{" "}
-            subscribed
-            <span className="mx-2 inline-block h-1 w-1 rounded-full bg-muted-foreground/50 align-middle" />
-            <span className="font-medium text-foreground">
-              {filteredItems.length + customItems.length}
-            </span>{" "}
-            shown
-          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowSubscribed(!showSubscribed)}
+              className={cn(
+                "flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors",
+                showSubscribed
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30",
+              )}
+            >
+              Subscribed
+              <span className="opacity-60">{subscribedCount}</span>
+            </button>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {filteredItems.length}
+              </span>{" "}
+              shown
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => setShowModal(true)}
@@ -189,31 +205,6 @@ export function NewslettersClient({
         </div>
       </div>
 
-      {/* Custom newsletters */}
-      {customItems.length > 0 && (
-        <div className="mb-10">
-          <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Custom newsletters
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {customItems.map(({ newsletter, subscriptionId, nextRunIso }) => (
-              <NewsletterCard
-                key={newsletter.id}
-                newsletter={newsletter}
-                subscriptionId={subscriptionId}
-                nextRunIso={nextRunIso}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Curated newsletters */}
-      {customItems.length > 0 && (
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Curated
-        </h2>
-      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredItems.map(({ newsletter, subscriptionId, nextRunIso }) => (
           <NewsletterCard
@@ -225,20 +216,13 @@ export function NewslettersClient({
         ))}
       </div>
 
-      {filteredItems.length === 0 && customItems.length === 0 && (
+      {filteredItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-lg font-medium text-foreground">
             No newsletters found
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Try adjusting your search or filter
-          </p>
-        </div>
-      )}
-      {filteredItems.length === 0 && customItems.length > 0 && (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            No curated newsletters match your search
           </p>
         </div>
       )}

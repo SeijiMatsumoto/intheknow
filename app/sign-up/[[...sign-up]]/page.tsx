@@ -59,15 +59,7 @@ export default function SignUpPage() {
         await setActive({ session: result.createdSessionId });
         router.push("/digests");
       } else {
-        const info = JSON.stringify({
-          status: result.status,
-          missingFields: result.missingFields,
-          unverifiedFields: result.unverifiedFields,
-          createdSessionId: result.createdSessionId,
-        });
-        // biome-ignore lint/suspicious/noGlobalAssign: temporary debug
-        alert(`[sign-up] incomplete: ${info}`);
-        setError(`Verification incomplete: ${info}`);
+        setError("Verification incomplete. Please try again.");
       }
     } catch (err) {
       console.error("[sign-up] error:", err);

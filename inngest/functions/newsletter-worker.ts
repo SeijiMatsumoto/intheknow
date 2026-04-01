@@ -14,7 +14,6 @@ import {
   getNewsletterById,
   getNewsletterSubscriptions,
   getPriorDigestTitles,
-  getUserPlans,
   markDigestRunSent,
   saveDigestContent,
   skipDigestRun,
@@ -85,8 +84,8 @@ export const newsletterWorker = inngest.createFunction(
       userIds,
     });
 
-    // 1. Load newsletter + subscriptions + check for reusable run
-    const { newsletter, subscriptions, recentRun, skippedRun } = await step.run(
+    // 1. Load newsletter + subscriptions + check for reusable run + extract domain hints
+    const { newsletter, subscriptions, recentRun, skippedRun, domainHints } = await step.run(
       "load-newsletter",
       async () => {
         const newsletter = await getNewsletterById(newsletterId);
@@ -104,7 +103,6 @@ export const newsletterWorker = inngest.createFunction(
           logger.info(`Found ${subscriptions.length} subscriber(s)`);
         }
 
-        // Check for reusable or skipped run (system newsletters only)
         let recentRun = null;
         let skippedRun = null;
         if (!newsletter.createdBy && !userEmails) {
@@ -125,18 +123,30 @@ export const newsletterWorker = inngest.createFunction(
           }
         }
 
-        return { newsletter, subscriptions, recentRun, skippedRun };
+        const sources = (newsletter.sources ?? {}) as {
+          rss?: string[];
+          sites?: string[];
+        };
+        const domainHints = [...(sources.rss ?? []), ...(sources.sites ?? [])]
+          .map((u) => {
+            try {
+              return new URL(u).hostname.replace(/^www\./, "");
+            } catch {
+              return u;
+            }
+          })
+          .filter(Boolean)
+          .slice(0, 6);
+
+        return { newsletter, subscriptions, recentRun, skippedRun, domainHints };
       },
     );
-
-    const recipientEmails = userEmails ?? [];
 
     if (!userEmails && subscriptions.length === 0) {
       logger.info("No subscribers for this run, skipping");
       return { newsletterId, skipped: true, reason: "no subscribers" };
     }
 
-    // 2a-pre. If a run was already skipped in this period, don't re-run the agent
     if (skippedRun) {
       logger.info(
         `Edition already skipped in this period (run ${skippedRun.id}) — not re-running agent`,
@@ -148,19 +158,31 @@ export const newsletterWorker = inngest.createFunction(
       };
     }
 
-    // 2a. Reuse recent run — skip generation, fan out emails directly
+    // 2. Resolve recipient emails once (used by both reuse and fresh paths)
+    const emails = await step.run("resolve-recipients", async () => {
+      if (userEmails) {
+        return userEmails.map((email: string) => ({
+          userId: "manual",
+          userEmail: email,
+        }));
+      }
+      const resolved = await resolveRecipientEmails(subscriptions);
+      logger.info(`Resolved ${resolved.length} recipient(s) from Clerk`);
+      return resolved;
+    });
+
+    // 3. Reuse recent run — skip generation, fan out emails directly
     if (recentRun?.emailHtml) {
       logger.info(`Reusing digest run ${recentRun.id} — skipping generation`);
 
       await step.run("fan-out-emails-reuse", async () => {
-        const emails = await resolveRecipientEmails(subscriptions);
         if (emails.length === 0) {
           logger.warn("No valid recipients for reuse — skipping");
           return;
         }
         const content = recentRun.content as { editionTitle?: string } | null;
         await inngest.send(
-          emails.map((e) => ({
+          emails.map((e: { userId: string; userEmail: string }) => ({
             name: "newsletter/email.generated" as const,
             data: {
               digestRunId: recentRun.id,
@@ -178,45 +200,27 @@ export const newsletterWorker = inngest.createFunction(
       return {
         digestRunId: recentRun.id,
         reused: true,
-        recipientCount: subscriptions.length,
+        recipientCount: emails.length,
       };
     }
 
-    // 2. Create digest run
-    const digestRun = await step.run("create-digest-run", async () => {
-      const run = await createDigestRun(newsletterId, digestRunId);
-      logger.info(`Created digest run: ${run.id}`);
-      return run;
-    });
-
-    // Extract domain hints from sources
-    const sources = (newsletter.sources ?? {}) as {
-      rss?: string[];
-      sites?: string[];
-    };
-    const domainHints = [...(sources.rss ?? []), ...(sources.sites ?? [])]
-      .map((u) => {
-        try {
-          return new URL(u).hostname.replace(/^www\./, "");
-        } catch {
-          return u;
+    // 4. Create digest run + fetch prior titles (parallel)
+    const [digestRun, priorTitles] = await Promise.all([
+      step.run("create-digest-run", async () => {
+        const run = await createDigestRun(newsletterId, digestRunId);
+        logger.info(`Created digest run: ${run.id}`);
+        return run;
+      }),
+      step.run("fetch-prior-titles", async () => {
+        const titles = await getPriorDigestTitles(newsletterId);
+        if (titles.length > 0) {
+          logger.info(`Found ${titles.length} prior story title(s) for dedup`);
         }
-      })
-      .filter(Boolean)
-      .slice(0, 6);
+        return titles;
+      }),
+    ]);
 
-    // 2b. Fetch prior digest titles for dedup
-    const priorTitles = await step.run("fetch-prior-titles", async () => {
-      const titles = await getPriorDigestTitles(newsletterId);
-      if (titles.length > 0) {
-        logger.info(
-          `Found ${titles.length} prior story title(s) for dedup`,
-        );
-      }
-      return titles;
-    });
-
-    // 3. Run agent — research + write newsletter
+    // 5. Run agent — research + write newsletter
     const { digest, model, stepCount, usage, toolCallCounts } = await step.run(
       "run-agent",
       async () => {
@@ -230,14 +234,8 @@ export const newsletterWorker = inngest.createFunction(
           tier,
           priorTitles,
         });
-        const cost = digestCostBreakdown(
-          result.model,
-          result.usage.inputTokens,
-          result.usage.outputTokens,
-          result.toolCallCounts,
-        );
         logger.info(
-          `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount} | ${formatCostLog(cost)}`,
+          `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount}`,
         );
         return result;
       },
@@ -265,83 +263,44 @@ export const newsletterWorker = inngest.createFunction(
       };
     }
 
-    // 4. Render emails (full + teaser for free users)
-    const { fullHtml, teaserHtml } = await step.run("render-email", async () => {
-      const [full, teaser] = await Promise.all([
-        renderEmail(digest, newsletter.title),
-        renderEmail(digest, newsletter.title, { teaser: true }),
-      ]);
-      logger.info(
-        `Email rendered — full: ${full.length} chars, teaser: ${teaser.length} chars`,
-      );
-      return { fullHtml: full, teaserHtml: teaser };
+    // 6. Render email
+    const emailHtml = await step.run("render-email", async () => {
+      const html = await renderEmail(digest, newsletter.title);
+      logger.info(`Email rendered — ${html.length} chars`);
+      return html;
     });
 
-    // 5. Persist content (save full version)
-    await step.run("save-digest-content", async () => {
-      await saveDigestContent(digestRun.id, digest, fullHtml);
-      logger.info("Digest content saved");
-    });
+    // 7. Save content + fan out emails & mark sent (parallel)
+    await Promise.all([
+      step.run("save-digest-content", async () => {
+        await saveDigestContent(digestRun.id, digest, emailHtml);
+        logger.info("Digest content saved");
+      }),
+      step.run("fan-out-and-mark-sent", async () => {
+        if (emails.length > 0) {
+          await inngest.send(
+            emails.map((e: { userId: string; userEmail: string }) => ({
+              name: "newsletter/email.generated" as const,
+              data: {
+                digestRunId: digestRun.id,
+                newsletterId,
+                newsletterTitle: digest.editionTitle,
+                userId: e.userId,
+                userEmail: e.userEmail,
+                emailHtml,
+              },
+            })),
+          );
+          logger.info(`Fired ${emails.length} email(s)`);
+        } else {
+          logger.warn("No valid recipients — skipping email send");
+        }
 
-    // 6. Fan out emails (free users get teaser, paid users get full)
-    await step.run("fan-out-emails", async () => {
-      let emails: { userId: string; userEmail: string }[];
+        await markDigestRunSent(digestRun.id);
+        logger.info("Digest run marked as sent");
+      }),
+    ]);
 
-      if (recipientEmails.length > 0) {
-        emails = recipientEmails.map((email: string) => ({
-          userId: "manual",
-          userEmail: email,
-        }));
-        logger.info(
-          `Email override — recipients: ${emails.map((e) => e.userEmail).join(", ")}`,
-        );
-      } else {
-        emails = await resolveRecipientEmails(subscriptions);
-        logger.info(`Resolved ${emails.length} recipient(s) from Clerk`);
-      }
-
-      if (emails.length === 0) {
-        logger.warn("No valid recipients — skipping email send");
-        return;
-      }
-
-      // Look up plans to decide full vs teaser email
-      const plans = await getUserPlans(
-        emails.map((e) => e.userId).filter((id) => id !== "manual"),
-      );
-
-      await inngest.send(
-        emails.map((e) => {
-          const plan = e.userId === "manual" ? "admin" : (plans.get(e.userId) ?? "free");
-          return {
-            name: "newsletter/email.generated" as const,
-            data: {
-              digestRunId: digestRun.id,
-              newsletterId,
-              newsletterTitle: digest.editionTitle,
-              userId: e.userId,
-              userEmail: e.userEmail,
-              emailHtml: plan === "free" ? teaserHtml : fullHtml,
-            },
-          };
-        }),
-      );
-
-      const freeCount = emails.filter(
-        (e) => e.userId !== "manual" && (plans.get(e.userId) ?? "free") === "free",
-      ).length;
-      logger.info(
-        `Fired ${emails.length} email(s) — ${emails.length - freeCount} full, ${freeCount} teaser`,
-      );
-    });
-
-    // 7. Mark as sent
-    await step.run("mark-sent", async () => {
-      await markDigestRunSent(digestRun.id);
-      logger.info("Digest run marked as sent");
-    });
-
-    const recipientCount = recipientEmails.length || subscriptions.length;
     const cost = digestCostBreakdown(
       model,
       usage.inputTokens,
@@ -349,12 +308,12 @@ export const newsletterWorker = inngest.createFunction(
       toolCallCounts,
     );
     logger.info(
-      `newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${recipientCount}, ${formatCostLog(cost)}`,
+      `newsletter-worker complete — digestRunId: ${digestRun.id}, recipients: ${emails.length}, ${formatCostLog(cost)}`,
     );
     return {
       digestRunId: digestRun.id,
       tier,
-      recipientCount,
+      recipientCount: emails.length,
       stepCount,
       usage,
       toolCallCounts,

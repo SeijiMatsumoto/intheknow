@@ -74,7 +74,7 @@ export default async function FeedPage({ searchParams }: Props) {
 
   const serialized = visible.map((s) => ({
     id: s.id,
-    sentAt: s.sentAt?.toISOString() ?? null,
+    sentAt: s.sentAt ? new Date(s.sentAt).toISOString() : null,
     run: {
       id: s.run.id,
       content: s.run.content as {

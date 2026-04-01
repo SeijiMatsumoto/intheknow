@@ -110,7 +110,7 @@ export async function getFeedSends(
   // Normalize runs into the same shape as sends
   const fromRuns = runs.map((run) => ({
     id: run.id, // use run id as the "send" id
-    sentAt: run.runAt,
+    sentAt: run.runAt as Date | null,
     run: {
       id: run.id,
       content: run.content,

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { BottomNav } from "@/components/bottom-nav";
-import { NewsletterHeaderClient } from "@/components/newsletter-header-client";
+import { BottomNav } from "@/components/layout/bottom-nav";
+import { NewsletterHeaderClient } from "@/components/newsletters/newsletter-header-client";
 import { getUserPlan, isAdmin } from "@/lib/user";
 
 export async function NewsletterHeader({

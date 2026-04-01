@@ -3,7 +3,7 @@
 import { Plus, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useMemo, useState } from "react";
-import { NewsletterCard } from "@/components/newsletter-card";
+import { NewsletterCard } from "@/components/newsletters/newsletter-card";
 import { AddNewsletterModal } from "@/components/newsletters/add-newsletter-modal";
 import {
   Select,

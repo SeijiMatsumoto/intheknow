@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { SignInModalButton } from "@/components/sign-in-button";
+import { SignInModalButton } from "@/components/layout/sign-in-button";
 
 export function CTA() {
   return (

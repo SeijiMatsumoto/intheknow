@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteNewsletter, updateNewsletter } from "@/app/actions/newsletters";
 import { NewsletterForm } from "@/components/internal/newsletter-form";
-import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import type { Frequency } from "@/lib/frequency";
 import { prisma } from "@/lib/prisma";
 

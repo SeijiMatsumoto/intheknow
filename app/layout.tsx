@@ -2,8 +2,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { AdminToolbarWrapper } from "@/components/admin-toolbar-wrapper";
-import { ThemeProvider } from "@/components/theme-provider";
+import { AdminToolbarWrapper } from "@/components/admin/admin-toolbar-wrapper";
+import { ThemeProvider } from "@/components/common/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({

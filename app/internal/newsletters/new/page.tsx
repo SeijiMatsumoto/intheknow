@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createNewsletter } from "@/app/actions/newsletters";
 import { NewsletterForm } from "@/components/internal/newsletter-form";
-import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 
 export default function NewNewsletterPage() {
   return (

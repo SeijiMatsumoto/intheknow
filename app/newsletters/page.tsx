@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { NewslettersClient } from "@/components/newsletters/newsletters-client";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/layout/page-header";
 import type { Frequency } from "@/lib/frequency";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";

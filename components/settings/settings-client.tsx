@@ -3,7 +3,7 @@
 import { CreditCard, Palette, Shield, User } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/layout/page-header";
 import { AccountSection } from "@/components/settings/account-section";
 import { AppearanceSection } from "@/components/settings/appearance-section";
 import {

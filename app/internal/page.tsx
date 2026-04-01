@@ -1,5 +1,5 @@
 import { NewslettersTable } from "@/components/internal/newsletters-table";
-import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import type { Frequency } from "@/lib/frequency";
 import { prisma } from "@/lib/prisma";
 

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ProfileButton } from "@/components/profile-button";
-import { SignInModalButton } from "@/components/sign-in-button";
+import { ProfileButton } from "@/components/layout/profile-button";
+import { SignInModalButton } from "@/components/layout/sign-in-button";
 
 type Props = {
   userId: string | null;

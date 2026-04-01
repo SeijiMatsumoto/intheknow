@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { SignInModalButton } from "@/components/sign-in-button";
+import { SignInModalButton } from "@/components/layout/sign-in-button";
 import { Button } from "@/components/ui/button";
 
 type PlanCard = {

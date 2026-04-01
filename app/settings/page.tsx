@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { SettingsClient } from "@/components/settings/settings-client";
 import type { Frequency } from "@/lib/frequency";
 import { prisma } from "@/lib/prisma";

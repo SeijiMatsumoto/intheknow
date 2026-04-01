@@ -4,7 +4,7 @@ import { Lock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDigestIcon, stripEmoji } from "@/lib/digest-icons";
-import { NewsletterHeader } from "@/components/newsletter-header";
+import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { canUsePlan } from "@/lib/gates";
 import { getUserPlan, isAdmin } from "@/lib/user";
 import {

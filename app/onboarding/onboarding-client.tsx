@@ -25,9 +25,10 @@ export function OnboardingClient() {
   const router = useRouter();
   const initialized = useRef(false);
 
-  const [step, setStep] = useState<"name" | "interests" | "newsletters">(
-    "name",
-  );
+  const [step, setStep] = useState<
+    "name" | "interests" | "loading" | "newsletters"
+  >("name");
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
@@ -39,7 +40,6 @@ export function OnboardingClient() {
   );
   const [maxSubscriptions, setMaxSubscriptions] = useState(3);
   const [isPending, startTransition] = useTransition();
-  const [loading, setLoading] = useState(false);
 
   // Pre-fill name from Clerk once loaded
   useEffect(() => {
@@ -69,16 +69,31 @@ export function OnboardingClient() {
 
   async function handleInterestsContinue() {
     if (selectedCategories.size === 0) return;
-    setLoading(true);
-    const { newsletters: results, maxSubscriptions: max } =
-      await getNewslettersByCategories([...selectedCategories]);
+    setStep("loading");
+    setLoadingProgress(0);
+
+    // Start fetching immediately
+    const fetchPromise = getNewslettersByCategories([...selectedCategories]);
+
+    // Animate progress bar over ~2.5s
+    const start = Date.now();
+    const duration = 2500;
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 0.9);
+      setLoadingProgress(progress);
+      if (progress < 0.9) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    const { newsletters: results, maxSubscriptions: max } = await fetchPromise;
     setNewsletters(results);
     setMaxSubscriptions(max);
-    // Pre-select up to the limit
-    setSelectedNewsletters(
-      new Set(results.slice(0, max).map((n) => n.id)),
-    );
-    setLoading(false);
+    setSelectedNewsletters(new Set());
+
+    // Fill to 100% then show results
+    setLoadingProgress(1);
+    await new Promise((r) => setTimeout(r, 400));
     setStep("newsletters");
   }
 
@@ -111,8 +126,8 @@ export function OnboardingClient() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
+    <div className={`flex min-h-screen px-4 py-12 ${step === "newsletters" ? "items-start justify-center pt-16" : "items-center justify-center"}`}>
+      <div className={`w-full ${step === "newsletters" ? "max-w-3xl" : "max-w-lg"} transition-all`}>
         <div className="text-center mb-8">
           <Link href="/">
             <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
@@ -123,22 +138,26 @@ export function OnboardingClient() {
 
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {(["name", "interests", "newsletters"] as const).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className={`h-2 w-2 rounded-full transition-colors ${
-                  step === s
-                    ? "bg-foreground"
-                    : (["name", "interests", "newsletters"].indexOf(step) > i
+          {(["name", "interests", "newsletters"] as const).map((s, i) => {
+            const stepIndex =
+              step === "loading" ? 1.5 : ["name", "interests", "newsletters"].indexOf(step);
+            const isActive = s === step || (step === "loading" && s === "interests");
+            const isPast = stepIndex > i && !isActive;
+            return (
+              <div key={s} className="flex items-center gap-2">
+                <div
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    isActive
+                      ? "bg-foreground"
+                      : isPast
                         ? "bg-foreground/40"
-                        : "bg-muted-foreground/30")
-                }`}
-              />
-              {i < 2 && (
-                <div className="h-px w-8 bg-border" />
-              )}
-            </div>
-          ))}
+                        : "bg-muted-foreground/30"
+                  }`}
+                />
+                {i < 2 && <div className="h-px w-8 bg-border" />}
+              </div>
+            );
+          })}
         </div>
 
         {/* Step 1: Name */}
@@ -219,21 +238,35 @@ export function OnboardingClient() {
                 type="button"
                 size="lg"
                 className="w-full gap-2"
-                disabled={selectedCategories.size === 0 || loading}
+                disabled={selectedCategories.size === 0}
                 onClick={handleInterestsContinue}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    See recommendations
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
+                See recommendations
+                <ArrowRight className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Loading transition */}
+        {step === "loading" && (
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mb-4" />
+              <p className="text-sm font-medium text-foreground">
+                Finding recommendations for you
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Matching newsletters to your interests...
+              </p>
+              <div className="mt-6 w-full max-w-xs">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-foreground transition-all duration-200 ease-out"
+                    style={{ width: `${Math.round(loadingProgress * 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -245,15 +278,14 @@ export function OnboardingClient() {
               Recommended for you
             </h2>
             <p className="mt-1 text-sm text-muted-foreground text-center mb-1">
-              We picked these based on your interests. Toggle any you don&apos;t
-              want.
+              Pick the newsletters you want to subscribe to.
             </p>
             <p className="text-xs text-muted-foreground text-center mb-6">
               {selectedNewsletters.size} / {maxSubscriptions} selected
               {atLimit && " (limit reached)"}
             </p>
 
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+            <div className="grid gap-3 sm:grid-cols-2">
               {newsletters.map((nl) => {
                 const selected = selectedNewsletters.has(nl.id);
                 const disabled = !selected && atLimit;
@@ -264,7 +296,7 @@ export function OnboardingClient() {
                     type="button"
                     onClick={() => toggleNewsletter(nl.id)}
                     disabled={disabled}
-                    className={`w-full flex items-start gap-3 rounded-lg border p-3 text-left transition-all ${
+                    className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-all ${
                       selected
                         ? "border-foreground/20 bg-foreground/5"
                         : disabled
@@ -282,25 +314,25 @@ export function OnboardingClient() {
                       {selected && <Check className="h-3 w-3" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground truncate">
-                          {nl.title}
-                        </span>
-                        <span className="shrink-0 text-xs text-muted-foreground capitalize">
+                      <span className="text-sm font-medium text-foreground">
+                        {nl.title}
+                      </span>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground capitalize">
                           {nl.frequency}
                         </span>
+                        {cat && (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${cat.pill}`}
+                          >
+                            {cat.label}
+                          </span>
+                        )}
                       </div>
                       {nl.description && (
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
                           {nl.description}
                         </p>
-                      )}
-                      {cat && (
-                        <span
-                          className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${cat.pill}`}
-                        >
-                          {cat.label}
-                        </span>
                       )}
                     </div>
                   </button>

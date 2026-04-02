@@ -9,20 +9,23 @@ export function LandingNav() {
           <span className="font-serif text-xl font-bold tracking-tight text-foreground">
             In The Know
           </span>
-          <nav className="hidden sm:flex items-center gap-8 text-sm text-muted-foreground absolute left-1/2 -translate-x-1/2">
+          <nav className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <a
               href="#how-it-works"
-              className="hover:text-foreground transition-colors"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all"
             >
               How it works
             </a>
             <a
               href="#pricing"
-              className="hover:text-foreground transition-colors"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all"
             >
               Pricing
             </a>
-            <a href="#faq" className="hover:text-foreground transition-colors">
+            <a
+              href="#faq"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all"
+            >
               FAQ
             </a>
           </nav>
@@ -32,7 +35,6 @@ export function LandingNav() {
           </div>
         </div>
       </div>
-      <div className="border-b border-border" />
     </header>
   );
 }

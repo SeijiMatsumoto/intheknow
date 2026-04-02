@@ -12,7 +12,7 @@ type Props = {
 
 export function NewsletterHeaderClient({ userId, admin, hideProfile }: Props) {
   return (
-    <header className="hidden sm:block border-b border-border bg-background sticky top-0 z-50">
+    <header className="hidden sm:block border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="mx-auto max-w-6xl px-6 py-4">
         <div className="flex items-center justify-between">
           <Link

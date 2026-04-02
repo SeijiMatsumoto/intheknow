@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import { CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 

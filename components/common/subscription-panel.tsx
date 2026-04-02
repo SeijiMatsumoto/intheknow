@@ -43,7 +43,8 @@ export function SubscriptionPanel({ subscriptions }: Props) {
                 {sub.newsletterTitle}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {nextRunLabel} · <span className="capitalize">{sub.frequency}</span>
+                {nextRunLabel} ·{" "}
+                <span className="capitalize">{sub.frequency}</span>
               </p>
             </div>
           </Link>

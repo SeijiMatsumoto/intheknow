@@ -1,6 +1,9 @@
 import { inngest } from "@/inngest/client";
 import type { Plan } from "@/lib/user";
-import { getActiveSubscriptionsWithSchedule, highestTierAmong } from "./queries";
+import {
+  getActiveSubscriptionsWithSchedule,
+  highestTierAmong,
+} from "./queries";
 
 const DAYS = [
   "sunday",
@@ -61,7 +64,9 @@ export const hourlyOrchestrator = inngest.createFunction(
     });
 
     for (const [newsletterId, { title, userIds }] of byNewsletter) {
-      logger.info(`  → ${title}: ${userIds.length} recipient(s), tier=${tiers[newsletterId]}`);
+      logger.info(
+        `  → ${title}: ${userIds.length} recipient(s), tier=${tiers[newsletterId]}`,
+      );
     }
 
     await step.sendEvent(

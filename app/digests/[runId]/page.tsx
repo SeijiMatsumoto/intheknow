@@ -69,7 +69,9 @@ function SourceRow({ sources }: { sources: DigestSource[] }) {
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground/50">
       {storyDate && (
         <>
-          <time className="text-muted-foreground/70 font-medium">{storyDate}</time>
+          <time className="text-muted-foreground/70 font-medium">
+            {storyDate}
+          </time>
           <span className="text-muted-foreground/30">|</span>
         </>
       )}
@@ -90,13 +92,7 @@ function SourceRow({ sources }: { sources: DigestSource[] }) {
   );
 }
 
-function StoryItem({
-  item,
-  full,
-}: {
-  item: DigestItem;
-  full: boolean;
-}) {
+function StoryItem({ item, full }: { item: DigestItem; full: boolean }) {
   const sources = getItemSources(item);
   const ItemIcon = getDigestIcon(item.icon);
 
@@ -179,7 +175,6 @@ export default async function FeedDetailPage({
 
   const title = content.editionTitle ?? content.title;
 
-
   return (
     <div className="min-h-screen bg-background">
       <NewsletterHeader />
@@ -200,7 +195,8 @@ export default async function FeedDetailPage({
           </p>
           <div className="border-t border-foreground/20 mt-3 mb-2" />
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">
-            {send.run.newsletter.title} · {sentDate ?? format(new Date(), "EEEE, MMMM d, yyyy")}
+            {send.run.newsletter.title} ·{" "}
+            {sentDate ?? format(new Date(), "EEEE, MMMM d, yyyy")}
           </p>
           <div className="border-t border-foreground/20 mt-2" />
         </div>
@@ -227,7 +223,9 @@ export default async function FeedDetailPage({
                   key={t}
                   className="text-[13px] leading-snug text-foreground/80 text-center"
                 >
-                  <span className="text-muted-foreground/40 font-serif italic mr-1.5">{i + 1}.</span>
+                  <span className="text-muted-foreground/40 font-serif italic mr-1.5">
+                    {i + 1}.
+                  </span>
                   {t}
                 </p>
               ))}
@@ -291,9 +289,7 @@ export default async function FeedDetailPage({
                             {h.authorName}
                           </a>{" "}
                           {h.author}
-                          {h.engagement && (
-                            <span> · {h.engagement}</span>
-                          )}
+                          {h.engagement && <span> · {h.engagement}</span>}
                         </p>
                       </div>
                     ))}

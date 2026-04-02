@@ -228,8 +228,11 @@ async function main() {
           try {
             const url = new URL(r.url);
             const hostname = url.hostname.replace(/^www\./, "");
-            if (BLOCKED_DOMAINS.has(hostname)) reason = `blocked domain: ${hostname}`;
-            else if (BLOCKED_DOMAIN_SUFFIXES.some((s) => hostname.endsWith(`.${s}`)))
+            if (BLOCKED_DOMAINS.has(hostname))
+              reason = `blocked domain: ${hostname}`;
+            else if (
+              BLOCKED_DOMAIN_SUFFIXES.some((s) => hostname.endsWith(`.${s}`))
+            )
               reason = `blocked subdomain: ${hostname}`;
             else if (url.pathname === "/" || url.pathname === "")
               reason = "bare homepage";

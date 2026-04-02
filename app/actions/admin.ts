@@ -1,16 +1,15 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { requireAuth } from "@/lib/auth";
 import type { Plan } from "@/lib/user";
 
 const COOKIE_NAME = "admin_plan_override";
 const VALID_PLANS: Plan[] = ["free", "plus", "pro", "admin"];
 
 export async function setPlanOverride(plan: Plan) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const userId = await requireAuth();
 
   const realPlan = await getRealPlan(userId);
   if (realPlan !== "admin") return;

@@ -14,8 +14,7 @@ export function buildUnsubscribeUrl(
 ): string {
   const payload = `${userId}:${newsletterId}`;
   const token = sign(payload);
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://thelatest.app";
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://thelatest.app";
   return `${base}/unsubscribe?uid=${encodeURIComponent(userId)}&nid=${encodeURIComponent(newsletterId)}&token=${token}`;
 }
 

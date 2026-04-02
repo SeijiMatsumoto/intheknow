@@ -2,43 +2,16 @@
 
 import { useTransition } from "react";
 import { updateSubscriptionSchedule } from "@/app/actions/subscriptions";
-import type { Frequency } from "@/lib/frequency";
+import {
+  ALL_DAYS,
+  DAY_SHORT,
+  type Frequency,
+  formatHour,
+  localToUtcHour,
+  utcToLocalHour,
+} from "@/lib/date-utils";
 
-const ALL_DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-];
-const DAY_SHORT: Record<string, string> = {
-  monday: "Mon",
-  tuesday: "Tue",
-  wednesday: "Wed",
-  thursday: "Thu",
-  friday: "Fri",
-  saturday: "Sat",
-  sunday: "Sun",
-};
-
-function utcToLocalHour(utcHour: number): number {
-  const offset = new Date().getTimezoneOffset(); // minutes, positive = UTC-x
-  return (utcHour - offset / 60 + 24) % 24;
-}
-
-function localToUtcHour(localHour: number): number {
-  const offset = new Date().getTimezoneOffset();
-  return (localHour + offset / 60 + 24) % 24;
-}
-
-function formatHour(h: number): string {
-  if (h === 0) return "12am";
-  if (h < 12) return `${h}am`;
-  if (h === 12) return "12pm";
-  return `${h - 12}pm`;
-}
+const TZ_OFFSET = new Date().getTimezoneOffset();
 
 type Props = {
   subscriptionId: string;
@@ -62,7 +35,10 @@ export function ScheduleEditor({
   const [pending, startTransition] = useTransition();
   const isDaily = frequency === "daily";
 
-  const defaultLocalHour = utcToLocalHour(currentHour ?? newsletterHour);
+  const defaultLocalHour = utcToLocalHour(
+    currentHour ?? newsletterHour,
+    TZ_OFFSET,
+  );
   const defaultDays = currentDays.length > 0 ? currentDays : newsletterDays;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -71,7 +47,7 @@ export function ScheduleEditor({
     // Daily newsletters: always use newsletter days (no override)
     const selectedDays = isDaily ? [] : (fd.getAll("days") as string[]);
     const localHour = Number(fd.get("hour"));
-    const utcHour = localToUtcHour(localHour);
+    const utcHour = localToUtcHour(localHour, TZ_OFFSET);
 
     // If matches newsletter default, clear the override
     const daysMatchDefault =

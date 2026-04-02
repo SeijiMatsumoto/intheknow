@@ -25,10 +25,8 @@ export default async function FeedPage({ searchParams }: Props) {
   const sp = await searchParams;
   const newsletter =
     typeof sp.newsletter === "string" ? sp.newsletter : undefined;
-  const frequency =
-    typeof sp.frequency === "string" ? sp.frequency : undefined;
-  const dateRange =
-    typeof sp.dateRange === "string" ? sp.dateRange : undefined;
+  const frequency = typeof sp.frequency === "string" ? sp.frequency : undefined;
+  const dateRange = typeof sp.dateRange === "string" ? sp.dateRange : undefined;
   const limit = typeof sp.limit === "string" ? Number(sp.limit) : PAGE_SIZE;
 
   const plan = await getUserPlan(userId);

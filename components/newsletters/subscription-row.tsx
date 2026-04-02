@@ -2,7 +2,7 @@
 
 import { Lock } from "lucide-react";
 import { useState } from "react";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import {
   formatNextRun,
   formatScheduleLabel,

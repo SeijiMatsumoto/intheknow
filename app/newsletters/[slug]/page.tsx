@@ -10,7 +10,7 @@ import { DeleteNewsletterButton } from "@/components/newsletters/delete-newslett
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { SubscriptionRow } from "@/components/newsletters/subscription-row";
 import { getCategory } from "@/lib/categories";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import { canUse } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
 import { nextRunDate } from "@/lib/schedule";
@@ -180,9 +180,7 @@ export default async function NewsletterDetailPage({
                   summary?: string;
                 } | null;
                 const title =
-                  content?.editionTitle ??
-                  content?.title ??
-                  "Untitled edition";
+                  content?.editionTitle ?? content?.title ?? "Untitled edition";
                 const summary = content?.summary;
                 const date = format(new Date(run.runAt), "MMM d, yyyy");
 
@@ -212,8 +210,8 @@ export default async function NewsletterDetailPage({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground py-8 text-center">
-              No editions have been sent yet. Subscribe to get notified when
-              the first one goes out.
+              No editions have been sent yet. Subscribe to get notified when the
+              first one goes out.
             </p>
           )}
         </section>

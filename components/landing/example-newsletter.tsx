@@ -80,8 +80,8 @@ export function ExampleNewsletter() {
                   <span className="text-muted-foreground/50 shrink-0">
                     &mdash;
                   </span>
-                  OpenAI drops a new reasoning model — and it&apos;s surprisingly
-                  cheap
+                  OpenAI drops a new reasoning model — and it&apos;s
+                  surprisingly cheap
                 </li>
                 <li className="flex gap-2">
                   <span className="text-muted-foreground/50 shrink-0">

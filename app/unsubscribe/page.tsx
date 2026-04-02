@@ -10,11 +10,21 @@ export default async function UnsubscribePage({
   const { uid, nid, token } = await searchParams;
 
   if (!uid || !nid || !token) {
-    return <Message title="Invalid link" body="This unsubscribe link is missing required parameters." />;
+    return (
+      <Message
+        title="Invalid link"
+        body="This unsubscribe link is missing required parameters."
+      />
+    );
   }
 
   if (!verifyUnsubscribeToken(uid, nid, token)) {
-    return <Message title="Invalid link" body="This unsubscribe link is invalid or has been tampered with." />;
+    return (
+      <Message
+        title="Invalid link"
+        body="This unsubscribe link is invalid or has been tampered with."
+      />
+    );
   }
 
   const subscription = await prisma.subscription.findFirst({
@@ -23,7 +33,12 @@ export default async function UnsubscribePage({
   });
 
   if (!subscription) {
-    return <Message title="Already unsubscribed" body="You're not subscribed to this newsletter." />;
+    return (
+      <Message
+        title="Already unsubscribed"
+        body="You're not subscribed to this newsletter."
+      />
+    );
   }
 
   await prisma.subscription.delete({ where: { id: subscription.id } });

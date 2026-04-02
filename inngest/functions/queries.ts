@@ -124,7 +124,12 @@ export async function getPriorDigestTitles(
 
 export function createDigestRun(newsletterId: string, id?: string) {
   return prisma.digestRun.create({
-    data: { ...(id ? { id } : {}), newsletterId, runAt: new Date(), status: "running" },
+    data: {
+      ...(id ? { id } : {}),
+      newsletterId,
+      runAt: new Date(),
+      status: "running",
+    },
   });
 }
 
@@ -152,7 +157,6 @@ export function skipDigestRun(id: string) {
     data: { status: "skipped", error: "No stories found — edition skipped" },
   });
 }
-
 
 export function markDigestRunSent(id: string) {
   return prisma.digestRun.update({

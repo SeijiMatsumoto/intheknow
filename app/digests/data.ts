@@ -49,31 +49,32 @@ export async function getFeedSends(
   };
 
   // Fetch all completed digest runs for subscribed newsletters
-  const runs = subscribedIds.length > 0
-    ? await prisma.digestRun.findMany({
-        where: {
-          newsletterId: { in: subscribedIds },
-          status: "sent",
+  const runs =
+    subscribedIds.length > 0
+      ? await prisma.digestRun.findMany({
+          where: {
+            newsletterId: { in: subscribedIds },
+            status: "sent",
 
-          ...(since ? { runAt: { gte: since } } : {}),
-          ...(Object.keys(newsletterFilter).length > 0
-            ? { newsletter: newsletterFilter }
-            : {}),
-        },
-        orderBy: { runAt: "desc" },
-        take: limit + 1,
-        include: {
-          newsletter: {
-            select: {
-              title: true,
-              slug: true,
-              categoryId: true,
-              frequency: true,
+            ...(since ? { runAt: { gte: since } } : {}),
+            ...(Object.keys(newsletterFilter).length > 0
+              ? { newsletter: newsletterFilter }
+              : {}),
+          },
+          orderBy: { runAt: "desc" },
+          take: limit + 1,
+          include: {
+            newsletter: {
+              select: {
+                title: true,
+                slug: true,
+                categoryId: true,
+                frequency: true,
+              },
             },
           },
-        },
-      })
-    : [];
+        })
+      : [];
 
   // Also include admin "manual" sends
   const manualSends = admin
@@ -193,42 +194,43 @@ export async function getFeedStats(userId: string, _admin: boolean) {
 
   const subscribedIds = subscriptions.map((s) => s.newsletterId);
 
-  const [totalDigests, digestsThisWeek] = subscribedIds.length > 0
-    ? await Promise.all([
-        prisma.digestRun.count({
-          where: {
-            newsletterId: { in: subscribedIds },
-            status: "sent",
-  
-          },
-        }),
-        prisma.digestRun.count({
-          where: {
-            newsletterId: { in: subscribedIds },
-            status: "sent",
-  
-            runAt: { gte: weekAgo },
-          },
-        }),
-      ])
-    : [0, 0];
+  const [totalDigests, digestsThisWeek] =
+    subscribedIds.length > 0
+      ? await Promise.all([
+          prisma.digestRun.count({
+            where: {
+              newsletterId: { in: subscribedIds },
+              status: "sent",
+            },
+          }),
+          prisma.digestRun.count({
+            where: {
+              newsletterId: { in: subscribedIds },
+              status: "sent",
+
+              runAt: { gte: weekAgo },
+            },
+          }),
+        ])
+      : [0, 0];
 
   // Find most recent run per newsletter
-  const recentRuns = subscribedIds.length > 0
-    ? await prisma.digestRun.findMany({
-        where: {
-          newsletterId: { in: subscribedIds },
-          status: "sent",
-        },
-        orderBy: { runAt: "desc" },
-        distinct: ["newsletterId"],
-        take: 50,
-        select: {
-          runAt: true,
-          newsletter: { select: { slug: true } },
-        },
-      })
-    : [];
+  const recentRuns =
+    subscribedIds.length > 0
+      ? await prisma.digestRun.findMany({
+          where: {
+            newsletterId: { in: subscribedIds },
+            status: "sent",
+          },
+          orderBy: { runAt: "desc" },
+          distinct: ["newsletterId"],
+          take: 50,
+          select: {
+            runAt: true,
+            newsletter: { select: { slug: true } },
+          },
+        })
+      : [];
 
   const lastSentBySlug = new Map<string, Date>();
   for (const r of recentRuns) {
@@ -248,7 +250,8 @@ export async function getFeedStats(userId: string, _admin: boolean) {
       scheduleDays: sub.newsletter.scheduleDays,
       scheduleHour: sub.newsletter.scheduleHour,
       categoryId: sub.newsletter.categoryId,
-      lastSentAt: lastSentBySlug.get(sub.newsletter.slug)?.toISOString() ?? null,
+      lastSentAt:
+        lastSentBySlug.get(sub.newsletter.slug)?.toISOString() ?? null,
     })),
   };
 }
@@ -277,7 +280,9 @@ export async function getFeedDigest(
   const run = await prisma.digestRun.findUnique({
     where: { id: runId },
     include: {
-      newsletter: { select: { id: true, title: true, slug: true, categoryId: true } },
+      newsletter: {
+        select: { id: true, title: true, slug: true, categoryId: true },
+      },
     },
   });
   if (!run) return null;

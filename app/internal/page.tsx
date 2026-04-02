@@ -1,6 +1,6 @@
 import { NewslettersTable } from "@/components/internal/newsletters-table";
 import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 50;

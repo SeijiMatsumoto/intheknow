@@ -37,10 +37,7 @@ export function FAQ() {
 
         <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {QUESTIONS.map((item) => (
-            <div
-              key={item.q}
-              className="rounded-xl bg-secondary/30 p-6"
-            >
+            <div key={item.q} className="rounded-xl bg-secondary/30 p-6">
               <p className="text-base font-semibold text-foreground mb-2">
                 {item.q}
               </p>

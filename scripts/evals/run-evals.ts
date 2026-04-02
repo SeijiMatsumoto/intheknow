@@ -220,7 +220,8 @@ async function main() {
         scores[res.key] = res.score;
       }
     }
-    const title = (result.run?.inputs as Record<string, unknown>)?.title ?? "unknown";
+    const title =
+      (result.run?.inputs as Record<string, unknown>)?.title ?? "unknown";
     rows.push({ [title as string]: scores });
   }
 

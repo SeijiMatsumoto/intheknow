@@ -68,7 +68,8 @@ export function SubscribeButton({
                 Free plan limit reached
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                You&apos;ve reached the maximum number of subscriptions for your plan.
+                You&apos;ve reached the maximum number of subscriptions for your
+                plan.
               </p>
             </div>
           </div>

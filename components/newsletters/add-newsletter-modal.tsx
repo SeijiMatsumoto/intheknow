@@ -2,52 +2,16 @@
 
 import { Loader2, Lock, Sparkles, X } from "lucide-react";
 import { useState, useTransition } from "react";
-import {
-  type GeneratedNewsletter,
-  generateNewsletterFields,
-} from "@/app/actions/generate-newsletter";
+import type { GeneratedNewsletter } from "@/app/actions/generate-newsletter";
 import { createUserNewsletter } from "@/app/actions/newsletters";
-import { CATEGORIES } from "@/lib/categories";
+import { localToUtcHour } from "@/lib/date-utils";
+import { NewsletterAiTab } from "./newsletter-ai-tab";
+import {
+  type NewsletterFormState,
+  NewsletterManualForm,
+} from "./newsletter-manual-form";
 
-const ALL_DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const;
-
-const HOURS = [...Array(24).keys()] as number[];
-
-// getTimezoneOffset() returns minutes BEHIND UTC (positive = west, negative = east)
-// local = UTC - offset/60
-function utcToLocalHour(utcHour: number, offsetMinutes: number): number {
-  return (((utcHour - offsetMinutes / 60) % 24) + 24) % 24;
-}
-
-function localToUtcHour(localHour: number, offsetMinutes: number): number {
-  return (((localHour + offsetMinutes / 60) % 24) + 24) % 24;
-}
-
-function formatHour(h: number): string {
-  const period = h >= 12 ? "PM" : "AM";
-  const display = h % 12 || 12;
-  return `${display}:00 ${period}`;
-}
-
-type FormState = {
-  title: string;
-  description: string;
-  categoryId: string;
-  frequency: "daily" | "weekly";
-  scheduleDays: string[];
-  scheduleHour: number;
-  keywords: string;
-};
-
-const DEFAULT_FORM: Omit<FormState, "scheduleHour"> = {
+const DEFAULT_FORM: Omit<NewsletterFormState, "scheduleHour"> = {
   title: "",
   description: "",
   categoryId: "ai-tech",
@@ -64,14 +28,12 @@ type Props = {
 
 export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
   const [tab, setTab] = useState<"ai" | "manual">("ai");
-  const [prompt, setPrompt] = useState("");
   const [tzOffset] = useState(() => new Date().getTimezoneOffset());
   const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const [form, setForm] = useState<FormState>(() => ({
+  const [form, setForm] = useState<NewsletterFormState>(() => ({
     ...DEFAULT_FORM,
     scheduleHour: localToUtcHour(8, new Date().getTimezoneOffset()),
   }));
-  const [aiGenerating, startAiTransition] = useTransition();
   const [saving, startSaveTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -85,20 +47,8 @@ export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
       scheduleHour: data.scheduleHour,
       keywords: data.keywords.join(", "),
     });
-    setTab("manual");
-  }
-
-  function handleGenerate() {
-    if (!prompt.trim()) return;
     setError(null);
-    startAiTransition(async () => {
-      const result = await generateNewsletterFields(prompt);
-      if (result.error) {
-        setError(result.error);
-      } else if (result.data) {
-        applyGenerated(result.data);
-      }
-    });
+    setTab("manual");
   }
 
   function handleSave() {
@@ -123,10 +73,6 @@ export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
         onCreated();
       }
     });
-  }
-
-  function selectDay(day: string) {
-    setForm((f) => ({ ...f, scheduleDays: [day] }));
   }
 
   return (
@@ -207,216 +153,19 @@ export function AddNewsletterModal({ canCreate, onClose, onCreated }: Props) {
 
             <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
               {tab === "ai" ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Describe the newsletter you want and AI will configure
-                    everything for you.
-                  </p>
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="e.g. A weekly digest of the latest AI agent frameworks, new LLM releases, and practical agentic coding tools for engineers…"
-                    rows={5}
-                    className="w-full resize-none rounded-lg border border-border bg-secondary px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                  />
-                  {error && <p className="text-sm text-destructive">{error}</p>}
-                  <button
-                    type="button"
-                    onClick={handleGenerate}
-                    disabled={aiGenerating || !prompt.trim()}
-                    className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-opacity disabled:opacity-50"
-                  >
-                    {aiGenerating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                    {aiGenerating ? "Generating…" : "Generate"}
-                  </button>
-                </div>
+                <NewsletterAiTab
+                  onGenerated={applyGenerated}
+                  error={error}
+                  onError={setError}
+                />
               ) : (
-                <div className="space-y-5">
-                  {/* Title */}
-                  <div>
-                    <label
-                      htmlFor="modal-title"
-                      className="mb-1.5 block text-sm font-medium text-foreground"
-                    >
-                      Title
-                    </label>
-                    <input
-                      id="modal-title"
-                      type="text"
-                      value={form.title}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, title: e.target.value }))
-                      }
-                      placeholder="Newsletter title"
-                      className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label
-                      htmlFor="modal-description"
-                      className="mb-1.5 block text-sm font-medium text-foreground"
-                    >
-                      Description
-                    </label>
-                    <textarea
-                      id="modal-description"
-                      value={form.description}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, description: e.target.value }))
-                      }
-                      placeholder="What will subscribers get?"
-                      rows={2}
-                      className="w-full resize-none rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                    />
-                  </div>
-
-                  {/* Category */}
-                  <div>
-                    <label
-                      htmlFor="modal-category"
-                      className="mb-1.5 block text-sm font-medium text-foreground"
-                    >
-                      Category
-                    </label>
-                    <select
-                      id="modal-category"
-                      value={form.categoryId}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, categoryId: e.target.value }))
-                      }
-                      className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Frequency */}
-                  <div>
-                    <p className="mb-1.5 text-sm font-medium text-foreground">
-                      Frequency
-                    </p>
-                    <div className="flex gap-3">
-                      {(["daily", "weekly"] as const).map((f) => (
-                        <button
-                          key={f}
-                          type="button"
-                          onClick={() =>
-                            setForm((s) => ({
-                              ...s,
-                              frequency: f,
-                              scheduleDays:
-                                f === "daily"
-                                  ? [...ALL_DAYS]
-                                  : s.scheduleDays.length > 0
-                                    ? [s.scheduleDays[0]]
-                                    : ["monday"],
-                            }))
-                          }
-                          className={`rounded-lg border px-4 py-2 text-sm font-medium capitalize transition-colors ${
-                            form.frequency === f
-                              ? "border-accent bg-accent/10 text-accent"
-                              : "border-border text-muted-foreground hover:border-accent/50 hover:text-foreground"
-                          }`}
-                        >
-                          {f}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Schedule Days — weekly only */}
-                  {form.frequency === "weekly" && (
-                    <div>
-                      <p className="mb-1.5 text-sm font-medium text-foreground">
-                        Delivery Day
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {ALL_DAYS.map((day) => (
-                          <button
-                            key={day}
-                            type="button"
-                            onClick={() => selectDay(day)}
-                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-                              form.scheduleDays[0] === day
-                                ? "border-accent bg-accent/10 text-accent"
-                                : "border-border text-muted-foreground hover:border-accent/50 hover:text-foreground"
-                            }`}
-                          >
-                            {day.slice(0, 3)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Schedule Hour */}
-                  <div>
-                    <label
-                      htmlFor="modal-hour"
-                      className="mb-1.5 block text-sm font-medium text-foreground"
-                    >
-                      Delivery Time{" "}
-                      <span className="font-normal text-muted-foreground">
-                        ({tzName})
-                      </span>
-                    </label>
-                    <select
-                      id="modal-hour"
-                      value={utcToLocalHour(form.scheduleHour, tzOffset)}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          scheduleHour: localToUtcHour(
-                            Number(e.target.value),
-                            tzOffset,
-                          ),
-                        }))
-                      }
-                      className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                    >
-                      {HOURS.map((hour) => (
-                        <option key={hour} value={hour}>
-                          {formatHour(hour)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Keywords */}
-                  <div>
-                    <label
-                      htmlFor="modal-keywords"
-                      className="mb-1.5 block text-sm font-medium text-foreground"
-                    >
-                      Keywords{" "}
-                      <span className="font-normal text-muted-foreground">
-                        (comma-separated)
-                      </span>
-                    </label>
-                    <input
-                      id="modal-keywords"
-                      type="text"
-                      value={form.keywords}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, keywords: e.target.value }))
-                      }
-                      placeholder="e.g. LLM agents, function calling, RAG, tool use"
-                      className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                    />
-                  </div>
-
-                  {error && <p className="text-sm text-destructive">{error}</p>}
-                </div>
+                <NewsletterManualForm
+                  form={form}
+                  onChange={setForm}
+                  tzOffset={tzOffset}
+                  tzName={tzName}
+                  error={error}
+                />
               )}
             </div>
           </>

@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { blueskyDateRange, type Frequency } from "@/lib/frequency";
+import { blueskyDateRange, type Frequency } from "@/lib/date-utils";
 import { checkRelevancy } from "./check-relevancy";
 
 type BlueskyAuthor = {

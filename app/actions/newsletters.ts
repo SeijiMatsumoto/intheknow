@@ -1,21 +1,11 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Frequency } from "@/lib/frequency";
+import { requireAuth } from "@/lib/auth";
+import { ALL_DAYS, type Frequency } from "@/lib/date-utils";
 import { canUse, getLimit } from "@/lib/gates";
 import { prisma } from "@/lib/prisma";
-
-const ALL_DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-];
 
 function slugify(title: string): string {
   return title
@@ -44,6 +34,23 @@ function parseSchedule(formData: FormData) {
     scheduleDays: formData.getAll("scheduleDays") as string[],
     scheduleHour: Number(formData.get("scheduleHour") ?? 8),
   };
+}
+
+async function deleteNewsletterCascade(newsletterId: string) {
+  const runs = await prisma.digestRun.findMany({
+    where: { newsletterId },
+    select: { id: true },
+  });
+  if (runs.length > 0) {
+    const runIds = runs.map((r) => r.id);
+    await prisma.digestFeedback.deleteMany({
+      where: { runId: { in: runIds } },
+    });
+    await prisma.digestSend.deleteMany({ where: { runId: { in: runIds } } });
+    await prisma.digestRun.deleteMany({ where: { newsletterId } });
+  }
+  await prisma.subscription.deleteMany({ where: { newsletterId } });
+  await prisma.newsletter.delete({ where: { id: newsletterId } });
 }
 
 export async function createNewsletter(formData: FormData) {
@@ -104,35 +111,13 @@ export async function updateNewsletter(id: string, formData: FormData) {
 }
 
 export async function deleteNewsletter(id: string) {
-  const runs = await prisma.digestRun.findMany({
-    where: { newsletterId: id },
-    select: { id: true },
-  });
-  if (runs.length > 0) {
-    await prisma.digestSend.deleteMany({
-      where: { runId: { in: runs.map((r) => r.id) } },
-    });
-    await prisma.digestRun.deleteMany({ where: { newsletterId: id } });
-  }
-  await prisma.subscription.deleteMany({ where: { newsletterId: id } });
-  await prisma.newsletter.delete({ where: { id } });
+  await deleteNewsletterCascade(id);
   revalidatePath("/internal");
   redirect("/internal");
 }
 
 export async function deleteNewsletterById(id: string) {
-  const runs = await prisma.digestRun.findMany({
-    where: { newsletterId: id },
-    select: { id: true },
-  });
-  if (runs.length > 0) {
-    await prisma.digestSend.deleteMany({
-      where: { runId: { in: runs.map((r) => r.id) } },
-    });
-    await prisma.digestRun.deleteMany({ where: { newsletterId: id } });
-  }
-  await prisma.subscription.deleteMany({ where: { newsletterId: id } });
-  await prisma.newsletter.delete({ where: { id } });
+  await deleteNewsletterCascade(id);
   revalidatePath("/internal");
   revalidatePath("/newsletters");
 }
@@ -141,8 +126,7 @@ export async function deleteCustomNewsletter(
   newsletterId: string,
 ): Promise<{ error?: string }> {
   try {
-    const { userId } = await auth();
-    if (!userId) return { error: "Not authenticated" };
+    const userId = await requireAuth();
 
     const newsletter = await prisma.newsletter.findUnique({
       where: { id: newsletterId },
@@ -151,19 +135,7 @@ export async function deleteCustomNewsletter(
     if (newsletter.createdBy !== userId)
       return { error: "You can only delete your own newsletters" };
 
-    // Cascade: digestSend → digestRun → subscription → newsletter
-    const runs = await prisma.digestRun.findMany({
-      where: { newsletterId },
-      select: { id: true },
-    });
-    if (runs.length > 0) {
-      await prisma.digestSend.deleteMany({
-        where: { runId: { in: runs.map((r) => r.id) } },
-      });
-      await prisma.digestRun.deleteMany({ where: { newsletterId } });
-    }
-    await prisma.subscription.deleteMany({ where: { newsletterId } });
-    await prisma.newsletter.delete({ where: { id: newsletterId } });
+    await deleteNewsletterCascade(newsletterId);
 
     revalidatePath("/newsletters");
     return {};
@@ -184,8 +156,7 @@ export async function createUserNewsletter(data: {
   keywords: string[];
 }): Promise<{ error?: string }> {
   try {
-    const { userId } = await auth();
-    if (!userId) return { error: "Not authenticated" };
+    const userId = await requireAuth();
     if (!(await canUse(userId, "custom_newsletter")))
       return { error: "Pro plan required" };
 
@@ -202,7 +173,7 @@ export async function createUserNewsletter(data: {
     const slug = `${slugify(data.title)}-${Math.random().toString(36).slice(2, 7)}`;
     const scheduleDays =
       data.frequency === "daily" && data.scheduleDays.length === 0
-        ? ALL_DAYS
+        ? [...ALL_DAYS]
         : data.scheduleDays;
 
     await prisma.newsletter.create({

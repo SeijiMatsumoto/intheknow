@@ -62,7 +62,9 @@ export default function SignUpPage() {
       }
       setError("Verification incomplete. Please try again.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Invalid code. Please try again.",
+      );
     }
     setLoading(false);
   }

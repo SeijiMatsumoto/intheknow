@@ -14,7 +14,7 @@ import { useState, useTransition } from "react";
 import { deleteNewsletterById } from "@/app/actions/newsletters";
 import { TriggerButton } from "@/components/internal/trigger-button";
 import { AddNewsletterModal } from "@/components/newsletters/add-newsletter-modal";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
 type Category = {

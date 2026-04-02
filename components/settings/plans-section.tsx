@@ -20,7 +20,7 @@ import {
   formatScheduleLabel,
   toLocalDays,
 } from "@/lib/format-schedule";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
 const PRICE_IDS: Record<string, { monthly: string; annual: string }> = {

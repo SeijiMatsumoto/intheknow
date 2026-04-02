@@ -3,7 +3,7 @@ import { startOfDay, startOfWeek } from "date-fns";
 import { inngest } from "@/inngest/client";
 import { renderEmail } from "@/inngest/lib/render-email";
 import { getDigestConfig } from "@/lib/digest-config";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 import { digestCostBreakdown, formatCostLog } from "@/lib/token-pricing";
 import { runNewsletterAgent } from "./newsletter-agent";
 import {
@@ -68,7 +68,13 @@ export const newsletterWorker = inngest.createFunction(
     },
   },
   async ({ event, step, logger }) => {
-    const { newsletterId, digestRunId, userEmails, userIds, tier = "pro" } = event.data;
+    const {
+      newsletterId,
+      digestRunId,
+      userEmails,
+      userIds,
+      tier = "pro",
+    } = event.data;
     const digestConfig = getDigestConfig(tier);
     logger.info("newsletter-worker started", {
       newsletterId,
@@ -85,9 +91,8 @@ export const newsletterWorker = inngest.createFunction(
     });
 
     // 1. Load newsletter + subscriptions + check for reusable run + extract domain hints
-    const { newsletter, subscriptions, recentRun, skippedRun, domainHints } = await step.run(
-      "load-newsletter",
-      async () => {
+    const { newsletter, subscriptions, recentRun, skippedRun, domainHints } =
+      await step.run("load-newsletter", async () => {
         const newsletter = await getNewsletterById(newsletterId);
         logger.info(
           `Loaded newsletter: "${newsletter.title}" (${newsletter.frequency})`,
@@ -138,9 +143,14 @@ export const newsletterWorker = inngest.createFunction(
           .filter(Boolean)
           .slice(0, 6);
 
-        return { newsletter, subscriptions, recentRun, skippedRun, domainHints };
-      },
-    );
+        return {
+          newsletter,
+          subscriptions,
+          recentRun,
+          skippedRun,
+          domainHints,
+        };
+      });
 
     if (!userEmails && subscriptions.length === 0) {
       logger.info("No subscribers for this run, skipping");

@@ -37,7 +37,11 @@ const PLANS: PlanCard[] = [
       "Custom schedule",
       "3 custom newsletters",
     ],
-    cta: <Button className="w-full" disabled>Coming soon</Button>,
+    cta: (
+      <Button className="w-full" disabled>
+        Coming soon
+      </Button>
+    ),
   },
   {
     name: "Pro",
@@ -136,9 +140,7 @@ export function Pricing() {
                   <span className="text-4xl font-bold text-foreground">
                     ${price}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    /month
-                  </span>
+                  <span className="text-sm text-muted-foreground">/month</span>
                   {annual && price > 0 && (
                     <p className="mt-1 text-xs text-muted-foreground/60">
                       ${price * 12}/year

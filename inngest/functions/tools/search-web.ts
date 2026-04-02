@@ -5,7 +5,7 @@ import {
   type Frequency,
   perplexityDateRange,
   serperDateRange,
-} from "@/lib/frequency";
+} from "@/lib/date-utils";
 import { checkRelevancy } from "./check-relevancy";
 
 // ── Configuration ─────────────────────────────────────────────────────────────
@@ -195,7 +195,10 @@ function isViableUrl(r: RawResult, seenUrls: Set<string>): boolean {
   const isAllowlistedBlog = BLOG_ALLOWLISTED_DOMAINS.has(hostname);
 
   // Blog posts, newsletters, roundups (skip check for allowlisted primary-source domains)
-  if (!isAllowlistedBlog && BLOG_PATH_PATTERNS.some((p) => p.test(url.pathname)))
+  if (
+    !isAllowlistedBlog &&
+    BLOG_PATH_PATTERNS.some((p) => p.test(url.pathname))
+  )
     return false;
 
   // Guides, how-tos, advice content

@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function submitDigestFeedback(
@@ -8,8 +8,7 @@ export async function submitDigestFeedback(
   rating: "up" | "down",
   comment: string | null,
 ): Promise<{ error?: string }> {
-  const { userId } = await auth();
-  if (!userId) return { error: "Unauthenticated" };
+  const userId = await requireAuth();
 
   await prisma.digestFeedback.upsert({
     where: { runId_userId: { runId, userId } },
@@ -23,8 +22,12 @@ export async function submitDigestFeedback(
 export async function getDigestFeedback(
   runId: string,
 ): Promise<{ rating: string; comment: string | null } | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch {
+    return null;
+  }
 
   return prisma.digestFeedback.findUnique({
     where: { runId_userId: { runId, userId } },

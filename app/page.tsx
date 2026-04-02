@@ -9,7 +9,6 @@ import { LandingNav } from "@/components/landing/nav";
 import { Pricing } from "@/components/landing/pricing";
 
 export default function Home() {
-
   return (
     <div className="relative min-h-screen bg-background">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[500px] dark:hidden bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(255,170,100,0.5),transparent)]" />

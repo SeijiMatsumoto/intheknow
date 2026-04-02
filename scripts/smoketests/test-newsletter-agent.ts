@@ -8,7 +8,7 @@ import {
   type ToolCallLog,
 } from "@/inngest/functions/newsletter-agent";
 import { renderEmail } from "@/inngest/lib/render-email";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 
 // ── Config ───────────────────────────────────────────────────────────────────
 

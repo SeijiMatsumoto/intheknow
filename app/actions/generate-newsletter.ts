@@ -11,24 +11,15 @@ import {
 const { generateText } = wrapAISDK(ai);
 
 import { z } from "zod";
+import { ALL_DAYS } from "@/lib/date-utils";
 import { prisma } from "@/lib/prisma";
-
-const DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const;
 
 export type GeneratedNewsletter = {
   title: string;
   description: string;
   categoryId: string;
   frequency: "daily" | "weekly";
-  scheduleDays: (typeof DAYS)[number][];
+  scheduleDays: (typeof ALL_DAYS)[number][];
   scheduleHour: number;
   keywords: string[];
 };
@@ -55,7 +46,7 @@ function buildSchema(categoryIds: [string, ...string[]]) {
       .describe(`Category id — must be one of: ${categoryIds.join(", ")}`),
     frequency: z.enum(["daily", "weekly"]),
     scheduleDays: z
-      .array(z.enum(DAYS))
+      .array(z.enum(ALL_DAYS))
       .describe(
         "Days to send. For daily use weekdays. For weekly pick one day that fits the topic.",
       ),

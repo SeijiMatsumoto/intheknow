@@ -128,8 +128,12 @@ export function OnboardingClient() {
   }
 
   return (
-    <div className={`flex min-h-screen px-4 py-12 ${step === "newsletters" ? "items-start justify-center pt-16" : "items-center justify-center"}`}>
-      <div className={`w-full ${step === "newsletters" ? "max-w-3xl" : "max-w-lg"} transition-all`}>
+    <div
+      className={`flex min-h-screen px-4 py-12 ${step === "newsletters" ? "items-start justify-center pt-16" : "items-center justify-center"}`}
+    >
+      <div
+        className={`w-full ${step === "newsletters" ? "max-w-3xl" : "max-w-lg"} transition-all`}
+      >
         <div className="text-center mb-8">
           <Link href="/">
             <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
@@ -142,8 +146,11 @@ export function OnboardingClient() {
         <div className="flex items-center justify-center gap-2 mb-8">
           {(["name", "interests", "newsletters"] as const).map((s, i) => {
             const stepIndex =
-              step === "loading" ? 1.5 : ["name", "interests", "newsletters"].indexOf(step);
-            const isActive = s === step || (step === "loading" && s === "interests");
+              step === "loading"
+                ? 1.5
+                : ["name", "interests", "newsletters"].indexOf(step);
+            const isActive =
+              s === step || (step === "loading" && s === "interests");
             const isPast = stepIndex > i && !isActive;
             return (
               <div key={s} className="flex items-center gap-2">

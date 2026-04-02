@@ -6,7 +6,7 @@ type Props = {
 
 function utcToLocalHour(utcHour: number): number {
   const offset = new Date().getTimezoneOffset();
-  return ((utcHour - offset / 60) % 24 + 24) % 24;
+  return (((utcHour - offset / 60) % 24) + 24) % 24;
 }
 
 function formatHour(h: number): string {

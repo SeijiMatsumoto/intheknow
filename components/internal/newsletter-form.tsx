@@ -3,17 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import type { Frequency } from "@/lib/frequency";
-
-const DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-];
+import { ALL_DAYS, type Frequency } from "@/lib/date-utils";
 
 type Sources = {
   rss?: string[];
@@ -127,7 +117,7 @@ export function NewsletterForm({
           Send on (UTC)
         </p>
         <div className="flex flex-wrap gap-3">
-          {DAYS.map((day) => (
+          {ALL_DAYS.map((day) => (
             <label
               key={day}
               className="flex items-center gap-1.5 text-sm capitalize"

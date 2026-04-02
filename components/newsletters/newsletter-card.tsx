@@ -4,7 +4,7 @@ import Link from "next/link";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { getCategory } from "@/lib/categories";
-import type { Frequency } from "@/lib/frequency";
+import type { Frequency } from "@/lib/date-utils";
 
 type NewsletterCardProps = {
   newsletter: {

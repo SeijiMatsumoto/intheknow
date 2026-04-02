@@ -75,7 +75,9 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
         value={newsletterValue}
         onValueChange={(v) => updateParam("newsletter", v ?? "all")}
       >
-        <SelectTrigger className={`${triggerClass} min-w-[220px] ${isActive(newsletterValue)}`}>
+        <SelectTrigger
+          className={`${triggerClass} min-w-[220px] ${isActive(newsletterValue)}`}
+        >
           <SelectValue placeholder="All newsletters">
             {newsletterValue === "all"
               ? "All newsletters"
@@ -97,7 +99,9 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
         value={frequencyValue}
         onValueChange={(v) => updateParam("frequency", v ?? "all")}
       >
-        <SelectTrigger className={`${triggerClass} ${isActive(frequencyValue)}`}>
+        <SelectTrigger
+          className={`${triggerClass} ${isActive(frequencyValue)}`}
+        >
           <SelectValue placeholder="All frequencies">
             {FREQUENCY_LABELS[frequencyValue] ?? frequencyValue}
           </SelectValue>
@@ -113,7 +117,9 @@ export function FeedFilters({ newsletters, filters }: FeedFiltersProps) {
         value={dateRangeValue}
         onValueChange={(v) => updateParam("dateRange", v ?? "all")}
       >
-        <SelectTrigger className={`${triggerClass} ${isActive(dateRangeValue)}`}>
+        <SelectTrigger
+          className={`${triggerClass} ${isActive(dateRangeValue)}`}
+        >
           <SelectValue placeholder="All time">
             {DATE_RANGE_LABELS[dateRangeValue] ?? dateRangeValue}
           </SelectValue>

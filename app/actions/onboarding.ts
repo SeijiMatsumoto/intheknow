@@ -1,13 +1,12 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 import { getLimit } from "@/lib/gates";
+import { prisma } from "@/lib/prisma";
 
 export async function getNewslettersByCategories(categoryIds: string[]) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthenticated");
+  const userId = await requireAuth();
 
   if (categoryIds.length === 0) return { newsletters: [], maxSubscriptions: 0 };
 
@@ -34,11 +33,8 @@ export async function getNewslettersByCategories(categoryIds: string[]) {
   return { newsletters, maxSubscriptions: limit - existing };
 }
 
-export async function completeOnboarding(input: {
-  newsletterIds: string[];
-}) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthenticated");
+export async function completeOnboarding(input: { newsletterIds: string[] }) {
+  const userId = await requireAuth();
 
   // Bulk subscribe, respecting plan limits
   if (input.newsletterIds.length > 0) {

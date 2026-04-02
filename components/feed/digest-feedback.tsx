@@ -93,7 +93,6 @@ export function DigestFeedback({ runId, existing }: DigestFeedbackProps) {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

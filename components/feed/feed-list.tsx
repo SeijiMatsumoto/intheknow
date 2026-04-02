@@ -75,7 +75,10 @@ function TimelineCard({ send }: { send: FeedSend }) {
     content?.keyTakeaways && content.keyTakeaways.length > 0;
   const sectionCount = content?.sections?.length ?? 0;
   const storyCount =
-    content?.sections?.reduce((sum, s) => sum + ((s as { items?: unknown[] }).items?.length ?? 0), 0) ?? 0;
+    content?.sections?.reduce(
+      (sum, s) => sum + ((s as { items?: unknown[] }).items?.length ?? 0),
+      0,
+    ) ?? 0;
 
   return (
     <div className="group relative">
@@ -118,9 +121,7 @@ function TimelineCard({ send }: { send: FeedSend }) {
 
           {/* Footer meta */}
           <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground/50">
-            {sectionCount > 0 && (
-              <span>{sectionCount} sections</span>
-            )}
+            {sectionCount > 0 && <span>{sectionCount} sections</span>}
             {storyCount > 0 && (
               <>
                 <span>·</span>
@@ -167,13 +168,7 @@ function TimelineCard({ send }: { send: FeedSend }) {
   );
 }
 
-function DateGroup({
-  dateKey,
-  sends,
-}: {
-  dateKey: string;
-  sends: FeedSend[];
-}) {
+function DateGroup({ dateKey, sends }: { dateKey: string; sends: FeedSend[] }) {
   return (
     <div className="relative flex gap-4 sm:gap-6">
       {/* Timeline rail */}

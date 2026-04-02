@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/common/theme-toggle";
 import { SignInModalButton } from "@/components/layout/sign-in-button";
 
 export function LandingNav() {
@@ -25,7 +26,10 @@ export function LandingNav() {
               FAQ
             </a>
           </nav>
-          <SignInModalButton />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <SignInModalButton />
+          </div>
         </div>
       </div>
       <div className="border-b border-border" />

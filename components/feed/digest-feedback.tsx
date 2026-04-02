@@ -15,30 +15,24 @@ export function DigestFeedback({ runId, existing }: DigestFeedbackProps) {
     (existing?.rating as "up" | "down") ?? null,
   );
   const [comment, setComment] = useState(existing?.comment ?? "");
-  const [showComment, setShowComment] = useState(false);
-  const [submitted, setSubmitted] = useState(!!existing);
+  const [commentSaved, setCommentSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleRating(value: "up" | "down") {
+    if (value === rating) return;
     setRating(value);
-    setShowComment(true);
-
-    if (submitted && value !== rating) {
-      setSubmitting(true);
-      await submitDigestFeedback(runId, value, comment || null);
-      setSubmitting(false);
-    }
+    setCommentSaved(false);
+    setSubmitting(true);
+    await submitDigestFeedback(runId, value, null);
+    setSubmitting(false);
   }
 
-  async function handleSubmit() {
+  async function handleCommentSubmit() {
     if (!rating) return;
     setSubmitting(true);
-    const result = await submitDigestFeedback(runId, rating, comment || null);
+    await submitDigestFeedback(runId, rating, comment || null);
+    setCommentSaved(true);
     setSubmitting(false);
-    if (!result.error) {
-      setSubmitted(true);
-      setShowComment(false);
-    }
   }
 
   return (
@@ -77,31 +71,29 @@ export function DigestFeedback({ runId, existing }: DigestFeedbackProps) {
           </button>
         </div>
 
-        {showComment && !submitted && (
-          <div className="flex flex-col items-center gap-2 w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-200">
+        {rating && (
+          <div className="flex flex-col items-center gap-2 w-full max-w-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
             <textarea
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={(e) => {
+                setComment(e.target.value);
+                setCommentSaved(false);
+              }}
               placeholder="Any thoughts? (optional)"
-              rows={2}
-              className="w-full resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-foreground/20"
+              rows={3}
+              className="w-full resize-none rounded-md border border-border bg-transparent px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-foreground/20"
             />
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
+              onClick={handleCommentSubmit}
+              disabled={submitting || commentSaved}
               className="rounded-md bg-foreground px-4 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-50"
             >
-              {submitting ? "Sending..." : "Submit"}
+              {submitting ? "Sending..." : commentSaved ? "Saved" : "Submit"}
             </button>
           </div>
         )}
 
-        {submitted && !showComment && (
-          <p className="text-xs text-muted-foreground/40 animate-in fade-in duration-200">
-            Thanks for the feedback
-          </p>
-        )}
       </div>
     </div>
   );

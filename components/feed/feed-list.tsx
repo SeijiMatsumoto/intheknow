@@ -12,13 +12,11 @@ type FeedSend = {
   sentAt: string | null;
   run: {
     id: string;
-    content: {
-      editionTitle?: string;
-      title?: string;
-      summary?: string;
-      keyTakeaways?: string[];
-      sections?: { heading: string }[];
-    } | null;
+    editionTitle: string | null;
+    summary: string | null;
+    keyTakeaways: string[];
+    sectionCount: number;
+    storyCount: number;
     newsletter: {
       title: string;
       slug: string;
@@ -63,22 +61,15 @@ function formatDateHeader(dateKey: string): string {
 function TimelineCard({ send }: { send: FeedSend }) {
   const [expanded, setExpanded] = useState(false);
   const { run } = send;
-  const content = run.content;
   const cat = getCategory(run.newsletter.categoryId);
   const CatIcon = cat.icon;
-  const editionTitle =
-    content?.editionTitle ?? content?.title ?? run.newsletter.title;
+  const editionTitle = run.editionTitle ?? run.newsletter.title;
   const sentLabel = send.sentAt
     ? format(new Date(send.sentAt), "h:mm a").toLowerCase()
     : null;
-  const hasKeyTakeaways =
-    content?.keyTakeaways && content.keyTakeaways.length > 0;
-  const sectionCount = content?.sections?.length ?? 0;
-  const storyCount =
-    content?.sections?.reduce(
-      (sum, s) => sum + ((s as { items?: unknown[] }).items?.length ?? 0),
-      0,
-    ) ?? 0;
+  const hasKeyTakeaways = run.keyTakeaways.length > 0;
+  const sectionCount = run.sectionCount;
+  const storyCount = run.storyCount;
 
   return (
     <div className="group relative">
@@ -113,9 +104,9 @@ function TimelineCard({ send }: { send: FeedSend }) {
           </h3>
 
           {/* Summary */}
-          {content?.summary && (
+          {run.summary && (
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground line-clamp-2">
-              {content.summary}
+              {run.summary}
             </p>
           )}
 
@@ -150,7 +141,7 @@ function TimelineCard({ send }: { send: FeedSend }) {
             </button>
             {expanded && (
               <ul className="px-4 pb-4 sm:px-5 space-y-2">
-                {content!.keyTakeaways!.map((t) => (
+                {run.keyTakeaways.map((t) => (
                   <li
                     key={t}
                     className="flex gap-2 text-xs leading-relaxed text-muted-foreground"

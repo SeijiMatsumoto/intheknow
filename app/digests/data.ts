@@ -1,7 +1,62 @@
+import type { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 function userIds(userId: string, admin: boolean): string[] {
   return admin ? [userId, "manual"] : [userId];
+}
+
+// Prisma include for loading normalized digest content
+const digestContentInclude = {
+  sections: {
+    orderBy: { sortOrder: "asc" },
+    include: {
+      stories: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          sources: { orderBy: { sortOrder: "asc" } },
+        },
+      },
+    },
+  },
+  socialHighlights: { orderBy: { sortOrder: "asc" } },
+} satisfies Prisma.DigestRunInclude;
+
+type DigestRunWithRelations = Prisma.DigestRunGetPayload<{
+  include: typeof digestContentInclude;
+}>;
+
+/** Transform a DigestRun with included relations into a flat DigestContent. */
+function toDigestContent(run: DigestRunWithRelations): DigestContent {
+  return {
+    editionTitle: run.editionTitle,
+    summary: run.summary,
+    keyTakeaways: run.keyTakeaways,
+    sections: run.sections.map((s: DigestRunWithRelations["sections"][number]) => ({
+      heading: s.heading,
+      items: s.stories.map((story: DigestRunWithRelations["sections"][number]["stories"][number]) => ({
+        title: story.title,
+        category: story.category,
+        icon: story.icon,
+        detail: story.detail,
+        quote: story.quote,
+        sources: story.sources.map((src: DigestRunWithRelations["sections"][number]["stories"][number]["sources"][number]) => ({
+          url: src.url,
+          name: src.name,
+          publishedAt: src.publishedAt,
+        })),
+      })),
+    })),
+    socialConsensusOverview: run.socialConsensusOverview,
+    socialHighlights: run.socialHighlights.map((h: DigestRunWithRelations["socialHighlights"][number]) => ({
+      text: h.text,
+      author: h.author,
+      authorName: h.authorName,
+      url: h.url,
+      engagement: h.engagement,
+    })),
+    bottomLine: run.bottomLine,
+    agentSummary: run.agentSummary,
+  };
 }
 
 export type FeedFilters = {
@@ -48,6 +103,29 @@ export async function getFeedSends(
     ...(filters.frequency ? { frequency: filters.frequency } : {}),
   };
 
+  const feedRunSelect = {
+    id: true,
+    runAt: true,
+    editionTitle: true,
+    summary: true,
+    keyTakeaways: true,
+    sections: {
+      select: {
+        heading: true,
+        _count: { select: { stories: true } },
+      },
+      orderBy: { sortOrder: "asc" as const },
+    },
+    newsletter: {
+      select: {
+        title: true,
+        slug: true,
+        categoryId: true,
+        frequency: true,
+      },
+    },
+  } satisfies Prisma.DigestRunSelect;
+
   // Fetch all completed digest runs for subscribed newsletters
   const runs =
     subscribedIds.length > 0
@@ -63,16 +141,7 @@ export async function getFeedSends(
           },
           orderBy: { runAt: "desc" },
           take: limit + 1,
-          include: {
-            newsletter: {
-              select: {
-                title: true,
-                slug: true,
-                categoryId: true,
-                frequency: true,
-              },
-            },
-          },
+          select: feedRunSelect,
         })
       : [];
 
@@ -92,41 +161,22 @@ export async function getFeedSends(
         orderBy: { sentAt: "desc" },
         take: limit + 1,
         include: {
-          run: {
-            include: {
-              newsletter: {
-                select: {
-                  title: true,
-                  slug: true,
-                  categoryId: true,
-                  frequency: true,
-                },
-              },
-            },
-          },
+          run: { select: feedRunSelect },
         },
       })
     : [];
 
   // Normalize runs into the same shape as sends
   const fromRuns = runs.map((run) => ({
-    id: run.id, // use run id as the "send" id
+    id: run.id,
     sentAt: run.runAt as Date | null,
-    run: {
-      id: run.id,
-      content: run.content,
-      newsletter: run.newsletter,
-    },
+    run,
   }));
 
   const fromManual = manualSends.map((s) => ({
     id: s.id,
     sentAt: s.sentAt,
-    run: {
-      id: s.run.id,
-      content: s.run.content,
-      newsletter: s.run.newsletter,
-    },
+    run: s.run,
   }));
 
   // Merge and deduplicate by run id, sort by date desc
@@ -263,27 +313,33 @@ export async function getFeedDigest(
   userId: string,
   admin: boolean,
 ) {
+  const digestRunInclude = {
+    ...digestContentInclude,
+    newsletter: { select: { id: true, title: true, slug: true, categoryId: true } },
+  };
+
   // First try finding a direct send for this user
   const send = await prisma.digestSend.findFirst({
     where: { runId, userId: { in: userIds(userId, admin) } },
-    include: {
-      run: {
-        include: {
-          newsletter: { select: { title: true, slug: true, categoryId: true } },
-        },
-      },
-    },
+    include: { run: { include: digestRunInclude } },
   });
-  if (send) return send;
+
+  if (send) {
+    return {
+      sentAt: send.sentAt,
+      run: {
+        id: send.run.id,
+        runAt: send.run.runAt,
+        newsletter: send.run.newsletter,
+        content: toDigestContent(send.run),
+      },
+    };
+  }
 
   // Fall back: allow access if user is subscribed to this newsletter
   const run = await prisma.digestRun.findUnique({
     where: { id: runId },
-    include: {
-      newsletter: {
-        select: { id: true, title: true, slug: true, categoryId: true },
-      },
-    },
+    include: digestRunInclude,
   });
   if (!run) return null;
 
@@ -292,27 +348,13 @@ export async function getFeedDigest(
   });
   if (!subscription) return null;
 
-  // Return in the same shape as a DigestSend record
   return {
-    id: run.id,
-    runId: run.id,
-    userId,
     sentAt: run.runAt,
-    status: "sent" as const,
     run: {
       id: run.id,
-      newsletterId: run.newsletterId,
       runAt: run.runAt,
-      status: run.status,
-      content: run.content,
-      emailHtml: run.emailHtml,
-      error: run.error,
-      createdAt: run.createdAt,
-      newsletter: {
-        title: run.newsletter.title,
-        slug: run.newsletter.slug,
-        categoryId: run.newsletter.categoryId,
-      },
+      newsletter: run.newsletter,
+      content: toDigestContent(run),
     },
   };
 }
@@ -320,20 +362,16 @@ export async function getFeedDigest(
 export type DigestSource = {
   url: string;
   name: string;
-  publishedAt?: string;
+  publishedAt: string | null;
 };
 
 export type DigestItem = {
   title: string;
-  category?: string;
-  icon?: string;
-  detail?: string;
-  quote?: string;
-  sources?: DigestSource[];
-  // Backward compat for old digests stored in DB
-  url?: string;
-  source?: string;
-  publishedAt?: string;
+  category: string;
+  icon: string;
+  detail: string;
+  quote: string | null;
+  sources: DigestSource[];
 };
 
 export type DigestSection = {
@@ -349,18 +387,13 @@ export type SocialHighlight = {
   engagement: string | null;
 };
 
-export type SocialConsensus = {
-  overview: string;
-  highlights: SocialHighlight[];
-};
-
 export type DigestContent = {
-  editionTitle: string;
-  title: string;
-  summary: string;
-  sections: DigestSection[];
+  editionTitle: string | null;
+  summary: string | null;
   keyTakeaways: string[];
-  socialConsensus?: SocialConsensus | null;
-  bottomLine?: string;
-  agentSummary?: string;
+  sections: DigestSection[];
+  socialConsensusOverview: string | null;
+  socialHighlights: SocialHighlight[];
+  bottomLine: string | null;
+  agentSummary: string | null;
 };

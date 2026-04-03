@@ -42,9 +42,10 @@ model Newsletter {
   createdBy    String?  @map("created_by")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  category      Category       @relation(fields: [categoryId], references: [id])
-  subscriptions Subscription[]
-  digestRuns    DigestRun[]
+  category          Category           @relation(fields: [categoryId], references: [id])
+  subscriptions     Subscription[]
+  digestRuns        DigestRun[]
+  newsletterSources NewsletterSource[]
 
   @@index([createdBy])
   @@map("newsletters")
@@ -68,18 +69,27 @@ model Subscription {
 }
 
 model DigestRun {
-  id             String    @id @default(uuid())
-  newsletterId   String    @map("newsletter_id")
-  runAt          DateTime  @map("run_at")
-  status         String    @default("pending") // 'pending' | 'running' | 'sent' | 'failed'
-  content        Json?
-  emailHtml      String?   @map("email_html")
-  error          String?
-  createdAt      DateTime  @default(now()) @map("created_at")
+  id                     String    @id @default(uuid())
+  newsletterId           String    @map("newsletter_id")
+  runAt                  DateTime  @map("run_at")
+  status                 String    @default("pending") // 'pending' | 'running' | 'sent' | 'failed'
+  editionTitle           String?   @map("edition_title")
+  summary                String?
+  keyTakeaways           String[]  @default([]) @map("key_takeaways")
+  socialConsensusOverview String?  @map("social_consensus_overview")
+  bottomLine             String?   @map("bottom_line")
+  agentSummary           String?   @map("agent_summary")
+  skipEdition            Boolean   @default(false) @map("skip_edition")
+  content                Json?     // DEPRECATED — kept for migration
+  emailHtml              String?   @map("email_html")
+  error                  String?
+  createdAt              DateTime  @default(now()) @map("created_at")
 
-  newsletter      Newsletter       @relation(fields: [newsletterId], references: [id])
-  digestSends     DigestSend[]
-  digestFeedback  DigestFeedback[]
+  newsletter       Newsletter              @relation(fields: [newsletterId], references: [id])
+  sections         DigestSection[]
+  socialHighlights DigestSocialHighlight[]
+  digestSends      DigestSend[]
+  digestFeedback   DigestFeedback[]
 
   @@index([newsletterId, status, runAt])
   @@map("digest_runs")
@@ -112,4 +122,76 @@ model DigestFeedback {
   @@unique([runId, userId])
   @@index([runId])
   @@map("digest_feedback")
+}
+
+model NewsletterSource {
+  id           String @id @default(uuid())
+  newsletterId String @map("newsletter_id")
+  type         String // 'rss' | 'site' | 'bluesky_query'
+  url          String
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+
+  @@index([newsletterId])
+  @@map("newsletter_sources")
+}
+
+model DigestSection {
+  id        String @id @default(uuid())
+  runId     String @map("run_id")
+  heading   String
+  sortOrder Int    @map("sort_order")
+
+  run     DigestRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  stories DigestStory[]
+
+  @@index([runId])
+  @@map("digest_sections")
+}
+
+model DigestStory {
+  id        String  @id @default(uuid())
+  sectionId String  @map("section_id")
+  title     String
+  category  String
+  icon      String
+  detail    String
+  quote     String?
+  sortOrder Int     @map("sort_order")
+
+  section DigestSection       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sources DigestStorySource[]
+
+  @@index([sectionId])
+  @@map("digest_stories")
+}
+
+model DigestStorySource {
+  id          String  @id @default(uuid())
+  storyId     String  @map("story_id")
+  url         String
+  name        String
+  publishedAt String? @map("published_at")
+  sortOrder   Int     @map("sort_order")
+
+  story DigestStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([storyId])
+  @@map("digest_story_sources")
+}
+
+model DigestSocialHighlight {
+  id         String  @id @default(uuid())
+  runId      String  @map("run_id")
+  text       String
+  author     String
+  authorName String  @map("author_name")
+  url        String
+  engagement String?
+  sortOrder  Int     @map("sort_order")
+
+  run DigestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@map("digest_social_highlights")
 }

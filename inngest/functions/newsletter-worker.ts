@@ -190,14 +190,13 @@ export const newsletterWorker = inngest.createFunction(
           logger.warn("No valid recipients for reuse — skipping");
           return;
         }
-        const content = recentRun.content as { editionTitle?: string } | null;
         await inngest.send(
           emails.map((e: { userId: string; userEmail: string }) => ({
             name: "newsletter/email.generated" as const,
             data: {
               digestRunId: recentRun.id,
               newsletterId,
-              newsletterTitle: content?.editionTitle ?? newsletter.title,
+              newsletterTitle: recentRun.editionTitle ?? newsletter.title,
               userId: e.userId,
               userEmail: e.userEmail,
               emailHtml: recentRun.emailHtml,

@@ -42,7 +42,7 @@ export default async function NewsletterDetailPage({
       where: { newsletterId: newsletter.id, status: "sent" },
       orderBy: { runAt: "desc" },
       take: 10,
-      select: { id: true, runAt: true, content: true },
+      select: { id: true, runAt: true, editionTitle: true, summary: true },
     }),
   ]);
 
@@ -174,14 +174,8 @@ export default async function NewsletterDetailPage({
           {pastRuns.length > 0 ? (
             <div className="divide-y divide-border">
               {pastRuns.map((run) => {
-                const content = run.content as {
-                  editionTitle?: string;
-                  title?: string;
-                  summary?: string;
-                } | null;
-                const title =
-                  content?.editionTitle ?? content?.title ?? "Untitled edition";
-                const summary = content?.summary;
+                const title = run.editionTitle ?? "Untitled edition";
+                const summary = run.summary;
                 const date = format(new Date(run.runAt), "MMM d, yyyy");
 
                 return (

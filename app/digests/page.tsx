@@ -75,13 +75,15 @@ export default async function FeedPage({ searchParams }: Props) {
     sentAt: s.sentAt ? new Date(s.sentAt).toISOString() : null,
     run: {
       id: s.run.id,
-      content: s.run.content as {
-        editionTitle?: string;
-        title?: string;
-        summary?: string;
-        keyTakeaways?: string[];
-        sections?: { heading: string }[];
-      } | null,
+      editionTitle: s.run.editionTitle,
+      summary: s.run.summary,
+      keyTakeaways: s.run.keyTakeaways,
+      sectionCount: s.run.sections.length,
+      storyCount: s.run.sections.reduce(
+        (sum: number, sec: { _count: { stories: number } }) =>
+          sum + sec._count.stories,
+        0,
+      ),
       newsletter: s.run.newsletter,
     },
   }));

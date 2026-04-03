@@ -16,6 +16,10 @@ import {
   getFeedDigest,
 } from "../data";
 
+function getItemSources(item: DigestItem): DigestSource[] {
+  return item.sources;
+}
+
 function formatDate(iso: string): string {
   try {
     return format(parseISO(iso), "MMMM d, yyyy");
@@ -48,19 +52,6 @@ function getStoryDate(sources: DigestSource[]): string | null {
   return null;
 }
 
-/** Extract sources from a digest item, handling both old and new schema. */
-function getItemSources(item: DigestItem): DigestSource[] {
-  if (item.sources && item.sources.length > 0) return item.sources;
-  if (item.url)
-    return [
-      {
-        url: item.url,
-        name: item.source ?? "Source",
-        publishedAt: item.publishedAt,
-      },
-    ];
-  return [];
-}
 
 function SourceRow({ sources }: { sources: DigestSource[] }) {
   if (sources.length === 0) return null;
@@ -164,7 +155,7 @@ export default async function FeedDetailPage({
 
   if (!send) notFound();
 
-  const content = send.run.content as DigestContent | null;
+  const content = send.run.content;
   if (!content) notFound();
 
   const hasFullAccess = canUsePlan(plan, "full_digest");
@@ -173,7 +164,7 @@ export default async function FeedDetailPage({
     ? format(new Date(send.sentAt), "EEEE, MMMM d, yyyy")
     : null;
 
-  const title = content.editionTitle ?? content.title;
+  const title = content.editionTitle ?? "Untitled";
 
   return (
     <div className="min-h-screen bg-background">
@@ -265,15 +256,17 @@ export default async function FeedDetailPage({
             ))}
 
             {/* ── The public square (social consensus) ────────── */}
-            {content.socialConsensus && (
+            {content.socialHighlights.length > 0 && (
               <div className="mt-6 sm:mt-8">
                 <SectionRule label="The Public Square" />
                 <div className="py-5 sm:py-6">
-                  <p className="text-sm leading-relaxed text-muted-foreground mb-5">
-                    {content.socialConsensus.overview}
-                  </p>
+                  {content.socialConsensusOverview && (
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-5">
+                      {content.socialConsensusOverview}
+                    </p>
+                  )}
                   <div className="space-y-4">
-                    {content.socialConsensus.highlights.map((h) => (
+                    {content.socialHighlights.map((h) => (
                       <div key={h.url}>
                         <p className="font-serif text-[14px] leading-snug text-foreground/80 italic">
                           &ldquo;{h.text}&rdquo;
@@ -320,14 +313,13 @@ export default async function FeedDetailPage({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2">
                   {section.items.map((item, idx) => {
-                    const sources = getItemSources(item);
-                    const primary = sources[0];
+                    const sources = item.sources;
                     const ItemIcon = getDigestIcon(item.icon);
                     const isLast = idx === section.items.length - 1;
                     const isOddLast = isLast && section.items.length % 2 === 1;
                     return (
                       <div
-                        key={primary?.url ?? idx}
+                        key={sources[0]?.url ?? idx}
                         className={`py-4 border-b border-foreground/10 ${
                           isOddLast
                             ? "sm:col-span-2"

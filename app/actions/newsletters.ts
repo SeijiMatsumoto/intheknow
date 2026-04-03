@@ -74,6 +74,13 @@ export async function createNewsletter(formData: FormData) {
       scheduleHour,
       keywords,
       sources: { rss, bluesky_queries, sites },
+      newsletterSources: {
+        create: [
+          ...rss.map((url) => ({ type: "rss", url })),
+          ...sites.map((url) => ({ type: "site", url })),
+          ...bluesky_queries.map((url) => ({ type: "bluesky_query", url })),
+        ],
+      },
     },
   });
 
@@ -92,18 +99,30 @@ export async function updateNewsletter(id: string, formData: FormData) {
   const sites = parseLines(formData.get("sites") as string);
   const { scheduleDays, scheduleHour } = parseSchedule(formData);
 
-  await prisma.newsletter.update({
-    where: { id },
-    data: {
-      title,
-      slug,
-      description,
-      frequency,
-      scheduleDays,
-      scheduleHour,
-      keywords,
-      sources: { rss, bluesky_queries, sites },
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.newsletter.update({
+      where: { id },
+      data: {
+        title,
+        slug,
+        description,
+        frequency,
+        scheduleDays,
+        scheduleHour,
+        keywords,
+        sources: { rss, bluesky_queries, sites },
+      },
+    });
+
+    // Replace normalized sources (delete + recreate)
+    await tx.newsletterSource.deleteMany({ where: { newsletterId: id } });
+    await tx.newsletterSource.createMany({
+      data: [
+        ...rss.map((url) => ({ newsletterId: id, type: "rss" as const, url })),
+        ...sites.map((url) => ({ newsletterId: id, type: "site" as const, url })),
+        ...bluesky_queries.map((url) => ({ newsletterId: id, type: "bluesky_query" as const, url })),
+      ],
+    });
   });
 
   revalidatePath("/internal");
@@ -188,6 +207,7 @@ export async function createUserNewsletter(data: {
         keywords: data.keywords,
         sources: { rss: [], bluesky_queries: [], sites: [] },
         createdBy: userId,
+        // No newsletterSources to create — user newsletters start with empty sources
       },
     });
 

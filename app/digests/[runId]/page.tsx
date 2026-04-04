@@ -103,12 +103,12 @@ function StoryItem({ item, full }: { item: DigestItem; full: boolean }) {
       {full && (
         <>
           {item.detail && (
-            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 text-[13px] leading-relaxed text-foreground/70">
               {item.detail}
             </p>
           )}
           {item.quote && (
-            <blockquote className="mt-2.5 border-l-2 border-foreground/20 pl-3.5 font-serif text-[13px] italic leading-snug text-muted-foreground">
+            <blockquote className="mt-2.5 border-l-2 border-foreground/20 pl-3.5 font-serif text-[13px] leading-snug text-muted-foreground">
               &ldquo;{item.quote}&rdquo;
             </blockquote>
           )}
@@ -268,7 +268,7 @@ export default async function FeedDetailPage({
                   <div className="space-y-4">
                     {content.socialHighlights.map((h) => (
                       <div key={h.url}>
-                        <p className="font-serif text-[14px] leading-snug text-foreground/80 italic">
+                        <p className="font-serif text-[14px] leading-snug text-foreground/80">
                           &ldquo;{h.text}&rdquo;
                         </p>
                         <p className="mt-1.5 text-xs text-muted-foreground/50">

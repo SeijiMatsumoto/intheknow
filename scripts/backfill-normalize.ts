@@ -10,6 +10,7 @@
  */
 
 import { config } from "dotenv";
+
 config({ path: ".env.local" });
 
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -158,10 +159,7 @@ async function backfillDigestRuns() {
 
           // Create social highlights
           if (content.socialConsensus?.highlights) {
-            for (const [
-              i,
-              h,
-            ] of content.socialConsensus.highlights.entries()) {
+            for (const [i, h] of content.socialConsensus.highlights.entries()) {
               await tx.digestSocialHighlight.create({
                 data: {
                   runId: run.id,
@@ -222,16 +220,31 @@ async function backfillNewsletterSources() {
     const blueskyQueries = sources?.bluesky_queries ?? [];
 
     // Skip if already backfilled OR if there are no sources to create
-    if (existing || (rss.length === 0 && sites.length === 0 && blueskyQueries.length === 0)) {
+    if (
+      existing ||
+      (rss.length === 0 && sites.length === 0 && blueskyQueries.length === 0)
+    ) {
       skipped++;
       continue;
     }
 
     await prisma.newsletterSource.createMany({
       data: [
-        ...rss.map((url) => ({ newsletterId: nl.id, type: "rss" as const, url })),
-        ...sites.map((url) => ({ newsletterId: nl.id, type: "site" as const, url })),
-        ...blueskyQueries.map((url) => ({ newsletterId: nl.id, type: "bluesky_query" as const, url })),
+        ...rss.map((url) => ({
+          newsletterId: nl.id,
+          type: "rss" as const,
+          url,
+        })),
+        ...sites.map((url) => ({
+          newsletterId: nl.id,
+          type: "site" as const,
+          url,
+        })),
+        ...blueskyQueries.map((url) => ({
+          newsletterId: nl.id,
+          type: "bluesky_query" as const,
+          url,
+        })),
       ],
     });
 

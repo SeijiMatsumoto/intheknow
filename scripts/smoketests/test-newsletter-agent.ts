@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { randomUUID } from "node:crypto";
 import { Client } from "langsmith";
 import { traceable } from "langsmith/traceable";
 import {
@@ -68,7 +68,8 @@ async function main() {
 
   const wrappedRun = traceable(
     async () => {
-      console.log(`\n  🔗 LangSmith run ID: ${runId}\n`);
+      const traceUrl = `https://smith.langchain.com/o/ca7f5255-e363-4472-8b81-43d682ffb70f/projects/p/9cf6de73-738c-4a43-a6f5-fa8b24752913/r/${runId}?trace_id=${runId}`;
+      console.log(`\n  🔗 ${traceUrl}\n`);
       console.log(SECTION("NEWSLETTER AGENT SMOKE TEST"));
       console.log(`  Newsletter:  ${newsletter.title}`);
       console.log(`  Frequency:   ${newsletter.frequency}`);

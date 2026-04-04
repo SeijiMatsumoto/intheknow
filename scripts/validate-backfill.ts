@@ -10,6 +10,7 @@
  */
 
 import { config } from "dotenv";
+
 config({ path: ".env.local" });
 
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -125,9 +126,14 @@ async function main() {
     for (let si = 0; si < Math.min(jsonSectionCount, dbSectionCount); si++) {
       const jsonItems = content.sections[si].items ?? [];
       const dbStories = dbSections[si].stories;
-      for (let ii = 0; ii < Math.min(jsonItems.length, dbStories.length); ii++) {
+      for (
+        let ii = 0;
+        ii < Math.min(jsonItems.length, dbStories.length);
+        ii++
+      ) {
         const jsonItem = jsonItems[ii];
-        const jsonSourceCount = jsonItem.sources?.length ?? (jsonItem.url ? 1 : 0);
+        const jsonSourceCount =
+          jsonItem.sources?.length ?? (jsonItem.url ? 1 : 0);
         const dbSourceCount = dbStories[ii].sources.length;
         if (jsonSourceCount !== dbSourceCount) {
           mismatches.push(

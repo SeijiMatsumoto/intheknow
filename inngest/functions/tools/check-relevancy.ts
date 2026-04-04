@@ -74,12 +74,21 @@ function buildPrompt(
   return parts.join("\n");
 }
 
+function parseResults(
+  output: z.infer<typeof RelevancySchema> | undefined,
+  itemCount: number,
+): RelevancyResult[] {
+  const results = output?.results ?? [];
+  const indexed = new Map(
+    results.map((r) => [r.index, { relevant: r.relevant, summary: r.summary }]),
+  );
+  return Array.from({ length: itemCount }, (_, i) =>
+    indexed.get(i) ?? { relevant: false, summary: "" },
+  );
+}
+
 // ── Public API ───────────────────────────────────────────────────────────────
 
-/**
- * Single-pass relevancy filter + summarizer.
- * Judges relevance and summarizes relevant items in one LLM call.
- */
 export async function checkRelevancy(
   query: string,
   items: RelevancyInput[],
@@ -117,18 +126,64 @@ Mark as NOT relevant ONLY if it clearly falls into one of these categories:
     prompt: buildPrompt(query, items, context),
   });
 
-  const results = output?.results ?? [];
-  const relevantCount = results.filter((r) => r.relevant).length;
-
+  const relevantCount = (output?.results ?? []).filter((r) => r.relevant).length;
   console.log(
     `[checkRelevancy] query="${query}" relevant=${relevantCount}/${items.length} tokens=${usage.inputTokens}in/${usage.outputTokens}out`,
   );
 
-  const indexed = new Map(
-    results.map((r) => [r.index, { relevant: r.relevant, summary: r.summary }]),
+  return parseResults(output, items.length);
+}
+
+export async function checkOpinionRelevancy(
+  query: string,
+  items: RelevancyInput[],
+  context: RelevancyContext,
+): Promise<RelevancyResult[]> {
+  if (items.length === 0) return [];
+
+  console.log(`[checkOpinionRelevancy] query="${query}" items=${items.length}`);
+
+  const { output, usage } = await generateText({
+    model: openai("gpt-4o-mini"),
+    output: Output.object({ schema: RelevancySchema }),
+    providerOptions: {
+      langsmith: createLangSmithProviderOptions({
+        metadata: {
+          task: "check-opinion-relevancy",
+          query,
+          itemCount: items.length,
+        },
+      }),
+    },
+    system: `You are an editorial filter for social media posts in a curated newsletter called "${context.newsletterTitle}". Your job is to find posts that express genuine opinions, reactions, analysis, or commentary — the kind of posts that reveal how people are feeling about a topic.
+
+REJECT posts that merely restate or summarize news headlines without adding personal perspective. A post like "Company X just announced Y" with no opinion adds nothing — readers already have the news articles. We want the public reaction.
+
+PREFER posts that:
+- Express a clear opinion, take, or emotional reaction ("This is huge because...", "I'm worried about...", "Hot take:")
+- Provide insider perspective or firsthand experience
+- Offer analysis, predictions, or critique
+- Spark or participate in debate
+- Add humor, sarcasm, or cultural commentary about the topic
+
+For each numbered item, decide: does this post add opinion or perspective beyond restating facts?
+
+If relevant: write a 1-2 sentence summary capturing the opinion/reaction and who holds it.
+If not relevant: set summary to an empty string.
+
+Mark as NOT relevant if:
+- It merely restates a news headline or press release without personal commentary
+- It is generic template, boilerplate, or placeholder content
+- It is completely unrelated to the newsletter topic
+- It is a duplicate or near-duplicate of another item (keep the more detailed one)
+- It is pure promotional content or spam`,
+    prompt: buildPrompt(query, items, context),
+  });
+
+  const relevantCount = (output?.results ?? []).filter((r) => r.relevant).length;
+  console.log(
+    `[checkOpinionRelevancy] query="${query}" relevant=${relevantCount}/${items.length} tokens=${usage.inputTokens}in/${usage.outputTokens}out`,
   );
 
-  return items.map(
-    (_, i) => indexed.get(i) ?? { relevant: false, summary: "" },
-  );
+  return parseResults(output, items.length);
 }

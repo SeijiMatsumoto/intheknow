@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { blueskyDateRange, type Frequency } from "@/lib/date-utils";
-import { checkRelevancy } from "./check-relevancy";
+import { checkOpinionRelevancy } from "./check-relevancy";
 
 type BlueskyAuthor = {
   handle: string;
@@ -191,6 +191,10 @@ async function blueskySearch(
     // Skip spam: mostly hashtags or @mentions
     const stripped = p.text.replace(/[@#]\S+/g, "").trim();
     if (stripped.length < 20) return false;
+    // Require minimum engagement to surface posts people actually care about
+    const totalEngagement =
+      p.likeCount + p.repostCount + p.replyCount + p.quoteCount;
+    if (totalEngagement < 5) return false;
     return true;
   });
 
@@ -207,9 +211,9 @@ async function blueskySearch(
     .sort((a, b) => b.likeCount + b.repostCount - (a.likeCount + a.repostCount))
     .slice(0, 10);
 
-  // Relevancy filter
+  // Relevancy + opinion filter
   const combinedQuery = queries.join(", ");
-  const relevancy = await checkRelevancy(
+  const relevancy = await checkOpinionRelevancy(
     combinedQuery,
     sorted.map((p) => ({
       title: `@${p.author.handle} (${p.author.displayName})`,
@@ -244,7 +248,7 @@ async function blueskySearch(
 export function makeSearchBlueskyTool(ctx: BlueskyToolContext) {
   return tool({
     description:
-      "Search Bluesky for public discussion, hot takes, and reactions about the newsletter topic. Returns top posts sorted by engagement. Use focused queries to find relevant discourse.",
+      "Search Bluesky for public opinions, hot takes, and reactions about the newsletter topic. Returns high-engagement posts that express genuine commentary, not headline restatements. Use queries that target reactions and discourse (e.g. 'GPT-5 opinions', 'AI regulation debate') rather than just topic keywords.",
     inputSchema: z.object({
       queries: z
         .array(z.string())

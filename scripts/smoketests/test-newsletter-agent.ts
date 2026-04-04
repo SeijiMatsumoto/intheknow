@@ -14,6 +14,7 @@ import type { Frequency } from "@/lib/date-utils";
 
 const newsletter = {
   title: "AI & LLMs Weekly",
+  newsletterId: "00000000-0000-0000-0000-000000000000",
   description:
     "A weekly digest of the latest AI agent frameworks, LLM releases, and practical tooling for engineers.",
   frequency: "weekly" as Frequency,

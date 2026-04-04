@@ -2,8 +2,9 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { startOfDay, startOfWeek } from "date-fns";
 import { inngest } from "@/inngest/client";
 import { renderEmail } from "@/inngest/lib/render-email";
-import { getDigestConfig } from "@/lib/digest-config";
 import type { Frequency } from "@/lib/date-utils";
+import { getDigestConfig } from "@/lib/digest-config";
+import { embedDigestStories } from "@/lib/rag/embed-stories";
 import { digestCostBreakdown, formatCostLog } from "@/lib/token-pricing";
 import { runNewsletterAgent } from "./newsletter-agent";
 import {
@@ -13,7 +14,6 @@ import {
   findSkippedDigestRun,
   getNewsletterById,
   getNewsletterSubscriptions,
-  getPriorDigestTitles,
   markDigestRunSent,
   saveDigestContent,
   skipDigestRun,
@@ -213,35 +213,26 @@ export const newsletterWorker = inngest.createFunction(
       };
     }
 
-    // 4. Create digest run + fetch prior titles (parallel)
-    const [digestRun, priorTitles] = await Promise.all([
-      step.run("create-digest-run", async () => {
-        const run = await createDigestRun(newsletterId, digestRunId);
-        logger.info(`Created digest run: ${run.id}`);
-        return run;
-      }),
-      step.run("fetch-prior-titles", async () => {
-        const titles = await getPriorDigestTitles(newsletterId);
-        if (titles.length > 0) {
-          logger.info(`Found ${titles.length} prior story title(s) for dedup`);
-        }
-        return titles;
-      }),
-    ]);
+    // 4. Create digest run
+    const digestRun = await step.run("create-digest-run", async () => {
+      const run = await createDigestRun(newsletterId, digestRunId);
+      logger.info(`Created digest run: ${run.id}`);
+      return run;
+    });
 
-    // 5. Run agent — research + write newsletter
+    // 5. Run agent — research + write newsletter (agent calls searchPriorCoverage as needed)
     const { digest, model, stepCount, usage, toolCallCounts } = await step.run(
       "run-agent",
       async () => {
         logger.info("Starting newsletter agent");
         const result = await runNewsletterAgent({
           title: newsletter.title,
+          newsletterId,
           description: newsletter.description,
           frequency: newsletter.frequency as Frequency,
           keywords: newsletter.keywords,
           domainHints,
           tier,
-          priorTitles,
         });
         logger.info(
           `Agent complete — "${result.digest.editionTitle}", ${result.digest.sections.length} section(s), ${result.digest.keyTakeaways.length} takeaway(s) | steps: ${result.stepCount}`,
@@ -280,10 +271,17 @@ export const newsletterWorker = inngest.createFunction(
     });
 
     // 7. Save content + fan out emails & mark sent (parallel)
+    const storyIds = await step.run("save-digest-content", async () => {
+      const ids = await saveDigestContent(digestRun.id, digest, emailHtml);
+      logger.info(`Digest content saved — ${ids.length} stories`);
+      return ids;
+    });
+
+    // 8. Embed stories + fan out emails (parallel)
     await Promise.all([
-      step.run("save-digest-content", async () => {
-        await saveDigestContent(digestRun.id, digest, emailHtml);
-        logger.info("Digest content saved");
+      step.run("embed-stories", async () => {
+        const { embedded } = await embedDigestStories(storyIds);
+        logger.info(`Embedded ${embedded} stories for RAG`);
       }),
       step.run("fan-out-and-mark-sent", async () => {
         if (emails.length > 0) {

@@ -150,14 +150,15 @@ model DigestSection {
 }
 
 model DigestStory {
-  id        String  @id @default(uuid())
-  sectionId String  @map("section_id")
+  id        String                    @id @default(uuid())
+  sectionId String                    @map("section_id")
   title     String
   category  String
   icon      String
   detail    String
   quote     String?
-  sortOrder Int     @map("sort_order")
+  sortOrder Int                       @map("sort_order")
+  embedding Unsupported("vector(1536)")?
 
   section DigestSection       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   sources DigestStorySource[]

@@ -13,6 +13,7 @@ import { type Frequency, windowLabel } from "@/lib/date-utils";
 import { getDigestConfig } from "@/lib/digest-config";
 import type { Plan } from "@/lib/user";
 import { makeSearchBlueskyTool } from "./tools/search-bluesky";
+import { makeSearchPriorCoverageTool } from "./tools/search-prior-coverage";
 import { makeSearchWebTool } from "./tools/search-web";
 import { makeSubmitAnswerTool } from "./tools/submit-answer";
 
@@ -164,12 +165,12 @@ export type DigestContent = z.infer<typeof DigestSchema>;
 
 export type NewsletterInput = {
   title: string;
+  newsletterId: string;
   description: string | null;
   frequency: Frequency;
   keywords: string[];
   domainHints?: string[];
   tier?: Plan;
-  priorTitles?: string[];
 };
 
 // ── Main agent ────────────────────────────────────────────────────────────────
@@ -195,12 +196,12 @@ export async function runNewsletterAgent(
 ): Promise<AgentResult> {
   const {
     title,
+    newsletterId,
     description,
     frequency,
     keywords,
     domainHints = [],
     tier = "pro",
-    priorTitles = [],
   } = newsletter;
 
   let output: DigestContent | null = null;
@@ -219,6 +220,7 @@ export async function runNewsletterAgent(
 
   const tools: Record<string, Tool> = {
     searchWeb: makeSearchWebTool(toolCtx),
+    searchPriorCoverage: makeSearchPriorCoverageTool({ newsletterId }),
     submitAnswer: makeSubmitAnswerTool((digest) => {
       output = digest;
     }),
@@ -231,7 +233,7 @@ export async function runNewsletterAgent(
 
   // Tier-specific instructions
   const blueskyInstruction = config.socialConsensus
-    ? "\n2. Use searchBluesky to find social/community discussion and public reaction to key stories. Include notable takes, sentiment, and consensus."
+    ? "\n3. Use searchBluesky to find social/community discussion and public reaction to key stories. Include notable takes, sentiment, and consensus."
     : "";
   const socialConsensusInstruction = config.socialConsensus
     ? ""
@@ -239,7 +241,7 @@ export async function runNewsletterAgent(
   const depthInstruction = config.deepResearch
     ? "\n- Provide extended analysis with more specifics, numbers, and context in each item's detail field."
     : "";
-  const submitStep = config.socialConsensus ? "4" : "3";
+  const submitStep = config.socialConsensus ? "5" : "4";
 
   const { steps, usage } = await generateText({
     model: openai(config.model),
@@ -260,7 +262,6 @@ export async function runNewsletterAgent(
 - Summary (intro): lead with the biggest story. No throat-clearing or meta-commentary about the edition.
 - bottomLine (Editor's Note): synthesize, don't summarize. Connect dots between stories, identify patterns, tell the reader what to watch for. 4-6 sentences with conviction.
 - Combine multiple articles covering the same story into one item with multiple sources.
-- If prior edition titles are provided, skip those stories unless there's a genuinely new development.
 - Only include a quote if it's genuinely interesting, otherwise null.
 - All URLs must be real from your research — never invent them.
 - If searches return zero usable stories, set skipEdition to true. Never fabricate filler. But if you have 2-3 real stories, write a shorter edition.
@@ -280,7 +281,7 @@ export async function runNewsletterAgent(
 
 <workflow>
 1. Call searchWeb 4-5 times in parallel: 1 broad catch-all query + 3-4 topic-specific queries covering the newsletter's areas.
-2. Review results. If a major topic area has zero coverage, do a follow-up round of 2-3 searches. Otherwise proceed.${blueskyInstruction}
+2. Call searchPriorCoverage for each major story or topic you found to check if it was already covered in a recent edition. You can call it multiple times in parallel. Skip stories that were already covered unless there's a genuinely new development.${blueskyInstruction}
 ${submitStep}. Call submitAnswer with the fully written newsletter.
 
 You MUST always call submitAnswer as the final step. If running low on steps, skip additional searches and submit with what you have.
@@ -294,7 +295,7 @@ ${domainHints.length > 0 ? `<preferred-sources>${domainHints.join(", ")}</prefer
 <time-window>${windowLabel(frequency)}</time-window>
 <story-target>up to ${config.storyTarget}</story-target>
 </context>
-${priorTitles.length > 0 ? `\n<prior-edition-stories>\nThe following stories were covered in the last edition. Do NOT repeat them unless there is a major new development:\n${priorTitles.map((t) => `- ${t}`).join("\n")}\n</prior-edition-stories>` : ""}
+
 Start by searching for the most important recent stories.`,
   });
 

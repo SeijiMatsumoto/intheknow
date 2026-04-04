@@ -1,8 +1,8 @@
 import type { InputJsonValue } from "@prisma/client/runtime/client";
 import { subHours } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import type { DigestContent } from "./newsletter-agent";
 import type { Plan } from "@/lib/user";
+import type { DigestContent } from "./newsletter-agent";
 
 // ── Subscriptions ────────────────────────────────────────────────────────────
 
@@ -105,28 +105,6 @@ export function findSkippedDigestRun(newsletterId: string) {
   });
 }
 
-/** Fetch item titles from the most recent sent digest for dedup. */
-export async function getPriorDigestTitles(
-  newsletterId: string,
-): Promise<string[]> {
-  const run = await prisma.digestRun.findFirst({
-    where: { newsletterId, status: "sent" },
-    orderBy: { runAt: "desc" },
-    select: {
-      sections: {
-        select: {
-          stories: {
-            select: { title: true },
-            orderBy: { sortOrder: "asc" },
-          },
-        },
-        orderBy: { sortOrder: "asc" },
-      },
-    },
-  });
-  if (!run) return [];
-  return run.sections.flatMap((s) => s.stories.map((story) => story.title));
-}
 
 export function createDigestRun(newsletterId: string, id?: string) {
   return prisma.digestRun.create({
@@ -143,7 +121,9 @@ export async function saveDigestContent(
   id: string,
   content: DigestContent,
   emailHtml: string,
-) {
+): Promise<string[]> {
+  const storyIds: string[] = [];
+
   await prisma.$transaction(async (tx) => {
     // Write to JSON column (existing behavior) + new scalar columns
     await tx.digestRun.update({
@@ -179,6 +159,7 @@ export async function saveDigestContent(
             sortOrder: ii,
           },
         });
+        storyIds.push(story.id);
 
         for (const [srcIdx, source] of (item.sources ?? []).entries()) {
           await tx.digestStorySource.create({
@@ -210,6 +191,8 @@ export async function saveDigestContent(
       }
     }
   });
+
+  return storyIds;
 }
 
 export function failDigestRun(id: string, error: string) {

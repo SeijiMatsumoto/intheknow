@@ -5,9 +5,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDigestFeedback } from "@/app/actions/digest-feedback";
 import { DigestFeedback } from "@/components/feed/digest-feedback";
-import { getDigestIcon, stripEmoji } from "@/lib/digest-icons";
+import { getDigestIcon, stripEmoji } from "@/lib/digest/icons";
 import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
-import { canUsePlan } from "@/lib/gates";
+import { canUsePlan } from "@/lib/billing/gates";
 import { getUserPlan, isAdmin } from "@/lib/user";
 import {
   type DigestContent,

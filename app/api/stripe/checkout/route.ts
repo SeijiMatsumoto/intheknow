@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { stripe } from "@/lib/billing/stripe";
 
 export async function POST(req: Request) {
   const userId = await requireAuth();

@@ -9,11 +9,11 @@ import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
 import { SubscriptionRow } from "@/components/newsletters/subscription-row";
-import { getCategory } from "@/lib/categories";
+import { getCategory } from "@/lib/newsletter/categories";
 import type { Frequency } from "@/lib/date-utils";
-import { canUse } from "@/lib/gates";
+import { canUse } from "@/lib/billing/gates";
 import { prisma } from "@/lib/prisma";
-import { nextRunDate } from "@/lib/schedule";
+import { nextRunDate } from "@/lib/newsletter/schedule";
 
 export default async function NewsletterDetailPage({
   params,

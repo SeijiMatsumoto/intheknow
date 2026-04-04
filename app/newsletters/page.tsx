@@ -3,9 +3,9 @@ import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { NewslettersClient } from "@/components/newsletters/newsletters-client";
 import { PageHeader } from "@/components/layout/page-header";
 import type { Frequency } from "@/lib/date-utils";
-import { canUse } from "@/lib/gates";
+import { canUse } from "@/lib/billing/gates";
 import { prisma } from "@/lib/prisma";
-import { nextRunDate } from "@/lib/schedule";
+import { nextRunDate } from "@/lib/newsletter/schedule";
 
 export default async function NewslettersPage() {
   const { userId } = await auth();

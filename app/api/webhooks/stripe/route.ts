@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { priceIdToPlan, stripe } from "@/lib/stripe";
+import { priceIdToPlan, stripe } from "@/lib/billing/stripe";
 
 function getPeriodEnd(subscription: Stripe.Subscription): Date | null {
   const end = subscription.items.data[0]?.current_period_end;

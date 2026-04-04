@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
-import { getLimit } from "@/lib/gates";
+import { getLimit } from "@/lib/billing/gates";
 import { prisma } from "@/lib/prisma";
 
 export async function getNewslettersByCategories(categoryIds: string[]) {

@@ -5,7 +5,7 @@
  * for the newsletter agent based on the user's plan tier.
  */
 
-import type { Plan } from "./user";
+import type { Plan } from "@/lib/user";
 
 export type DigestTierConfig = {
   /** OpenAI model ID for generation. */

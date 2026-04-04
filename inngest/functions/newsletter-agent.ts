@@ -10,7 +10,7 @@ const { generateText } = wrapAISDK(ai);
 
 import { z } from "zod";
 import { type Frequency, windowLabel } from "@/lib/date-utils";
-import { getDigestConfig } from "@/lib/digest-config";
+import { getDigestConfig } from "@/lib/digest/config";
 import type { Plan } from "@/lib/user";
 import { makeSearchBlueskyTool } from "./tools/search-bluesky";
 import { makeSearchPriorCoverageTool } from "./tools/search-prior-coverage";

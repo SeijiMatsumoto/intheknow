@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
+import { verifyUnsubscribeToken } from "@/lib/email/unsubscribe-token";
 
 export default async function UnsubscribePage({
   searchParams,

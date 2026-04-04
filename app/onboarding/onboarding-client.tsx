@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/newsletter/categories";
 import {
   completeOnboarding,
   getNewslettersByCategories,

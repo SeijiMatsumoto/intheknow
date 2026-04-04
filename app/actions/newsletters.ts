@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { ALL_DAYS, type Frequency } from "@/lib/date-utils";
-import { canUse, getLimit } from "@/lib/gates";
+import { canUse, getLimit } from "@/lib/billing/gates";
 import { prisma } from "@/lib/prisma";
 
 function slugify(title: string): string {

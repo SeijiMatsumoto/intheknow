@@ -1,6 +1,6 @@
 "use client";
 
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/newsletter/categories";
 import {
   ALL_DAYS,
   formatHour,

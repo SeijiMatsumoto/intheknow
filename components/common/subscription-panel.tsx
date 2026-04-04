@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { getCategory } from "@/lib/categories";
-import { formatNextRun } from "@/lib/format-schedule";
+import { getCategory } from "@/lib/newsletter/categories";
+import { formatNextRun } from "@/lib/newsletter/format-schedule";
 
 type Subscription = {
   newsletterTitle: string;

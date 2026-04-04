@@ -19,7 +19,7 @@ import {
   formatNextRun,
   formatScheduleLabel,
   toLocalDays,
-} from "@/lib/format-schedule";
+} from "@/lib/newsletter/format-schedule";
 import type { Frequency } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 

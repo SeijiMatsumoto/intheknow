@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Frequency } from "@/lib/date-utils";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/newsletter/categories";
 import { cn } from "@/lib/utils";
 
 type Newsletter = {

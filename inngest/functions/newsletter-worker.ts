@@ -3,9 +3,9 @@ import { startOfDay, startOfWeek } from "date-fns";
 import { inngest } from "@/inngest/client";
 import { renderEmail } from "@/inngest/lib/render-email";
 import type { Frequency } from "@/lib/date-utils";
-import { getDigestConfig } from "@/lib/digest-config";
+import { getDigestConfig } from "@/lib/digest/config";
 import { embedDigestStories } from "@/lib/rag/embed-stories";
-import { digestCostBreakdown, formatCostLog } from "@/lib/token-pricing";
+import { digestCostBreakdown, formatCostLog } from "@/lib/billing/token-pricing";
 import { runNewsletterAgent } from "./newsletter-agent";
 import {
   createDigestRun,

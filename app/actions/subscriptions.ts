@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/auth";
-import { canUse, getLimit } from "@/lib/gates";
+import { canUse, getLimit } from "@/lib/billing/gates";
 import { prisma } from "@/lib/prisma";
 
 export async function subscribe(

@@ -24,7 +24,7 @@
  *   3. Use getLimit() / getLimitForPlan() in your code
  */
 
-import { getUserPlan, type Plan } from "./user";
+import { getUserPlan, type Plan } from "@/lib/user";
 
 // ─── Feature registry ────────────────────────────────────────────────
 

@@ -5,7 +5,7 @@ import { ArrowRight, ChevronDown, Clock } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import { getCategory } from "@/lib/categories";
+import { getCategory } from "@/lib/newsletter/categories";
 
 type FeedSend = {
   id: string;

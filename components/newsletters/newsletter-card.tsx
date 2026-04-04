@@ -3,7 +3,7 @@ import { Clock } from "lucide-react";
 import Link from "next/link";
 import { DeleteNewsletterButton } from "@/components/newsletters/delete-newsletter-button";
 import { SubscribeButton } from "@/components/newsletters/subscribe-button";
-import { getCategory } from "@/lib/categories";
+import { getCategory } from "@/lib/newsletter/categories";
 import type { Frequency } from "@/lib/date-utils";
 
 type NewsletterCardProps = {

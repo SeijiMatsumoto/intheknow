@@ -3,7 +3,7 @@ import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { SettingsClient } from "@/components/settings/settings-client";
 import type { Frequency } from "@/lib/date-utils";
 import { prisma } from "@/lib/prisma";
-import { nextRunDate } from "@/lib/schedule";
+import { nextRunDate } from "@/lib/newsletter/schedule";
 import { getUserPlan } from "@/lib/user";
 
 export default async function SettingsPage() {

@@ -7,8 +7,8 @@ import { FeedFilters } from "@/components/feed/feed-filters";
 import { FeedList } from "@/components/feed/feed-list";
 import { NewsletterHeader } from "@/components/newsletters/newsletter-header";
 import { SubscriptionPanel } from "@/components/common/subscription-panel";
-import { getCategory } from "@/lib/categories";
-import { nextRunDate } from "@/lib/schedule";
+import { getCategory } from "@/lib/newsletter/categories";
+import { nextRunDate } from "@/lib/newsletter/schedule";
 import { getUserPlan, isAdmin } from "@/lib/user";
 import { getFeedNewsletters, getFeedSends, getFeedStats } from "./data";
 

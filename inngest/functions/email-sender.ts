@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { UNSUBSCRIBE_PLACEHOLDER } from "@/inngest/lib/render-email";
-import { resend } from "@/lib/resend";
-import { buildUnsubscribeUrl } from "@/lib/unsubscribe-token";
+import { resend } from "@/lib/email/resend";
+import { buildUnsubscribeUrl } from "@/lib/email/unsubscribe-token";
 import { createDigestSend } from "./queries";
 
 export const emailSender = inngest.createFunction(

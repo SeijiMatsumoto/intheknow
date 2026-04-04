@@ -7,7 +7,7 @@ import {
   formatNextRun,
   formatScheduleLabel,
   toLocalDays,
-} from "@/lib/format-schedule";
+} from "@/lib/newsletter/format-schedule";
 import { ScheduleEditor } from "@/components/newsletters/schedule-editor";
 
 type Props = {

@@ -248,13 +248,13 @@ async function blueskySearch(
 export function makeSearchBlueskyTool(ctx: BlueskyToolContext) {
   return tool({
     description:
-      "Search Bluesky for public opinions, hot takes, and reactions about the newsletter topic. Returns high-engagement posts that express genuine commentary, not headline restatements. Use queries that target reactions and discourse (e.g. 'GPT-5 opinions', 'AI regulation debate') rather than just topic keywords.",
+      "Search Bluesky for public discourse about a topic. Cast a wide net with broad topic keywords — the system automatically filters for posts that express genuine opinions and reactions. Do NOT add words like 'reactions', 'opinions', or 'hot takes' to your queries, as Bluesky search is keyword-based and this will exclude most relevant posts.",
     inputSchema: z.object({
       queries: z
         .array(z.string())
         .max(3)
         .describe(
-          "1-3 Bluesky search queries. Use keywords, hashtags, or phrases. E.g. ['GPT-5 launch reactions', '#AI agents']",
+          "1-3 broad Bluesky search queries. Use topic keywords, names, or hashtags. E.g. ['GPT-5', 'AI agents', '#LLM']. Do NOT append 'reactions' or 'opinions' — just the topic itself.",
         ),
     }),
     execute: async ({ queries }) => blueskySearch(queries, ctx),

@@ -33,7 +33,7 @@ export const emailSender = inngest.createFunction(
     const html = emailHtml.replaceAll(UNSUBSCRIBE_PLACEHOLDER, unsubscribeUrl);
 
     const { data, error } = await resend.emails.send({
-      from: "In The Know <onboarding@resend.dev>",
+      from: "In The Know <digest@stayintheknow.app>",
       to: userEmail,
       subject: newsletterTitle,
       html,

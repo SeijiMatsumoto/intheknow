@@ -233,7 +233,7 @@ export async function runNewsletterAgent(
 
   // Tier-specific instructions
   const blueskyInstruction = config.socialConsensus
-    ? "\n3. Use searchBluesky to find social/community discussion and public reaction to key stories. Include notable takes, sentiment, and consensus."
+    ? "\n3. Use searchBluesky with broad topic keywords (NOT 'topic reactions' or 'topic opinions') to find social/community discussion. The tool automatically filters for posts with genuine commentary. Include notable takes, sentiment, and consensus."
     : "";
   const socialConsensusInstruction = config.socialConsensus
     ? ""

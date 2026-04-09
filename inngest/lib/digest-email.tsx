@@ -15,15 +15,15 @@ import type { DigestContent } from "@/inngest/functions/newsletter-agent";
 
 export const UNSUBSCRIBE_PLACEHOLDER = "{{unsubscribe_url}}";
 
-// ── Color palette (matches app warm cream theme) ─────────────────────────────
+// ── Color palette (dark theme) ──────────────────────────────────────────────
 const C = {
-  bg: "#f3efe8",
-  card: "#faf8f4",
-  foreground: "#1a1812",
-  muted: "#8a8478",
-  mutedLight: "#b5afa5",
-  border: "#d9d3c7",
-  borderLight: "#e8e3da",
+  bg: "#0a0a0a",
+  card: "#141414",
+  foreground: "#e0e0e0",
+  muted: "#9a9a9a",
+  mutedLight: "#6a6a6a",
+  border: "#2a2a2a",
+  borderLight: "#1e1e1e",
 };
 
 const font =

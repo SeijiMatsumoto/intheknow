@@ -112,7 +112,15 @@ export function DigestEmail({
 
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="dark" />
+        <meta name="supported-color-schemes" content="dark" />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `:root { color-scheme: dark; } body, .body { background-color: ${C.bg} !important; color: ${C.foreground} !important; }`,
+          }}
+        />
+      </Head>
       <Preview>{digest.summary}</Preview>
       <Body
         style={{ margin: 0, padding: 0, background: C.bg, fontFamily: font }}

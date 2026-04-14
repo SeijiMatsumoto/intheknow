@@ -3,7 +3,7 @@ import { SignInModalButton } from "@/components/layout/sign-in-button";
 
 export function LandingNav() {
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 bg-blue-500/70 backdrop-blur-md">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="relative flex items-center justify-between h-16">
           <span className="font-serif text-xl font-bold tracking-tight text-foreground">

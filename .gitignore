@@ -47,3 +47,5 @@ next-env.d.ts
 
 # smoketest output
 /scripts/smoketests/output/
+
+logs

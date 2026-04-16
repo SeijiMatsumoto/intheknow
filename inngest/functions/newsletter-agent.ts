@@ -281,7 +281,10 @@ export async function runNewsletterAgent(
 
 <workflow>
 1. Call searchWeb 4-5 times in parallel: 1 broad catch-all query + 3-4 topic-specific queries covering the newsletter's areas.
-2. Call searchPriorCoverage for each major story or topic you found to check if it was already covered in a recent edition. You can call it multiple times in parallel. Skip stories that were already covered unless there's a genuinely new development.${blueskyInstruction}
+2. Call searchPriorCoverage for each major story or topic you found. You can call it multiple times in parallel. Hard rules for the results:
+   - Any story returned in the "mustSkip" bucket MUST be excluded from the edition. No exceptions. A new angle, a new quote, or an incremental development is NOT sufficient — only include it if the news represents a fundamentally different event (e.g., an actual resolution, reversal, or major new action, not just continued coverage of the same topic).
+   - The "context" bucket is for your awareness only; use it to frame today's stories, not as a reason to re-cover them.
+   - Within the final edition itself, do not include two stories that are essentially the same topic — merge into one item with multiple sources.${blueskyInstruction}
 ${submitStep}. Call submitAnswer with the fully written newsletter.
 
 You MUST always call submitAnswer as the final step. If running low on steps, skip additional searches and submit with what you have.

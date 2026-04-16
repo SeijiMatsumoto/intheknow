@@ -15,15 +15,13 @@ import type { DigestContent } from "@/inngest/functions/newsletter-agent";
 
 export const UNSUBSCRIBE_PLACEHOLDER = "{{unsubscribe_url}}";
 
-// ── Color palette (dark theme) ──────────────────────────────────────────────
+// No bg/fg colors — the email inherits the client's native color scheme.
+// Only muted greys and borders are specified (they read well on both).
 const C = {
-  bg: "#0a0a0a",
-  card: "#141414",
-  foreground: "#e0e0e0",
-  muted: "#9a9a9a",
-  mutedLight: "#6a6a6a",
-  border: "#2a2a2a",
-  borderLight: "#1e1e1e",
+  muted: "#808080",
+  mutedLight: "#9a9a9a",
+  border: "#80808040",
+  borderLight: "#80808026",
 };
 
 const font =
@@ -98,7 +96,6 @@ export function DigestEmail({
   const dateLabel = format(new Date(), "EEEE, MMMM d, yyyy").toUpperCase();
   const title = digest.editionTitle;
 
-  // Flatten all items as generic records for email rendering
   type EmailItem = Record<string, unknown> & { _section: string };
   const allItems: EmailItem[] = (digest.sections ?? []).flatMap((section) =>
     section.items.map(
@@ -113,25 +110,18 @@ export function DigestEmail({
   return (
     <Html lang="en">
       <Head>
-        <meta name="color-scheme" content="dark" />
-        <meta name="supported-color-schemes" content="dark" />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `:root { color-scheme: dark; } body, .body { background-color: ${C.bg} !important; color: ${C.foreground} !important; }`,
-          }}
-        />
+        <meta name="color-scheme" content="light dark" />
+        <meta name="supported-color-schemes" content="light dark" />
       </Head>
       <Preview>{digest.summary}</Preview>
-      <Body
-        style={{ margin: 0, padding: 0, background: C.bg, fontFamily: font }}
-      >
+      <Body style={{ margin: 0, padding: 0, fontFamily: font }}>
         <Container
           style={{ maxWidth: "620px", margin: "32px auto", padding: "0 16px" }}
         >
           {/* ── Nameplate ─────────────────────────────────── */}
           <Hr
             style={{
-              borderTop: `2px solid ${C.foreground}`,
+              borderTop: `2px solid currentColor`,
               margin: "0 0 12px",
             }}
           />
@@ -140,7 +130,6 @@ export function DigestEmail({
               fontFamily: serif,
               fontSize: "28px",
               fontWeight: 700,
-              color: C.foreground,
               textAlign: "center",
               margin: "0 0 8px",
               letterSpacing: "-0.01em",
@@ -166,7 +155,6 @@ export function DigestEmail({
                 fontFamily: serif,
                 fontSize: "26px",
                 fontWeight: 700,
-                color: C.foreground,
                 margin: "0 0 12px",
                 lineHeight: "1.2",
               }}
@@ -200,7 +188,6 @@ export function DigestEmail({
                     style={{
                       fontFamily: font,
                       fontSize: "13px",
-                      color: C.foreground,
                       lineHeight: "1.55",
                       margin: "0 0 4px",
                       paddingLeft: "12px",
@@ -246,7 +233,6 @@ export function DigestEmail({
                     fontFamily: serif,
                     fontSize: "16px",
                     fontWeight: 600,
-                    color: C.foreground,
                     margin: "0 0 8px",
                     lineHeight: "1.35",
                   }}
@@ -374,7 +360,6 @@ export function DigestEmail({
                             fontFamily: serif,
                             fontSize: "13px",
                             fontStyle: "italic",
-                            color: C.foreground,
                             lineHeight: "1.55",
                             margin: "0 0 4px",
                           }}
@@ -393,7 +378,7 @@ export function DigestEmail({
                           <Link
                             href={h.url}
                             style={{
-                              color: C.foreground,
+                              color: "inherit",
                               textDecoration: "none",
                               fontWeight: 600,
                             }}
@@ -442,7 +427,7 @@ export function DigestEmail({
           {/* ── Footer ────────────────────────────────────── */}
           <Hr
             style={{
-              borderTop: `2px solid ${C.foreground}`,
+              borderTop: `2px solid currentColor`,
               margin: "24px 0 12px",
             }}
           />
@@ -451,7 +436,6 @@ export function DigestEmail({
               fontFamily: serif,
               fontSize: "14px",
               fontWeight: 700,
-              color: C.foreground,
               textAlign: "center",
               margin: "0 0 8px",
             }}
